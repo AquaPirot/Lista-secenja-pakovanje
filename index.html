@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a5f5f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Secenje" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="description" content="Aplikacija za listu secenja i pakovanje materijala" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-152.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+
+  <title>Lista Secenja - Pakovanje</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f4;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       OVDE UBACI SVOJ CSS KOD
+       ============================================================ */
+
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       OVDE UBACI SVOJ HTML KOD
+       ============================================================ -->
+
+  <script>
+    // PWA Service Worker registracija
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registrovan:', reg.scope))
+          .catch(err => console.warn('SW greška:', err));
+      });
+    }
+
+    // ============================================================
+    // OVDE UBACI SVOJ JAVASCRIPT KOD
+    // ============================================================
+  </script>
+
+</body>
+</html>
