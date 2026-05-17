@@ -1,62 +1,738 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#1a5f5f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Secenje" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="description" content="Aplikacija za listu secenja i pakovanje materijala" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#191814" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="AG Nalog" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="description" content="AG GROUP — Radni nalog za sečenje i pakovanje pergole" />
 
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-152.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-152.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
 
-  <title>Lista Secenja - Pakovanje</title>
+<title>AG GROUP — Radni nalog za proizvodnju</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fjalla+One&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  :root{
+    --shell:#15171b; --shell2:#1e2127; --line:#33373f; --muted:#888;
+    --paper:#f6f4ee; --paper2:#ebe7db; --ink:#191814;
+    --bronze:#a9743c; --bronzeD:#8a5d2e; --ok:#3f7a4d; --warn:#bd4a2a;
+  }
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--shell);font-family:'Hanken Grotesk',sans-serif;}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f4f4;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
+  .topbar{background:var(--ink);padding:12px 16px;display:flex;align-items:center;
+    justify-content:space-between;gap:10px;position:sticky;top:0;z-index:50;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .logo{padding:3px 8px;border:2px solid var(--bronze);border-radius:4px;
+    font-family:'Fjalla One',sans-serif;color:var(--bronze);font-size:16px;}
+  .brand-t{font-family:'Fjalla One',sans-serif;font-size:16px;color:#fff;letter-spacing:.04em;line-height:1;}
+  .brand-s{font-size:9.5px;color:var(--muted);letter-spacing:.08em;margin-top:2px;}
+  .btn-pdf{background:var(--bronze);color:#fff;border:0;padding:11px 16px;border-radius:6px;
+    font-family:'Fjalla One',sans-serif;font-size:14px;letter-spacing:.04em;cursor:pointer;white-space:nowrap;}
+  .btn-pdf:active{background:var(--bronzeD);}
 
-    /* ============================================================
-       OVDE UBACI SVOJ CSS KOD
-       ============================================================ */
+  .panel{max-width:780px;margin:14px auto 0;padding:0 14px;}
+  .card-in{background:var(--shell2);border:1px solid var(--line);border-radius:10px;padding:14px;}
+  .grp{font-family:'Fjalla One',sans-serif;font-size:13px;color:var(--bronze);
+    letter-spacing:.07em;margin:14px 0 8px;}
+  .grp:first-child{margin-top:0;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(min-width:560px){.row{grid-template-columns:1fr 1fr 1fr;}}
+  label{display:block;}
+  .lbl{font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#d8d4c4;}
+  .sub{font-size:9.5px;color:var(--muted);margin:1px 0 3px;}
+  input,select{width:100%;margin-top:2px;padding:9px 10px;background:#101216;
+    border:1px solid var(--line);border-radius:5px;color:#fff;
+    font-family:'Hanken Grotesk',sans-serif;font-size:14px;}
+  input[type=number]{font-family:'Spline Sans Mono',monospace;font-size:15px;}
+  input::placeholder{color:#5c606b;}
+  select option{background:#1e2127;}
+  .auto-box{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    background:#101216;border:1px solid var(--line);border-radius:6px;padding:9px 11px;}
+  .auto-box label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#e8e2d0;font-weight:500;}
+  .auto-box input[type=checkbox]{width:auto;margin:0;}
+  .auto-stat{margin-left:auto;font-family:'Spline Sans Mono',monospace;font-size:11.5px;}
+  .hint{text-align:center;color:var(--muted);font-size:11px;margin:10px 0 4px;}
+  .steel-toggle{grid-column:1/-1;display:flex;align-items:center;gap:8px;
+    background:#101216;border:1px solid var(--line);border-radius:6px;padding:9px 11px;}
+  .steel-toggle label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#e8e2d0;font-weight:500;}
+  .steel-toggle input{width:auto;margin:0;}
+  .steel-rows{grid-column:1/-1;}
+  .steel-r{display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:8px;}
+  .steel-r .lbl{font-size:10px;}
+  .btn-mini{background:var(--shell2);border:1px solid var(--line);color:#fff;
+    padding:9px 11px;border-radius:5px;cursor:pointer;font-size:13px;}
+  .btn-add{background:transparent;border:1px dashed var(--bronze);color:var(--bronze);
+    padding:8px 12px;border-radius:5px;cursor:pointer;font-size:12px;margin-top:8px;
+    font-family:'Hanken Grotesk',sans-serif;font-weight:600;}
 
-  </style>
+  .doc{max-width:780px;margin:18px auto 50px;background:var(--paper);
+    box-shadow:0 18px 45px rgba(0,0,0,.5);padding:22px 22px;color:var(--ink);}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:3px solid var(--ink);padding-bottom:11px;gap:10px;}
+  .doc-title{font-family:'Fjalla One',sans-serif;font-size:27px;letter-spacing:.02em;line-height:.95;}
+  .doc-sub{font-family:'Fjalla One',sans-serif;font-size:12px;color:var(--bronze);letter-spacing:.16em;margin-top:3px;}
+  .doc-meta{text-align:right;font-family:'Spline Sans Mono',monospace;font-size:10.5px;line-height:1.65;}
+  .badge{background:var(--ink);color:#fff;padding:3px 7px;border-radius:3px;display:inline-block;font-weight:600;font-size:9.5px;}
+  .info-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:11px;}
+  @media(max-width:480px){.info-row{grid-template-columns:1fr;}}
+  .card{background:var(--paper2);padding:9px 11px;border-radius:5px;}
+  .card-t{font-family:'Fjalla One',sans-serif;font-size:10.5px;letter-spacing:.09em;color:var(--bronzeD);}
+  .mono{font-family:'Spline Sans Mono',monospace;}
+  .dims{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+  .dim{background:var(--ink);color:#fff;padding:6px 7px;border-radius:4px;}
+  .dim-k{font-size:8.5px;letter-spacing:.06em;color:#b9b3a0;}
+  .dim-v{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:14px;}
+  .calc-line{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-family:'Spline Sans Mono',monospace;font-size:11px;}
+
+  .sec{margin-top:20px;}
+  .sec-h{display:flex;align-items:baseline;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:3px;margin-bottom:8px;}
+  .sec-n{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:10.5px;
+    background:var(--ink);color:#fff;padding:2px 6px;border-radius:3px;}
+  .sec-n.acc{background:var(--bronze);}
+  .sec-t{margin:0;font-family:'Fjalla One',sans-serif;font-size:16px;letter-spacing:.02em;text-transform:uppercase;}
+
+  table{width:100%;border-collapse:collapse;}
+  th{font-weight:700;font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:#fff;
+    background:var(--ink);padding:5px 7px;text-align:left;border-right:1px solid #43403a;}
+  td{padding:5px 7px;border-bottom:1px solid var(--paper2);font-size:12px;vertical-align:top;}
+  td.m{font-family:'Spline Sans Mono',monospace;font-weight:500;}
+  .grp-t{font-family:'Fjalla One',sans-serif;font-size:12px;color:var(--bronzeD);letter-spacing:.04em;margin:9px 0 1px;}
+  .chk{width:14px;height:14px;border:1.5px solid #9a927c;border-radius:3px;display:inline-block;}
+
+  .box-cut{border:2px solid var(--ink);border-radius:6px;padding:10px 12px;}
+  .box-cut-t{font-family:'Fjalla One',sans-serif;font-size:11px;letter-spacing:.05em;}
+  .box-cut-v{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:22px;color:var(--bronze);}
+  .cerada-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.cerada-wrap{grid-template-columns:1fr;}}
+  .note-ok{background:#e7efe6;border:1px solid var(--ok);border-radius:5px;padding:6px 9px;font-size:11px;margin-top:8px;}
+  .note-warn{background:#f6e7df;border:1px solid var(--warn);border-radius:5px;padding:6px 9px;font-size:11px;margin-top:8px;}
+  .mapa{border:1px solid var(--paper2);border-radius:6px;padding:9px 10px;background:#fff;}
+  .mapa-edge{display:flex;justify-content:space-between;font-family:'Spline Sans Mono',monospace;font-size:9px;color:var(--muted);}
+  .mapa-body{position:relative;border:1px solid var(--line);border-radius:3px;
+    background:repeating-linear-gradient(180deg,#faf8f2,#faf8f2 8px,#f1ede1 8px,#f1ede1 9px);margin:3px 0;}
+  .keder{position:absolute;left:0;right:0;}
+  .keder-bar{border-radius:1px;}
+  .keder-lbl{display:flex;justify-content:space-between;font-family:'Spline Sans Mono',monospace;
+    font-size:8.5px;color:#4a4636;margin-top:1px;font-weight:500;}
+  .rezerva{position:absolute;bottom:0;left:0;right:0;border-top:1px dashed var(--ink);
+    background:repeating-linear-gradient(45deg,#e3ddcc,#e3ddcc 4px,#d8d1bd 4px,#d8d1bd 8px);}
+  .rezerva span{font-family:'Spline Sans Mono',monospace;font-size:8px;color:#5a5446;padding:2px 4px;display:block;}
+  .legend{display:flex;gap:10px;margin-top:6px;font-size:9px;flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:4px;}
+  .swatch{width:13px;height:5px;display:inline-block;border-radius:1px;}
+
+  ol.napomene{margin:0;padding-left:18px;font-size:11.5px;line-height:1.6;}
+  .potpisi{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:22px;}
+  .potpis{border-top:1px solid var(--ink);padding-top:5px;font-size:10.5px;font-weight:700;
+    letter-spacing:.04em;text-transform:uppercase;color:#5a5446;}
+  .potpis-l{margin-top:14px;font-weight:400;color:var(--muted);}
+  .foot{margin-top:16px;border-top:1px solid var(--paper2);padding-top:6px;
+    font-family:'Spline Sans Mono',monospace;font-size:9px;color:var(--muted);text-align:center;}
+  .shablon{background:#f6e7df;border:1px solid var(--warn);border-radius:5px;padding:6px 10px;font-size:11px;}
+  .opt-off{background:var(--paper2);border-radius:5px;padding:8px 11px;font-size:11.5px;color:#5a5446;}
+
+  @media print{
+    @page{margin:10mm;}
+    html,body{background:#fff;}
+    .no-print{display:none!important;}
+    .doc{box-shadow:none!important;margin:0!important;max-width:100%!important;padding:0!important;}
+    .sec{break-inside:avoid;}
+    table{break-inside:auto;} tr{break-inside:avoid;}
+  }
+</style>
 </head>
 <body>
 
-  <!-- ============================================================
-       OVDE UBACI SVOJ HTML KOD
-       ============================================================ -->
+<div class="topbar no-print">
+  <div class="brand">
+    <div class="logo">AG</div>
+    <div>
+      <div class="brand-t">AG GROUP · RADNI NALOG</div>
+      <div class="brand-s">PROGRAM ZA SEČENJE PERGOLE</div>
+    </div>
+  </div>
+  <button class="btn-pdf" onclick="window.print()">⎙ PDF / Štampaj</button>
+</div>
 
-  <script>
-    // PWA Service Worker registracija
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registrovan:', reg.scope))
-          .catch(err => console.warn('SW greška:', err));
-      });
+<div class="panel no-print">
+  <div class="card-in">
+    <div class="grp">① TERENSKE MERE (mm)</div>
+    <div class="row">
+      <label><div class="lbl">Širina</div><div class="sub">izmera na objektu</div>
+        <input type="number" id="sirina" value="3500"></label>
+      <label><div class="lbl">Dubina / projekcija</div><div class="sub">zid do spoljne mere stuba</div>
+        <input type="number" id="dubina" value="3500"></label>
+      <label><div class="lbl">Zadnja visina</div><div class="sub">pod do cevi na zidu</div>
+        <input type="number" id="zadnjaVisina" value="2650"></label>
+      <label><div class="lbl">Prednja visina</div><div class="sub">pod do oluka</div>
+        <input type="number" id="prednjaVisina" value="2150"></label>
+    </div>
+
+    <div class="grp">② IZBOR PROFILA</div>
+    <div class="row">
+      <label><div class="lbl">Cev na zidu</div><div class="sub">nosač pergole — uvek ide</div>
+        <select id="cev"><option>100x100</option><option selected>80x40</option></select></label>
+      <label><div class="lbl">Stub</div>
+        <select id="stub"><option selected>100x100</option><option>120x120</option><option>110x144</option></select></label>
+      <label><div class="lbl">Model kedera</div>
+        <select id="keder"><option>jednostrani</option><option selected>dvostrani</option></select></label>
+      <label><div class="lbl">Širina raja</div>
+        <select id="sirinaRaja"><option>75</option><option selected>90</option><option>110</option></select></label>
+      <label><div class="lbl">Korniš sklop</div>
+        <select id="kornisTip"><option selected>jednodelni</option><option>sečeni</option></select></label>
+      <label><div class="lbl">Cev motora</div>
+        <select id="cevMotora"><option selected>jednodelna</option><option>po poljima</option></select></label>
+      <label><div class="lbl">Boja profila (RAL)</div>
+        <input type="text" id="bojaProfila" value="7016"></label>
+      <label><div class="lbl">Boja cerade</div>
+        <input type="text" id="bojaCerade" value="Antracit"></label>
+    </div>
+
+    <div class="grp">③ KORNIŠI · MOTOR · SVETLA</div>
+    <div class="row">
+      <div class="auto-box">
+        <label><input type="checkbox" id="autoInterval" checked>
+          Auto-uklapanje intervala korniša (razmak 399–499mm)</label>
+        <span class="auto-stat" id="autoStat">—</span>
+      </div>
+      <label><div class="lbl">Broj intervala korniša</div><div class="sub" id="intervalSub">auto-predlog</div>
+        <input type="number" id="brIntervala" value="7" disabled></label>
+      <label><div class="lbl">Svetala po kornišu</div><div class="sub">obično 3–6</div>
+        <input type="number" id="svetalaPoKornizu" value="6"></label>
+      <label><div class="lbl">Motor (model)</div><div class="sub">prazno = piše samo „Motor"</div>
+        <input type="text" id="motor" placeholder="npr. Somfy RTS 120Nm"></label>
+    </div>
+
+    <div class="grp">④ ČELIČNA KONSTRUKCIJA (opciono)</div>
+    <div class="row">
+      <div class="steel-toggle">
+        <label><input type="checkbox" id="celicnaOn">
+          Potrebna čelična konstrukcija (podkonstrukcija za ovaj objekat)</label>
+      </div>
+      <div class="steel-rows" id="steelRows"></div>
+      <div style="grid-column:1/-1">
+        <button class="btn-add" id="addSteel" type="button">＋ Dodaj cev</button>
+      </div>
+    </div>
+
+    <div class="grp">⑤ PODACI ZA NALOG</div>
+    <div class="row">
+      <label><div class="lbl">Broj naloga</div><input type="text" id="brNaloga" placeholder="2026-014"></label>
+      <label><div class="lbl">Kupac / Firma</div><input type="text" id="kupac" placeholder="ime / firma"></label>
+      <label><div class="lbl">Adresa</div><input type="text" id="adresa" placeholder="adresa montaže"></label>
+      <label><div class="lbl">Datum</div><input type="text" id="datum"></label>
+      <label><div class="lbl">Rok</div><input type="text" id="rok" placeholder="datum isporuke"></label>
+      <label><div class="lbl">Zadužen radnik</div><input type="text" id="radnik" placeholder="ime radnika"></label>
+    </div>
+  </div>
+  <div class="hint">Popuni mere → <b style="color:#cfcabb">⎙ PDF / Štampaj</b> → „Sačuvaj kao PDF" → pošalji radniku. Radi i bez interneta.</div>
+</div>
+
+<div class="doc" id="doc"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const round = (n,d=0)=>{const p=10**d;return isFinite(n)?Math.round(n*p)/p:0;};
+const ceil = n => isFinite(n)?Math.ceil(n):0;
+const esc = s => String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function suggestIntervala(korisna){
+  if(!korisna||korisna<=0)return 1;
+  let best=1,bestScore=Infinity;
+  for(let n=1;n<=40;n++){
+    const r=korisna/n; let score;
+    if(r>=399&&r<=499) score=Math.abs(r-449);
+    else if(r>499) score=1e5+(r-499);
+    else score=1e5+(399-r)*2;
+    if(score<bestScore){bestScore=score;best=n;}
+  }
+  return best;
+}
+
+/* ───────── KATALOG OKOVA — siguran:false → množilac PROCENJEN ───────── */
+const KATALOG_OKOVA=[
+  {grupa:"raj",sifra:"PRG-01",naziv:"Zadnji kavez",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-02",naziv:"Zadnji zupčanik",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-03",naziv:"Kočnica",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-04",naziv:"Prednji zatezač L/D",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-05",naziv:"Mali kavez ležaja",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-15",naziv:"Plastika spoja kaiša",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-16",naziv:"Velika kolica",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-41",naziv:"Zidni nosač šine",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-42",naziv:"Zadnji spoj šine",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-43",naziv:"Fiksator šina–korniš",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-79",naziv:"Prednji zatezač (automat)",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-81",naziv:"Prednji poklopac šine",pravilo:"raj",m:1,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-117",naziv:"Plastika velikog ležaja",pravilo:"raj",m:2,jed:"kom",siguran:true},
+  {grupa:"raj",sifra:"PRG-119",naziv:"Plastika malog ležaja",pravilo:"raj",m:2,jed:"kom",siguran:true},
+  {grupa:"stub",sifra:"PRG-09",naziv:"Odvod vode oluka",pravilo:"stub",m:1,jed:"kom",siguran:true},
+  {grupa:"stub",sifra:"PRG-48",naziv:"Spoj stub–oluk",pravilo:"stub",m:1,jed:"kom",siguran:true},
+  {grupa:"stub",sifra:"PRG-84",naziv:"Donja stopa stuba",pravilo:"stub",m:1,jed:"kom",siguran:true},
+  {grupa:"motor",sifra:"PRG-18",naziv:"Aparat motora",pravilo:"fiksno",m:1,jed:"kom",siguran:true},
+  {grupa:"motor",sifra:"PRG-44",naziv:"Fiksator motora na šinu",pravilo:"fiksno",m:2,jed:"kom",siguran:true},
+  {grupa:"motor",sifra:"PRG-45",naziv:"Podloška fiksatora motora",pravilo:"fiksno",m:1,jed:"kom",siguran:true},
+  {grupa:"kornis",sifra:"PRG-19",naziv:"Ugaoni umetak tankog korniša",fn:c=>c.tanki*2,opis:"tanki × 2",jed:"kom",siguran:false},
+  {grupa:"kornis",sifra:"PRG-20",naziv:"Srednji umetak tankog korniša",fn:c=>c.tanki*Math.max(0,c.polja-1),opis:"tanki × (polja−1)",jed:"kom",siguran:false},
+  {grupa:"kornis",sifra:"PRG-21",naziv:"Ugaoni umetak debelog korniša",fn:c=>c.debeli*2,opis:"debeli × 2",jed:"kom",siguran:false},
+  {grupa:"kornis",sifra:"PRG-22",naziv:"Srednji umetak debelog korniša",fn:c=>c.debeli*Math.max(0,c.polja-1),opis:"debeli × (polja−1)",jed:"kom",siguran:false},
+  {grupa:"fitilj",sifra:"PRG-102",naziv:"Fitilj / keder šine",fn:c=>c.raja*c.duzRaja/1000*2,opis:"raja × dužina raja × 2",jed:"m",siguran:false},
+  {grupa:"fitilj",sifra:"PRG-104",naziv:"Fitilj / keder oluka",fn:c=>c.duzOluka/1000,opis:"dužina oluka",jed:"m",siguran:false},
+  {grupa:"fitilj",sifra:"PRG-101",naziv:"Fitilj / keder cerade (korniš)",fn:c=>c.kornisaUkupno*c.duzKornisa/1000,opis:"kornišа × dužina korniša",jed:"m",siguran:false},
+];
+const OKOV_GRUPE=[
+  {id:"raj",t:"Po raju (šini)"},
+  {id:"stub",t:"Po stubu"},
+  {id:"kornis",t:"Takozi / umetci korniša"},
+  {id:"fitilj",t:"Kederi i fitilji (gumene trake)"},
+];
+
+function compute(I){
+  const D=+I.sirina||0, B=+I.dubina||0, A=+I.zadnjaVisina||0, Cc=+I.prednjaVisina||0;
+  const cev=I.cev, sirinaRaja=+I.sirinaRaja||90;
+  const cevHoriz = cev==="100x100"?100:40;
+
+  const brStubova = D<=3900?2:D<=7800?3:D<=10000?4:0;
+  const brRaja=brStubova, brPolja=Math.max(0,brRaja-1);
+  const sirinaPolja = brPolja?round((D-brRaja*sirinaRaja)/brPolja,0):0;
+  const preko10m = D>10000;
+
+  const kat1=A-Cc+150, kat2=B-cevHoriz;
+  const pad = kat2?round((kat1/kat2)*100,1):0;
+  const padOk = pad>=8&&pad<=10;
+  const dijagonala = round(Math.sqrt(kat1*kat1+kat2*kat2),0);
+  const duzRaja = dijagonala-200;
+
+  const sirinaCerade=D, duzCerade=dijagonala+400;
+  const korisnaZaKornize = dijagonala-100-70;
+  const predlogIntervala = suggestIntervala(korisnaZaKornize);
+  const brIntervala = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
+  const razmakKornisa = brIntervala?round(korisnaZaKornize/brIntervala,0):0;
+  const razmakOk = razmakKornisa>=399&&razmakKornisa<=499;
+  const kornisaUkupno = brIntervala+1;
+  const debeli=2, tanki=Math.max(0,kornisaUkupno-2);
+  const tankiSvetlo=ceil(tanki/2), tankiBez=tanki-tankiSvetlo;
+
+  const keder=I.keder, kornisTip=I.kornisTip;
+  const tipSklopa = keder==="jednostrani"?"A — jednodelni (jednostrani)"
+    :kornisTip==="jednodelni"?"B — jednodelni + 2 konektora"
+    :"C — sečen + "+(brPolja+1)+" konektora";
+  const konektoraPoRedu = keder==="jednostrani"?0:kornisTip==="jednodelni"?2:brPolja+1;
+  const duzKornisa = keder==="jednostrani"?sirinaCerade
+    :kornisTip==="jednodelni"?sirinaCerade-100
+    :brPolja?round((sirinaCerade-(brPolja+1)*50)/brPolja,0):0;
+  const konektoraUkupno = kornisaUkupno*konektoraPoRedu;
+
+  const duzOluka=D+150;
+  const limKom=ceil(D/1250);
+  const cevMotoraTip=I.cevMotora;
+  const duzCevMotora=(cevMotoraTip==="jednodelna"?D:sirinaPolja)+100;
+  const brCevMotora=cevMotoraTip==="jednodelna"?1:brPolja;
+  const brPanela=brPolja;
+  const duzPanela=sirinaPolja+100;
+  const duzStuba=Cc;
+
+  const svetalaPoKornizu=+I.svetalaPoKornizu||0;
+  const razmakRupa=svetalaPoKornizu?round((duzKornisa-20)/svetalaPoKornizu,0):0;
+  const odIviceDoRupe=round(razmakRupa/2,0);
+  const svetalaUkupno=svetalaPoKornizu*tankiSvetlo;
+
+  const potrosnja=round(svetalaUkupno*0.34,2);
+  const trafo = potrosnja<=10?"10A":potrosnja<=20?"20A":potrosnja<=30?"30A":"⚠ preko 30A";
+
+  return {
+    in:{A,B,C:Cc,D,cev,sirinaRaja},
+    auto:{brStubova,brRaja,brPolja,sirinaPolja,preko10m},
+    raj:{kat1,kat2,pad,padOk,dijagonala,duzRaja},
+    cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
+      razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez},
+    kornis:{tipSklopa,konektoraPoRedu,duzKornisa,konektoraUkupno,kornisTip,keder},
+    profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
+    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,svetalaUkupno,potrosnja,trafo},
+  };
+}
+
+function ceradaMap(R){
+  const n=R.cerada.kornisaUkupno, out=[];
+  for(let i=1;i<=n;i++){
+    const debeli=i===1||i===n;
+    const pos=i===n?R.cerada.duzCerade-470:100+(i-1)*R.cerada.razmakKornisa;
+    const tip=debeli?"debeli":(i-1)%2===1?"svetlo":"tanki";
+    out.push({i,pos,tip});
+  }
+  return out;
+}
+
+function okov(R){
+  const c={
+    raja:R.auto.brRaja,stubova:R.auto.brStubova,polja:R.auto.brPolja,
+    kornisaUkupno:R.cerada.kornisaUkupno,debeli:R.cerada.debeli,tanki:R.cerada.tanki,
+    tankiSvetlo:R.cerada.tankiSvetlo,svetla:R.led.svetalaUkupno,cevMotora:R.profili2.brCevMotora,
+    duzRaja:R.raj.duzRaja,duzOluka:R.profili2.duzOluka,duzKornisa:R.kornis.duzKornisa,
+  };
+  const txt={raj:"× broj raja ("+c.raja+")",stub:"× broj stubova ("+c.stubova+")",fiksno:"fiksno"};
+  const baze={raj:c.raja,stub:c.stubova,fiksno:1};
+  return KATALOG_OKOVA.map(it=>{
+    let kol,pravilo;
+    if(it.fn){kol=it.fn(c);pravilo=it.opis;}
+    else{kol=(baze[it.pravilo]||0)*(it.m||1);pravilo=((it.m&&it.m!==1)?it.m+" ":"")+txt[it.pravilo];}
+    return Object.assign({},it,{kol:round(kol,it.jed==="m"?1:0),pravilo});
+  });
+}
+
+function metalniDelovi(I,R){
+  return [
+    {sifra:"—",naziv:"Cev na zidu  "+I.cev,pravilo:"nosač pergole — dužina = širina",
+      kol:1,jed:"kom",mera:R.in.D+" mm",siguran:true},
+    {sifra:"—",naziv:"Bočni poklopac oluka  L + D",pravilo:"levi + desni — u kompletu",
+      kol:1,jed:"komplet",mera:"—",siguran:true},
+    {sifra:"—",naziv:"Zaštitni lim uz zid",pravilo:"pokriva širinu (lim 1250×800)",
+      kol:R.profili2.limKom,jed:"kom",mera:"1250 × 800",siguran:true},
+  ];
+}
+
+function elektronika(I,R){
+  const motorNaziv=(I.motor||"").trim()||"Motor";
+  return [
+    {naziv:motorNaziv,pravilo:(I.motor||"").trim()?"po izboru":"model po izboru — upiši u nalog",kol:1,jed:"kom",mera:"—"},
+    {naziv:"Daljinski upravljač",pravilo:"posebno od motora",kol:1,jed:"kom",mera:"—"},
+    {naziv:"Trafo  "+R.led.trafo,pravilo:"uz svaki sistem — "+R.led.potrosnja+"A ("+R.led.svetalaUkupno+" × 0,34A)",kol:1,jed:"kom",mera:"—"},
+    {naziv:"Dimer",pravilo:"uz svaki sistem — za LED rasvetu",kol:1,jed:"kom",mera:"—"},
+    {naziv:"LED svetlo (24V)",pravilo:"× ukupno svetala",kol:R.led.svetalaUkupno,jed:"kom",mera:"—"},
+  ];
+}
+
+let steelRows=[{profil:"100x100",kom:"",duzina:""}];
+function renderSteelInputs(){
+  const wrap=$("steelRows"), on=$("celicnaOn").checked;
+  wrap.innerHTML="";
+  wrap.style.display = on ? "block" : "none";
+  $("addSteel").style.display = on ? "inline-block" : "none";
+  if(!on) return;
+  steelRows.forEach((r,i)=>{
+    const div=document.createElement("div");
+    div.className="steel-r";
+    div.innerHTML=`
+      <label><div class="lbl">Profil cevi</div>
+        <select data-i="${i}" data-k="profil">
+          <option${r.profil==="100x100"?" selected":""}>100x100</option>
+          <option${r.profil==="80x40"?" selected":""}>80x40</option>
+          <option${r.profil==="120x80"?" selected":""}>120x80</option>
+        </select></label>
+      <label><div class="lbl">Komada</div>
+        <input type="number" data-i="${i}" data-k="kom" value="${esc(r.kom)}" placeholder="0"></label>
+      <label><div class="lbl">Dužina (mm)</div>
+        <input type="number" data-i="${i}" data-k="duzina" value="${esc(r.duzina)}" placeholder="0"></label>
+      <button class="btn-mini" type="button" data-del="${i}">✕</button>`;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll("select,input").forEach(el=>{
+    el.addEventListener("input",e=>{
+      const i=+e.target.dataset.i,k=e.target.dataset.k;
+      steelRows[i][k]=e.target.value; render();
+    });
+  });
+  wrap.querySelectorAll("[data-del]").forEach(b=>{
+    b.addEventListener("click",e=>{
+      const i=+e.target.dataset.del;
+      steelRows.splice(i,1);
+      if(steelRows.length===0) steelRows.push({profil:"100x100",kom:"",duzina:""});
+      renderSteelInputs(); render();
+    });
+  });
+}
+
+const BOJA={debeli:"#191814",svetlo:"#a9743c",tanki:"#c9b896"};
+const LABELA={debeli:"■ DEBELI",svetlo:"▬ tanki ★ svetlo",tanki:"▬ tanki"};
+
+function render(){
+  const I={
+    sirina:$("sirina").value,dubina:$("dubina").value,zadnjaVisina:$("zadnjaVisina").value,
+    prednjaVisina:$("prednjaVisina").value,cev:$("cev").value,stub:$("stub").value,
+    keder:$("keder").value,sirinaRaja:$("sirinaRaja").value,kornisTip:$("kornisTip").value,
+    cevMotora:$("cevMotora").value,bojaProfila:$("bojaProfila").value,bojaCerade:$("bojaCerade").value,
+    autoInterval:$("autoInterval").checked,brIntervala:$("brIntervala").value,
+    svetalaPoKornizu:$("svetalaPoKornizu").value,motor:$("motor").value,
+    celicnaOn:$("celicnaOn").checked,
+    brNaloga:$("brNaloga").value,kupac:$("kupac").value,adresa:$("adresa").value,
+    datum:$("datum").value,rok:$("rok").value,radnik:$("radnik").value,
+  };
+  const R=compute(I), cMap=ceradaMap(R), ok=okov(R);
+  const metal=metalniDelovi(I,R), elek=elektronika(I,R);
+
+  const autoOn=$("autoInterval").checked;
+  $("brIntervala").disabled=autoOn;
+  if(autoOn) $("brIntervala").value=R.cerada.predlogIntervala;
+  $("intervalSub").textContent = autoOn ? ("auto-predlog: "+R.cerada.predlogIntervala) : "ručni unos";
+  const as=$("autoStat");
+  as.textContent = R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
+  as.style.color = R.cerada.razmakOk ? "#5fa86f" : "#d8754a";
+
+  const profili=[
+    {naziv:"RAJ (šina "+I.sirinaRaja+"mm)",mera:R.raj.duzRaja,kom:R.auto.brRaja,nap:"★ Dijagonala − 200mm"},
+    {naziv:"OLUK",mera:R.profili2.duzOluka,kom:1,nap:"Širina + 150mm"},
+    {naziv:"STUB (prednji)",mera:R.profili2.duzStuba,kom:R.auto.brStubova,nap:"→ Prednja visina"},
+    {naziv:"CEV MOTORA",mera:R.profili2.duzCevMotora,kom:R.profili2.brCevMotora,nap:R.profili2.cevMotoraTip},
+    {naziv:"PANEL (između rajeva)",mera:R.profili2.duzPanela,kom:R.profili2.brPanela,nap:"→ Širina polja + 100"},
+    {naziv:"★ KORNIŠ — VELIKI DEBELI",mera:R.kornis.duzKornisa,kom:R.cerada.debeli,nap:"Uz zid + uz oluk, BEZ rupa"},
+    {naziv:"★ KORNIŠ — TANKI sa svetlom",mera:R.kornis.duzKornisa,kom:R.cerada.tankiSvetlo,nap:"★ Izbušene rupe za LED"},
+    {naziv:"★ KORNIŠ — TANKI bez svetla",mera:R.kornis.duzKornisa,kom:R.cerada.tankiBez,nap:"Bez rupa"},
+  ];
+
+  let html="";
+  html+=`<div class="doc-head">
+    <div><div class="doc-title">RADNI NALOG</div>
+      <div class="doc-sub">AG GROUP · LISTA ZA SEČENJE + MATERIJAL</div></div>
+    <div class="doc-meta"><div class="badge">NALOG ZA PROIZVODNJU</div>
+      <div style="margin-top:4px">Br. naloga: <b>${esc(I.brNaloga)||"______"}</b></div>
+      <div>Datum: <b>${esc(I.datum)||"—"}</b> · Rok: <b>${esc(I.rok)||"—"}</b></div>
+    </div></div>`;
+
+  html+=`<div class="info-row">
+    <div class="card"><div class="card-t">KUPAC</div>
+      <div style="font-size:14px;margin-top:3px"><b>${esc(I.kupac)||"—"}</b></div>
+      <div style="font-size:12px;color:#5a5446">${esc(I.adresa)||"—"}</div>
+      <div style="font-size:12px;margin-top:5px">Radnik: <b>${esc(I.radnik)||"________________"}</b></div></div>
+    <div class="card"><div class="card-t">KONFIGURACIJA</div>
+      <div class="mono" style="font-size:11px;margin-top:3px;line-height:1.65">
+        Cev: <b>${esc(I.cev)}</b> · Stub: <b>${esc(I.stub)}</b> · Raj: <b>${esc(I.sirinaRaja)}mm</b><br>
+        Keder: <b>${esc(I.keder)}</b> · Korniš: <b>${esc(I.kornisTip)}</b><br>
+        Boja profila: <b>RAL ${esc(I.bojaProfila)}</b> · Cerada: <b>${esc(I.bojaCerade)}</b><br>
+        Sklop korniša: <b>${esc(R.kornis.tipSklopa)}</b></div></div></div>`;
+
+  const dims=[["D · Širina",R.in.D],["B · Dubina",R.in.B],["A · Zadnja",R.in.A],["C · Prednja",R.in.C]];
+  html+=`<div class="dims">`+dims.map(d=>`<div class="dim"><div class="dim-k">${d[0]}</div><div class="dim-v">${d[1]} mm</div></div>`).join("")+`</div>`;
+  html+=`<div class="calc-line">
+    <span>Stubova: <b>${R.auto.brStubova}</b></span>
+    <span>Raja: <b>${R.auto.brRaja}</b></span>
+    <span>Polja: <b>${R.auto.brPolja}</b> (${R.auto.sirinaPolja} mm)</span>
+    <span>Dijagonala: <b>${R.raj.dijagonala} mm</b></span>
+    <span style="color:${R.raj.padOk?'#3f7a4d':'#bd4a2a'};font-weight:700">Pad: ${R.raj.pad}% ${R.raj.padOk?'✓':'⚠ van 8–10%'}</span>
+    ${R.auto.preko10m?'<span style="color:#bd4a2a;font-weight:700">⚠ ŠIRINA PREKO 10m</span>':''}
+  </div>`;
+
+  /* 01 — ALUMINIJUM */
+  html+=`<div class="sec"><div class="sec-h"><span class="sec-n acc">01</span>
+    <h3 class="sec-t">Aluminijum — za sečenje</h3></div>
+    <table><thead><tr>
+      <th style="width:24px">#</th><th>Naziv</th>
+      <th style="width:110px;text-align:right">Mera</th>
+      <th style="width:42px;text-align:center">Kom</th>
+      <th style="width:30px;text-align:center">✓</th>
+      <th style="width:150px">Napomena</th>
+    </tr></thead><tbody>`;
+  profili.forEach((p,i)=>{
+    html+=`<tr style="background:${i%2?'#ebe7db':'transparent'}">
+      <td class="m">${i+1}</td><td style="font-weight:600">${esc(p.naziv)}</td>
+      <td class="m" style="text-align:right"><b style="font-size:13px">${p.mera} mm</b></td>
+      <td class="m" style="text-align:center;font-weight:700;font-size:13px">${p.kom}</td>
+      <td style="text-align:center"><span class="chk"></span></td>
+      <td style="font-size:10.5px;color:#5a5446">${esc(p.nap)}</td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  /* 02 — CERADA */
+  html+=`<div class="sec"><div class="sec-h"><span class="sec-n acc">02</span>
+    <h3 class="sec-t">Cerada — sečenje i mapa kedera</h3></div>
+    <div class="cerada-wrap"><div>
+      <div class="box-cut"><div class="box-cut-t">MERA ZA KROJENJE</div>
+        <div class="box-cut-v">${R.cerada.sirinaCerade} × ${R.cerada.duzCerade}</div>
+        <div style="font-size:10px;color:#888">širina × dužina (mm) · 1 kom</div></div>
+      <div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
+        <div>Broj kedera: <b>${R.cerada.kornisaUkupno}</b></div>
+        <div>Intervala: <b>${R.cerada.brIntervala}</b> ${autoOn?'(auto)':'(ručno)'}</div>
+        <div>Razmak (centar–centar): <b>${R.cerada.razmakKornisa} mm</b></div>
+        <div>Od prednje ivice do K1: <b>100 mm</b></div>
+        <div>Rezerva uz zid: <b>470 mm</b> (400 + 70)</div></div>
+      <div class="${R.cerada.razmakOk?'note-ok':'note-warn'}">
+        <b style="color:${R.cerada.razmakOk?'#3f7a4d':'#bd4a2a'}">${R.cerada.razmakOk?'✓':'⚠'} Razmak ${R.cerada.razmakKornisa} mm</b> —
+        ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}</div>
+    </div>`;
+
+  /* mapa cerade */
+  const mapH=300;
+  html+=`<div class="mapa">
+    <div class="mapa-edge"><span>▼ PREDNJA IVICA (uz oluk)</span><span>0 mm</span></div>
+    <div class="mapa-body" style="height:${mapH}px">`;
+  const n=cMap.length;
+  cMap.forEach(k=>{
+    const top=(k.pos/R.cerada.duzCerade)*mapH;
+    const h=k.tip==="debeli"?8:5;
+    const shadow=k.tip==="svetlo"?"box-shadow:0 0 0 1px #8a5d2e;":"";
+    const mark=k.tip==="svetlo"?"★":k.tip==="debeli"?"■":"";
+    const isLast=k.i===n;
+    if(isLast){
+      html+=`<div class="keder" style="top:${top-4}px;z-index:5">
+        <div class="keder-lbl" style="margin:0 0 1px 0">
+          <span style="background:#191814;color:#f6f4ee;padding:1px 5px;border-radius:2px;font-weight:700">K${k.i} ${mark} (zadnji)</span>
+          <span style="background:#191814;color:#f6f4ee;padding:1px 5px;border-radius:2px;font-weight:700">${round(k.pos)} mm</span>
+        </div>
+        <div class="keder-bar" style="height:${h}px;background:${BOJA[k.tip]}"></div>
+      </div>`;
+    } else {
+      html+=`<div class="keder" style="top:${top-4}px">
+        <div class="keder-bar" style="height:${h}px;background:${BOJA[k.tip]};${shadow}"></div>
+        <div class="keder-lbl"><span style="font-weight:700">K${k.i} ${mark}</span><span>${round(k.pos)} mm</span></div>
+      </div>`;
     }
+  });
+  const rezH=(470/R.cerada.duzCerade)*mapH;
+  html+=`<div class="rezerva" style="height:${rezH}px"><span>▒ REZERVA UZ ZID 470mm</span></div>
+    </div>
+    <div class="mapa-edge"><span>▲ ZADNJA IVICA (uz zid)</span><span>${R.cerada.duzCerade} mm</span></div>
+    <div class="legend">`+
+    Object.keys(BOJA).map(k=>`<span><span class="swatch" style="background:${BOJA[k]}"></span>${LABELA[k]}</span>`).join("")+
+    `</div></div></div></div>`;
 
-    // ============================================================
-    // OVDE UBACI SVOJ JAVASCRIPT KOD
-    // ============================================================
-  </script>
+  /* ŠABLON upozorenje */
+  html+=`<div class="sec"><div class="shablon">
+    <b style="color:#bd4a2a">⚠ ŠABLON:</b> stavke označene <b>⚠</b> imaju procenjeno pravilo količine —
+    uskladiti sa stvarnim AG GROUP spiskom okova. Ostale su strukturno sigurne.</div></div>`;
 
+  /* 03 — BRAVARIJA / OKOV */
+  html+=`<div class="sec"><div class="sec-h"><span class="sec-n">03</span>
+    <h3 class="sec-t">Bravarija / okov</h3></div>`;
+  html+=`<div class="grp-t">METALNI DELOVI</div><table><tbody>`;
+  metal.forEach((m,i)=>{
+    html+=`<tr style="background:${i%2?'#ebe7db':'transparent'}">
+      <td class="m" style="width:54px">${m.sifra}</td>
+      <td style="font-weight:600">${esc(m.naziv)}</td>
+      <td class="m" style="width:84px">${esc(m.mera)}</td>
+      <td style="font-size:10px;color:#888;width:165px">${esc(m.pravilo)}</td>
+      <td class="m" style="width:66px;text-align:right;font-weight:700;font-size:13px">${m.kol} ${m.jed}</td>
+      <td style="text-align:center;width:28px"><span class="chk"></span></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  OKOV_GRUPE.forEach(g=>{
+    const stavke=ok.filter(x=>x.grupa===g.id);
+    if(!stavke.length)return;
+    html+=`<div class="grp-t">${g.t.toUpperCase()}</div><table><tbody>`;
+    stavke.forEach((s,i)=>{
+      html+=`<tr style="background:${i%2?'#ebe7db':'transparent'}">
+        <td class="m" style="width:60px">${s.sifra}</td>
+        <td style="font-weight:600">${esc(s.naziv)} ${!s.siguran?'<span style="color:#bd4a2a">⚠</span>':''}</td>
+        <td style="font-size:10px;color:#888;width:170px">${esc(s.pravilo)}</td>
+        <td class="m" style="width:62px;text-align:right;font-weight:700;font-size:13px">${s.kol} ${s.jed}</td>
+        <td style="text-align:center;width:28px"><span class="chk"></span></td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  });
+  html+=`</div>`;
+
+  /* 04 — ELEKTRONIKA */
+  html+=`<div class="sec"><div class="sec-h"><span class="sec-n">04</span>
+    <h3 class="sec-t">Elektronika</h3></div>
+    <div style="font-size:10.5px;color:#5a5446;margin-bottom:4px">
+      Motor, daljinski, trafo i dimer idu uz svaki sistem da bi radila LED rasveta.</div>
+    <table><tbody>`;
+  elek.forEach((e,i)=>{
+    html+=`<tr style="background:${i%2?'#ebe7db':'transparent'}">
+      <td style="font-weight:600;width:38%">${esc(e.naziv)}</td>
+      <td class="m" style="width:60px">${esc(e.mera)}</td>
+      <td style="font-size:10px;color:#888">${esc(e.pravilo)}</td>
+      <td class="m" style="width:66px;text-align:right;font-weight:700;font-size:13px">${e.kol} ${e.jed}</td>
+      <td style="text-align:center;width:28px"><span class="chk"></span></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  html+=`<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
+    <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
+      BUŠENJE RUPA ZA LED — samo na tankim kornišima sa svetlom (${R.cerada.tankiSvetlo} kom)</div>
+    <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b></div>
+    <div>Razmak rupa (centri): <b>${R.led.razmakRupa} mm</b></div>
+    <div>Od ivice do prve rupe: <b>${R.led.odIviceDoRupe} mm</b></div>
+    <div style="margin-top:4px;padding-top:4px;border-top:1px solid #ebe7db">
+      ★ UKUPNO LED: <b style="font-size:14px">${R.led.svetalaUkupno} kom</b></div></div></div>`;
+
+  /* 05 — ČELIČNA KONSTRUKCIJA */
+  html+=`<div class="sec"><div class="sec-h"><span class="sec-n">05</span>
+    <h3 class="sec-t">Čelična konstrukcija (opciono)</h3></div>`;
+  if(!I.celicnaOn){
+    html+=`<div class="opt-off">Za ovaj objekat <b>nije</b> potrebna čelična konstrukcija.</div>`;
+  } else {
+    const valid=steelRows.filter(r=>(+r.kom>0)&&(+r.duzina>0));
+    if(!valid.length){
+      html+=`<div class="note-warn"><b style="color:#bd4a2a">⚠</b> Čelična konstrukcija je uključena, ali nije unesena nijedna cev. Dodaj profil, broj komada i dužinu.</div>`;
+    } else {
+      html+=`<div style="font-size:10.5px;color:#5a5446;margin-bottom:4px">Za poručivanje materijala — čelične cevi za podkonstrukciju.</div>
+        <table><thead><tr>
+          <th>Profil cevi</th>
+          <th style="width:130px;text-align:right">Dužina (mera)</th>
+          <th style="width:50px;text-align:center">Kom</th>
+          <th style="width:90px;text-align:right">Ukupno (m)</th>
+          <th style="width:30px;text-align:center">✓</th>
+        </tr></thead><tbody>`;
+      let totalM=0;
+      valid.forEach((r,i)=>{
+        const uk=(+r.kom*+r.duzina)/1000;
+        totalM+=uk;
+        html+=`<tr style="background:${i%2?'#ebe7db':'transparent'}">
+          <td style="font-weight:600">Čelična cev ${esc(r.profil)}</td>
+          <td class="m" style="text-align:right"><b style="font-size:13px">${esc(r.duzina)} mm</b></td>
+          <td class="m" style="text-align:center;font-weight:700;font-size:13px">${esc(r.kom)}</td>
+          <td class="m" style="text-align:right;font-weight:700">${round(uk,2)} m</td>
+          <td style="text-align:center"><span class="chk"></span></td></tr>`;
+      });
+      html+=`<tr style="background:#191814;color:#fff">
+        <td colspan="3" style="font-weight:700;border:0">UKUPNO ČELIČNE CEVI</td>
+        <td class="m" style="text-align:right;font-weight:700;border:0">${round(totalM,2)} m</td>
+        <td style="border:0"></td></tr></tbody></table>`;
+    }
+  }
+  html+=`</div>`;
+
+  /* napomene */
+  html+=`<div class="sec"><div class="sec-h"><span class="sec-n acc">!!</span>
+    <h3 class="sec-t">Napomene za radnika</h3></div>
+    <ol class="napomene">
+      <li>Dužina raja = dijagonala (Pitagora) − 200mm.</li>
+      <li>Cerada: prvi keder na <b>100mm</b> od prednje ivice, rezerva uz zid <b>470mm</b>.</li>
+      <li>Razmak kedera mora biti <b>399–499mm</b> — program uklapa automatski.</li>
+      <li>Debeli korniši: prvi i poslednji, bez rupa. Tanki sa svetlom: naizmenično.</li>
+      <li>Cev na zidu se prvo učvrsti na zid — na nju se montira pergola.</li>
+      <li>Rupe za LED se buše <b>samo</b> na tankim kornišima sa ★.</li>
+      <li>Okov sa oznakom <b>⚠</b> — proveriti količinu pre izdavanja iz magacina.</li>
+    </ol></div>`;
+
+  html+=`<div class="potpisi">
+    <div class="potpis">Pripremio / radionica<div class="potpis-l">Ime / potpis: ______________________</div></div>
+    <div class="potpis">Montirao / montaža<div class="potpis-l">Ime / potpis: ______________________</div></div>
+  </div>
+  <div class="foot">AG GROUP · program za sečenje pergole · jezgro proračuna v8.1 + materijal i okov · proveriti pre proizvodnje</div>`;
+
+  $("doc").innerHTML=html;
+}
+
+(function(){
+  $("datum").value = new Date().toLocaleDateString("sr-RS");
+  $("celicnaOn").addEventListener("change",()=>{renderSteelInputs();render();});
+  $("addSteel").addEventListener("click",()=>{
+    steelRows.push({profil:"100x100",kom:"",duzina:""});
+    renderSteelInputs(); render();
+  });
+  document.querySelectorAll(".panel input,.panel select").forEach(el=>{
+    if(el.id==="celicnaOn")return;
+    el.addEventListener("input",render);
+    el.addEventListener("change",render);
+  });
+  renderSteelInputs();
+  render();
+})();
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registrovan:', reg.scope))
+      .catch(err => console.warn('SW greška:', err));
+  });
+}
+</script>
 </body>
 </html>
