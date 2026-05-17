@@ -473,9 +473,12 @@ function compute(I){
 
 function ceradaMap(R){
   const n=R.cerada.kornisaUkupno, out=[];
+  const K=R.cerada.korisnaZaKornize;
   for(let i=1;i<=n;i++){
     const debeli=i===1||i===n;
-    const pos=i===n?R.cerada.duzCerade-470:100+(i-1)*R.cerada.razmakKornisa;
+    const pos = i===1 ? 100
+              : i===n ? R.cerada.duzCerade-470
+              : Math.round(100 + (i-1)*K/(n-1));
     const tip=debeli?"debeli":(i-1)%2===1?"svetlo":"tanki";
     out.push({i,pos,tip});
   }
