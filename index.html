@@ -144,6 +144,25 @@
     .sec{break-inside:avoid;}
     table{break-inside:auto;} tr{break-inside:avoid;}
   }
+  .arch-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
+  .arch-overlay.open{display:flex;align-items:flex-start;justify-content:flex-end;}
+  .arch-panel{background:var(--shell2);border-left:1px solid var(--line);width:min(400px,100vw);height:100vh;overflow-y:auto;display:flex;flex-direction:column;}
+  .arch-head{background:var(--ink);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  .arch-head-t{font-family:'Fjalla One',sans-serif;color:var(--bronze);font-size:15px;letter-spacing:.05em;}
+  .arch-close{background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;}
+  .arch-close:hover{color:#fff;}
+  .arch-empty{padding:40px 20px;color:var(--muted);text-align:center;font-size:13px;}
+  .arch-item{padding:13px 16px;border-bottom:1px solid var(--line);}
+  .arch-item-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px;}
+  .arch-item-nr{font-family:'Fjalla One',sans-serif;color:#fff;font-size:13px;}
+  .arch-item-date{font-size:10px;color:var(--muted);flex-shrink:0;}
+  .arch-item-sub{font-size:11px;color:#a09880;margin-bottom:9px;}
+  .arch-item-acts{display:flex;gap:6px;}
+  .btn-xs{border:0;padding:5px 11px;border-radius:4px;font-family:'Fjalla One',sans-serif;font-size:11px;cursor:pointer;letter-spacing:.03em;}
+  .btn-xs-load{background:var(--bronze);color:#fff;}
+  .btn-xs-load:hover{background:var(--bronzeD);}
+  .btn-xs-del{background:#2e1a1a;color:#e07070;border:1px solid #5a2020;}
+  .btn-xs-del:hover{background:#3e2020;}
 </style>
 </head>
 <body>
@@ -159,6 +178,8 @@
   <div class="topbar-actions">
     <button class="btn btn-secondary active" id="btnNalog" onclick="switchView('nalog')">Nalog</button>
     <button class="btn btn-secondary" id="btnObracun" onclick="switchView('obracun')">Obračun</button>
+    <button class="btn btn-secondary" id="btnSacuvaj" onclick="saveOrder()">💾 Sačuvaj</button>
+    <button class="btn btn-secondary" onclick="openArchive()">📁 Arhiva</button>
     <button class="btn btn-primary" onclick="window.print()">⎙ PDF</button>
   </div>
 </div>
@@ -1160,5 +1181,100 @@ function renderObracun(I, R, alu, okov, obr){
     });
   }
   </script>
+
+<div class="arch-overlay no-print" id="archOverlay" onclick="if(event.target===this)closeArchive()">
+  <div class="arch-panel">
+    <div class="arch-head">
+      <span class="arch-head-t">ARHIVA NALOGA</span>
+      <button class="arch-close" onclick="closeArchive()">✕</button>
+    </div>
+    <div id="archList"></div>
+  </div>
+</div>
+
+<script>
+/* ───────── ARHIVA ───────── */
+const ARCH_KEY = 'ag_arhiva';
+const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stub',
+  'sirinaRaja','keder','kornisTip','cevMotora','bojaRal','bojaCerade',
+  'autoInterval','brIntervala','svetalaPoKornizu','motor','celicnaOn',
+  'brNaloga','kupac','adresa','datum','rok','radnik'];
+
+function saveOrder(){
+  const fields = {};
+  ARCH_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    fields[id] = el.type==='checkbox' ? el.checked : el.value;
+  });
+  fields._steelRows = JSON.stringify(steelRows);
+  const entry = {id: Date.now(), savedAt: new Date().toLocaleString('sr-RS'), fields};
+  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
+  arch.unshift(entry);
+  localStorage.setItem(ARCH_KEY, JSON.stringify(arch));
+  const btn = document.getElementById('btnSacuvaj');
+  const orig = btn.textContent;
+  btn.textContent = '✓ Sačuvano';
+  btn.disabled = true;
+  setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; }, 1600);
+}
+
+function openArchive(){
+  document.getElementById('archOverlay').classList.add('open');
+  renderArchive();
+}
+
+function closeArchive(){
+  document.getElementById('archOverlay').classList.remove('open');
+}
+
+function renderArchive(){
+  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
+  const cont = document.getElementById('archList');
+  if(!arch.length){
+    cont.innerHTML = '<div class="arch-empty">Nema sačuvanih naloga.<br>Klikni 💾 Sačuvaj da čuvaš trenutni nalog.</div>';
+    return;
+  }
+  cont.innerHTML = arch.map(o=>{
+    const f = o.fields;
+    const naziv = [f.brNaloga, f.kupac].filter(Boolean).join(' · ') || '(bez naziva)';
+    const opis = [f.sirina&&f.dubina ? f.sirina+'×'+f.dubina+'mm' : '', f.datum].filter(Boolean).join(' · ');
+    return `<div class="arch-item">
+      <div class="arch-item-head">
+        <span class="arch-item-nr">${naziv}</span>
+        <span class="arch-item-date">${o.savedAt}</span>
+      </div>
+      <div class="arch-item-sub">${opis}</div>
+      <div class="arch-item-acts">
+        <button class="btn-xs btn-xs-load" onclick="loadOrder(${o.id})">Učitaj nalog</button>
+        <button class="btn-xs btn-xs-del" onclick="deleteOrder(${o.id})">Obriši</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadOrder(id){
+  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
+  const entry = arch.find(o=>o.id===id);
+  if(!entry) return;
+  const f = entry.fields;
+  ARCH_FIELDS.forEach(fid=>{
+    const el = document.getElementById(fid);
+    if(!el) return;
+    if(el.type==='checkbox') el.checked = !!f[fid];
+    else el.value = f[fid]??'';
+  });
+  if(f._steelRows){ steelRows=JSON.parse(f._steelRows); renderSteelInputs(); }
+  render();
+  closeArchive();
+}
+
+function deleteOrder(id){
+  if(!confirm('Obrisati ovaj nalog iz arhive?')) return;
+  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]').filter(o=>o.id!==id);
+  localStorage.setItem(ARCH_KEY, JSON.stringify(arch));
+  renderArchive();
+}
+</script>
 </body>
 </html>
