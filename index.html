@@ -200,8 +200,8 @@
 
     <div class="grp">② IZBOR PROFILA</div>
     <div class="row">
-      <label><div class="lbl">Cev na zidu</div><div class="sub">nosač pergole — uvek ide</div>
-        <select id="cev"><option>100x100</option><option selected>80x40</option></select></label>
+      <label><div class="lbl">Cev na zidu</div><div class="sub">nosač pergole</div>
+        <select id="cev"><option value="nema">Nema cevi</option><option value="80x40" selected>80×40</option><option value="100x100">100×100</option></select></label>
       <label><div class="lbl">Stub</div>
         <select id="stub"><option selected>110x144</option><option>100x100</option></select></label>
       <label><div class="lbl">Širina raja</div><div class="sub">90×150 ili 110×150</div>
@@ -222,7 +222,7 @@
           <option value="">— ostalo / ručno —</option>
         </select></label>
       <label><div class="lbl">Boja cerade</div>
-        <input type="text" id="bojaCerade" value="Antracit"></label>
+        <select id="bojaCerade"><option selected>Antracit</option><option>Krem</option><option>Crna</option><option>Miš boja</option></select></label>
     </div>
 
     <div class="grp">③ KORNIŠI · MOTOR · SVETLA</div>
@@ -429,7 +429,7 @@ const OKOV_PODSEKCIJE = [
 function compute(I){
   const D=+I.sirina||0, B=+I.dubina||0, A=+I.zadnjaVisina||0, Cc=+I.prednjaVisina||0;
   const cev=I.cev, sirinaRaja=+I.sirinaRaja||90;
-  const cevHoriz = cev==="100x100"?100:40;
+  const cevHoriz = cev==="100x100"?100:cev==="80x40"?40:0;
 
   const brStubova = D<=3900?2:D<=7800?3:D<=10000?4:0;
   const brRaja=brStubova, brPolja=Math.max(0,brRaja-1);
@@ -472,7 +472,8 @@ function compute(I){
   const duzStuba=Cc;
 
   const svetalaPoKornizu=+I.svetalaPoKornizu||0;
-  const razmakRupa=svetalaPoKornizu?round((duzKornisa-20)/svetalaPoKornizu,0):0;
+  const odbitakRupa = keder==="jednostrani" ? 0 : 200;
+  const razmakRupa=svetalaPoKornizu?round((duzKornisa-odbitakRupa)/svetalaPoKornizu,0):0;
   const odIviceDoRupe=round(razmakRupa/2,0);
   const svetalaUkupno=svetalaPoKornizu*tankiSvetlo;
 
@@ -573,7 +574,7 @@ function obracunCalc(I, R, alu, okov){
   const ledEur      = sumByGroup("led");
 
   // Cev na zidu — dužina = širina pergole, cena kao čelična cev (1100 RSD/m)
-  const cevNaZiduM   = round(R.in.D / 1000, 2);
+  const cevNaZiduM   = I.cev==="nema" ? 0 : round(R.in.D / 1000, 2);
   const cevNaZiduEur = round(cevNaZiduM * CELIK_CEV_PER_M_EUR, 2);
 
   // Trapezni lim 125×80 — broj komada × 1 m² po komadu (1,25 × 0,80 = 1 m²)
@@ -819,9 +820,9 @@ function renderNalog(I, R, alu, okov){
 
   // Metalna cev na zidu + trapezni lim
   html += `<div class="grp-t">METALNA CEV NA ZIDU + LIM</div><table><tbody>`;
-  html += `<tr>
+  if(I.cev!=="nema") html += `<tr>
     <td style="width:64px">&nbsp;</td>
-    <td><b>Cev na zidu ${esc(I.cev)}</b><div style="font-size:10px;color:#5a5446">Nosač pergole — dužina = širina pergole · uvek ide</div></td>
+    <td><b>Cev na zidu ${esc(I.cev)}</b><div style="font-size:10px;color:#5a5446">Nosač pergole — dužina = širina pergole</div></td>
     <td class="m" style="width:110px;text-align:right"><b style="font-size:14px">${R.in.D} mm</b></td>
     <td class="m" style="width:42px;text-align:center;font-weight:700;font-size:14px">1</td>
     <td style="text-align:center;width:32px"><span class="chk"></span></td>
@@ -935,7 +936,7 @@ function renderNalog(I, R, alu, okov){
       <li>Cerada: prvi keder na <b>100mm</b> od prednje ivice, rezerva uz zid <b>470mm</b>.</li>
       <li>Razmak kedera mora biti <b>399–499mm</b> — program uklapa automatski.</li>
       <li>Debeli korniši: prvi i poslednji, bez rupa. Tanki sa svetlom: naizmenično.</li>
-      <li>Cev na zidu se prvo učvrsti na zid — na nju se montira pergola.</li>
+      ${I.cev!=="nema"?`<li>Cev na zidu se prvo učvrsti na zid — na nju se montira pergola.</li>`:''}
       <li>Rupe za LED se buše <b>samo</b> na tankim kornišima sa ★.</li>
     </ol></div>`;
 
@@ -1087,10 +1088,10 @@ function renderObracun(I, R, alu, okov, obr){
   html += `<div class="sec"><div class="sec-h"><span class="sec-n">08</span>
     <h3 class="sec-t">Bravarija — cev na zidu + lim</h3></div>
     <table><tbody>
-      <tr><td><b>Cev na zidu ${esc(I.cev)}</b><div style="font-size:10px;color:#888">Nosač pergole · dužina = širina pergole · ${eur(CELIK_CEV_PER_M_EUR)}/m (1100 RSD/m)</div></td>
+      ${I.cev!=="nema"?`<tr><td><b>Cev na zidu ${esc(I.cev)}</b><div style="font-size:10px;color:#888">Nosač pergole · dužina = širina pergole · ${eur(CELIK_CEV_PER_M_EUR)}/m (1100 RSD/m)</div></td>
         <td class="m" style="width:90px;text-align:right">${obr.cevNaZiduM} m</td>
         <td class="m" style="width:80px;text-align:right">${eur(CELIK_CEV_PER_M_EUR)}</td>
-        <td class="m euro" style="width:90px;text-align:right;font-weight:700">${eur(obr.cevNaZiduEur)}</td></tr>
+        <td class="m euro" style="width:90px;text-align:right;font-weight:700">${eur(obr.cevNaZiduEur)}</td></tr>`:''}
       <tr style="background:#ebe7db"><td><b>Trapezni lim 125×80</b><div style="font-size:10px;color:#888">1 komad 1,25×0,80m = 1 m² · ${eur(TRAPEZ_LIM_PER_M2_EUR)}/m² (900 RSD/m²)</div></td>
         <td class="m" style="text-align:right">${obr.trapezniLimKom} kom (${obr.trapezniLimM2} m²)</td>
         <td class="m" style="text-align:right">${eur(TRAPEZ_LIM_PER_M2_EUR)}</td>
@@ -1137,7 +1138,7 @@ function renderObracun(I, R, alu, okov, obr){
     <tr><td><b>Metal okov</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.metal)}</td></tr>
     <tr><td><b>Fitilji / kederi</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.fitilj)}</td></tr>
     <tr><td><b>Elektronika</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.elekTotal)}</td></tr>
-    <tr><td><b>Cev na zidu ${esc(I.cev)} (${obr.cevNaZiduM} m)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.cevNaZiduEur)}</td></tr>
+    ${I.cev!=="nema"?`<tr><td><b>Cev na zidu ${esc(I.cev)} (${obr.cevNaZiduM} m)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.cevNaZiduEur)}</td></tr>`:''}
     <tr><td><b>Trapezni lim 125×80 (${obr.trapezniLimKom} kom · ${obr.trapezniLimM2} m²)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.trapezniLimEur)}</td></tr>
     <tr><td><b>Vijci + pakovanje (paušal)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.srafovi)}</td></tr>
     ${I.celicnaOn && obr.celicnaEur>0 ? `<tr><td><b>Čelična konstrukcija (${obr.celicnaM} m)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.celicnaEur)}</td></tr>` : ''}
