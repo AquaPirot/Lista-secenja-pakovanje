@@ -197,6 +197,16 @@
       <label><div class="lbl">Prednja visina</div><div class="sub">pod do oluka</div>
         <input type="number" id="prednjaVisina" value="2150"></label>
     </div>
+    <div class="row" id="parapetSection" style="margin-top:8px">
+      <div class="auto-box" style="grid-column:1/-1">
+        <label><input type="checkbox" id="parapetOn">
+          Ima zidić / parapet ispod stuba</label>
+      </div>
+      <div id="parapetInputWrap" style="display:none">
+        <label><div class="lbl">Visina zidića</div><div class="sub">oduzima se od prednje visine → dužina sečenja stuba</div>
+          <input type="number" id="parapetVisina" placeholder="npr. 500"></label>
+      </div>
+    </div>
 
     <div class="grp">② IZBOR PROFILA</div>
     <div class="row">
@@ -469,7 +479,8 @@ function compute(I){
   const brCevMotora=cevMotoraTip==="jednodelna"?1:brPolja;
   const brPanela=brPolja;
   const duzPanela=sirinaPolja+100;
-  const duzStuba=Cc;
+  const parapetVis = I.parapetOn ? (Math.max(0,+I.parapetVisina||0)) : 0;
+  const duzStuba = Math.max(0, Cc - parapetVis);
 
   const svetalaPoKornizu=+I.svetalaPoKornizu||0;
   const odbitakRupa = keder==="jednostrani" ? 0 : 200;
@@ -482,7 +493,7 @@ function compute(I){
   const trafoCena = potrosnja<=10?15:potrosnja<=20?22:30;
 
   return {
-    in:{A,B,C:Cc,D,cev,sirinaRaja},
+    in:{A,B,C:Cc,D,cev,sirinaRaja,parapetVis},
     auto:{brStubova,brRaja,brPolja,sirinaPolja,preko10m},
     raj:{kat1,kat2,pad,padOk,dijagonala,duzRaja},
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
@@ -544,7 +555,7 @@ function aluCalc(I, R){
   const items = [
     {key:"raj",      prof:rajProf,                naziv:"Šina (raj) "+I.sirinaRaja+"×150", mera:R.raj.duzRaja,        kom:R.auto.brRaja,   nap:"★ Dijagonala − 200mm"},
     {key:"oluk",     prof:PROFILI.oluk,           naziv:"Oluk",                            mera:R.profili2.duzOluka,  kom:1,               nap:"Širina + 150mm"},
-    {key:"stub",     prof:stubProf,               naziv:"Stub ("+I.stub+")",              mera:R.profili2.duzStuba,  kom:R.auto.brStubova,nap:"→ Prednja visina"},
+    {key:"stub",     prof:stubProf,               naziv:"Stub ("+I.stub+")",              mera:R.profili2.duzStuba,  kom:R.auto.brStubova,nap: R.in.parapetVis>0 ? "Prednja "+R.in.C+" − zidić "+R.in.parapetVis+" = "+R.profili2.duzStuba+" mm" : "→ Prednja visina"},
     {key:"cevm",     prof:PROFILI.cevMotora,      naziv:"Cev motora",                      mera:R.profili2.duzCevMotora, kom:R.profili2.brCevMotora, nap: R.profili2.cevMotoraTip==="jednodelna" ? "Jednodelna · širina pergole + 100mm" : `Po poljima · ${R.profili2.brCevMotora} cevi (zbir = širina pergole + 50mm)`},
     {key:"panel",    prof:PROFILI.panel,          naziv:"Panel (između rajeva)",           mera:R.profili2.duzPanela, kom:R.profili2.brPanela, nap:"→ Širina polja + 100"},
     {key:"kdeb",     prof:PROFILI.kornisDebeli,   naziv:"★ Korniš — VELIKI DEBELI",       mera:R.kornis.duzKornisa,  kom:R.cerada.debeli, nap:"Uz zid + uz oluk, BEZ rupa"},
@@ -683,6 +694,7 @@ function render(){
     autoInterval:$("autoInterval").checked,brIntervala:$("brIntervala").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value,motor:$("motor").value,
     celicnaOn:$("celicnaOn").checked,
+    parapetOn:$("parapetOn").checked,parapetVisina:$("parapetVisina").value,
     brNaloga:$("brNaloga").value,kupac:$("kupac").value,adresa:$("adresa").value,
     datum:$("datum").value,rok:$("rok").value,radnik:$("radnik").value,
   };
@@ -732,6 +744,7 @@ function renderNalog(I, R, alu, okov){
         Sklop korniša: <b>${esc(R.kornis.tipSklopa)}</b></div></div></div>`;
 
   const dims=[["D · Širina",R.in.D],["B · Dubina",R.in.B],["A · Zadnja",R.in.A],["C · Prednja",R.in.C]];
+  if(R.in.parapetVis>0) dims.push(["↕ Zidić",R.in.parapetVis]);
   html+=`<div class="dims">`+dims.map(d=>`<div class="dim"><div class="dim-k">${d[0]}</div><div class="dim-v">${d[1]} mm</div></div>`).join("")+`</div>`;
   html+=`<div class="calc-line">
     <span>Stubova: <b>${R.auto.brStubova}</b></span>
@@ -739,6 +752,7 @@ function renderNalog(I, R, alu, okov){
     <span>Polja: <b>${R.auto.brPolja}</b> (${R.auto.sirinaPolja} mm)</span>
     <span>Dijagonala: <b>${R.raj.dijagonala} mm</b></span>
     <span style="color:${R.raj.padOk?'#3f7a4d':'#bd4a2a'};font-weight:700">Pad: ${R.raj.pad}% ${R.raj.padOk?'✓':'⚠ van 8–10%'}</span>
+    ${R.in.parapetVis>0?`<span style="color:#a9743c;font-weight:700">Stub seče na: ${R.profili2.duzStuba} mm (${R.in.C} − ${R.in.parapetVis})</span>`:''}
     ${R.auto.preko10m?'<span style="color:#bd4a2a;font-weight:700">⚠ ŠIRINA PREKO 10m</span>':''}
   </div>`;
 
@@ -1160,6 +1174,11 @@ function renderObracun(I, R, alu, okov, obr){
 (function(){
   $("datum").value = new Date().toLocaleDateString("sr-RS");
   $("celicnaOn").addEventListener("change",()=>{renderSteelInputs();render();});
+  $("parapetOn").addEventListener("change",()=>{
+    $("parapetInputWrap").style.display=$("parapetOn").checked?"block":"none";
+    render();
+  });
+  $("parapetVisina").addEventListener("input",render);
   $("addSteel").addEventListener("click",()=>{
     steelRows.push({profil:"100x100",kom:"",duzina:""});
     renderSteelInputs(); render();
@@ -1199,6 +1218,7 @@ const ARCH_KEY = 'ag_arhiva';
 const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stub',
   'sirinaRaja','keder','kornisTip','cevMotora','bojaRal','bojaCerade',
   'autoInterval','brIntervala','svetalaPoKornizu','motor','celicnaOn',
+  'parapetOn','parapetVisina',
   'brNaloga','kupac','adresa','datum','rok','radnik'];
 
 function saveOrder(){
