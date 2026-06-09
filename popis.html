@@ -2,208 +2,565 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8"/>
-<title>AG GROUP — Popis magacina</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta name="theme-color" content="#191814"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>AG — Popis magacina</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap');
-  *{box-sizing:border-box;}
-  body{font-family:'Hanken Grotesk',Arial,sans-serif;font-size:11px;margin:0;padding:16px;color:#111;}
-  h1{font-size:16px;margin:0 0 2px;letter-spacing:.04em;}
-  .meta{font-size:10px;color:#666;margin-bottom:14px;}
-  .meta input{border:none;border-bottom:1px solid #999;width:120px;font-size:10px;}
-  table{width:100%;border-collapse:collapse;margin-bottom:18px;}
-  th{background:#191814;color:#fff;padding:5px 7px;text-align:left;font-size:10px;letter-spacing:.04em;}
-  td{padding:4px 7px;border-bottom:1px solid #ddd;vertical-align:middle;}
-  tr:nth-child(even) td{background:#f7f5ef;}
-  .sek{background:#a9743c!important;color:#fff;font-weight:700;font-size:10px;letter-spacing:.06em;padding:4px 7px;}
-  .sifra{font-family:monospace;font-size:10px;color:#555;white-space:nowrap;}
-  .jed{text-align:center;font-weight:600;}
-  .stanje{width:70px;text-align:center;}
-  .min{width:70px;text-align:center;}
-  .nap{width:140px;font-size:9.5px;color:#888;}
-  input[type=number],input[type=text]{width:100%;border:1px solid #ccc;border-radius:3px;padding:2px 4px;font-size:10px;text-align:center;}
-  .br{font-size:10px;color:#aaa;text-align:right;}
-  @media print{
-    body{padding:8px;}
-    @page{margin:10mm;size:A4;}
-    input{border:none;border-bottom:1px solid #aaa;border-radius:0;background:transparent;}
-  }
+:root{
+  --ink:#191814; --bronze:#a9743c; --bronzeD:#8a5d2e;
+  --shell:#15171b; --shell2:#1e2127; --line:#2e3138;
+  --ok:#3a7a4d; --warn:#bd4a2a; --paper:#f6f4ee;
+  --text:#e8e4d8; --muted:#888;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{background:var(--shell);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:15px;min-height:100vh;}
+
+/* ── HEADER ── */
+.hdr{background:var(--ink);padding:12px 16px 10px;position:sticky;top:0;z-index:100;}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.hdr-title{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--bronze);}
+.hdr-date{font-size:11px;color:var(--muted);}
+.progress-bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--bronze);border-radius:2px;transition:width .3s;}
+.progress-txt{font-size:10px;color:var(--muted);margin-top:4px;text-align:right;}
+
+/* ── SEKCIJE ── */
+.sek-wrap{margin:10px 12px 0;}
+.sek-btn{width:100%;background:var(--shell2);border:1px solid var(--line);border-radius:10px;
+  padding:13px 16px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;margin-bottom:6px;text-align:left;}
+.sek-btn.open{border-color:var(--bronze);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0;}
+.sek-left{display:flex;align-items:center;gap:10px;}
+.sek-icon{font-size:18px;width:28px;text-align:center;}
+.sek-name{font-weight:700;font-size:14px;}
+.sek-count{font-size:11px;color:var(--muted);margin-top:1px;}
+.sek-badge{background:var(--bronze);color:#fff;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:10px;white-space:nowrap;}
+.sek-badge.done{background:var(--ok);}
+.sek-arrow{color:var(--muted);font-size:12px;transition:transform .2s;}
+.sek-btn.open .sek-arrow{transform:rotate(180deg);}
+
+.sek-body{display:none;background:var(--shell2);border:1px solid var(--bronze);
+  border-top:none;border-radius:0 0 10px 10px;margin-bottom:6px;overflow:hidden;}
+.sek-body.open{display:block;}
+
+/* ── STAVKA ── */
+.stavka{padding:12px 14px;border-bottom:1px solid var(--line);}
+.stavka:last-child{border-bottom:none;}
+.stavka-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.stavka-info{flex:1;min-width:0;}
+.stavka-sifra{font-size:10px;color:var(--muted);font-family:monospace;letter-spacing:.04em;}
+.stavka-naziv{font-size:13px;font-weight:600;line-height:1.3;}
+.stavka-jed{font-size:10px;color:var(--muted);}
+.stavka-ok{width:24px;height:24px;border-radius:50%;background:var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;}
+.stavka-ok.done{background:var(--ok);color:#fff;}
+
+/* ── KOM COUNTER ── */
+.kom-row{display:flex;align-items:center;gap:0;}
+.kom-btn{width:44px;height:44px;border:1px solid var(--line);background:var(--shell);
+  color:var(--text);font-size:20px;font-weight:300;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:8px;}
+.kom-btn:active{background:var(--bronze);}
+.kom-val{flex:1;height:44px;background:var(--shell);border:1px solid var(--line);
+  border-left:none;border-right:none;text-align:center;font-size:18px;font-weight:700;
+  color:#fff;-moz-appearance:textfield;}
+.kom-val::-webkit-inner-spin-button,.kom-val::-webkit-outer-spin-button{-webkit-appearance:none;}
+.kom-min-row{margin-top:6px;display:flex;align-items:center;gap:8px;}
+.kom-min-lbl{font-size:10px;color:var(--muted);white-space:nowrap;}
+.kom-min-inp{flex:1;height:34px;background:var(--shell);border:1px solid var(--line);
+  border-radius:6px;color:var(--text);font-size:13px;text-align:center;padding:0 8px;}
+.kom-lok-inp{flex:1;height:34px;background:var(--shell);border:1px solid var(--line);
+  border-radius:6px;color:var(--text);font-size:12px;padding:0 8px;}
+
+/* ── PROFIL KOMADI ── */
+.komadi-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.komad-row{display:flex;align-items:center;gap:6px;}
+.komad-len{flex:1;height:44px;background:var(--shell);border:1px solid var(--line);
+  border-radius:8px;color:#fff;font-size:16px;text-align:center;font-weight:600;padding:0 8px;}
+.komad-len::placeholder{color:var(--muted);font-weight:400;font-size:13px;}
+.komad-lok{width:90px;height:44px;background:var(--shell);border:1px solid var(--line);
+  border-radius:8px;color:var(--text);font-size:12px;padding:0 8px;}
+.komad-lok::placeholder{color:var(--muted);}
+.komad-del{width:44px;height:44px;background:#2e1a1a;border:1px solid #5a2020;
+  border-radius:8px;color:#e07070;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.komad-del:active{background:#5a2020;}
+.btn-add-komad{width:100%;height:42px;background:var(--shell);border:1px dashed var(--line);
+  border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-add-komad:active{border-color:var(--bronze);color:var(--bronze);}
+.profil-sum{font-size:11px;color:var(--muted);margin-top:4px;text-align:right;}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar{position:sticky;bottom:0;background:var(--ink);border-top:1px solid var(--line);
+  padding:10px 12px;display:flex;gap:8px;z-index:100;}
+.btn-save{flex:1;height:46px;background:var(--bronze);border:none;border-radius:8px;
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.04em;}
+.btn-save:active{background:var(--bronzeD);}
+.btn-export{height:46px;padding:0 16px;background:var(--shell2);border:1px solid var(--line);
+  border-radius:8px;color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;}
+.btn-export:active{border-color:var(--bronze);}
+.autosave{font-size:10px;color:var(--ok);text-align:center;padding:4px 0 0;width:100%;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#222;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;
+  opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── EXPORT MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--shell2);border-radius:16px 16px 0 0;width:100%;max-height:80vh;
+  overflow-y:auto;padding:20px 16px 32px;}
+.modal h3{font-size:15px;margin-bottom:14px;color:var(--bronze);}
+.export-out{background:var(--shell);border:1px solid var(--line);border-radius:8px;
+  padding:10px;font-size:10px;font-family:monospace;white-space:pre-wrap;
+  max-height:200px;overflow-y:auto;color:#aaa;margin-bottom:12px;}
+.btn-copy{width:100%;height:44px;background:var(--bronze);border:none;border-radius:8px;
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.btn-modal-close{width:100%;height:44px;background:var(--shell);border:1px solid var(--line);
+  border-radius:8px;color:var(--text);font-size:13px;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<h1>AG GROUP — POPIS MAGACINA</h1>
-<div class="meta">
-  Datum popisa: <input type="text" placeholder="__.__.20____"> &nbsp;&nbsp;
-  Popisao: <input type="text" placeholder="Ime i prezime"> &nbsp;&nbsp;
-  Stranica 1/1
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-title">AG GROUP · POPIS MAGACINA</div>
+    <div class="hdr-date" id="hdDate">—</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  <div class="progress-txt" id="progTxt">0 / 0 stavki ima unos</div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     1. ALUMINIJUM PROFILI
-════════════════════════════════════════════════ -->
-<table>
-  <thead>
-    <tr><th colspan="7" class="sek">① ALUMINIJUM PROFILI</th></tr>
-    <tr>
-      <th class="br">#</th>
-      <th>Šifra</th>
-      <th>Naziv profila</th>
-      <th style="width:50px">Jed.</th>
-      <th class="stanje">Stanje<br>na lageru</th>
-      <th class="min">Min.<br>upozorenje</th>
-      <th class="nap">Napomena</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="br">1</td><td class="sifra">10501</td><td>Šina (raj) 90×150</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">2</td><td class="sifra">10475</td><td>Šina (raj) 110×150</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">3</td><td class="sifra">10468</td><td>Oluk</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">4</td><td class="sifra">10471</td><td>Korniš — TANKI</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">5</td><td class="sifra">10472</td><td>Korniš — DEBELI</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">6</td><td class="sifra">10470</td><td>Tanki stringcourse (korniš kedera)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">7</td><td class="sifra">10419</td><td>Stub 110×144</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">8</td><td class="sifra">10414</td><td>Stub 100×100</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">9</td><td class="sifra">10420</td><td>Panel (između rajeva)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">10</td><td class="sifra">10417</td><td>Cev motora</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">11</td><td class="sifra">CEV-80</td><td>Cev na zidu 80×40 (čelična)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">12</td><td class="sifra">CEV-100</td><td>Cev na zidu 100×100 (čelična)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-  </tbody>
-</table>
+<div class="sek-wrap" id="mainWrap"></div>
+<div style="height:8px"></div>
 
-<!-- ════════════════════════════════════════════════
-     2. PLASTIKA — KAVEZI, KOČNICE, KOLICA
-════════════════════════════════════════════════ -->
-<table>
-  <thead>
-    <tr><th colspan="7" class="sek">② PLASTIKA — kavezi, kočnice, kolica, takozi</th></tr>
-    <tr>
-      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
-      <th style="width:50px">Jed.</th>
-      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="br">13</td><td class="sifra">ARV-01</td><td>Velike plastike za zupčanik</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">14</td><td class="sifra">ARV-02</td><td>Veliki zupčanik</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">15</td><td class="sifra">ARV-03</td><td>Kočnica</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">16</td><td class="sifra">ARV-04</td><td>Prednji zatezač L/D (par)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">17</td><td class="sifra">ARV-05</td><td>Komplet za prednji ležaj</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">18</td><td class="sifra">ARV-07</td><td>Plastika spoja kaiša</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">19</td><td class="sifra">ARV-08</td><td>Velika kolica</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">20</td><td class="sifra">ARV-09</td><td>Mala kolica</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">21</td><td class="sifra">ARV-06</td><td>Odvod vode oluka</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">22</td><td class="sifra">ARV-19</td><td>Ugaoni umetak tankog korniša</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">23</td><td class="sifra">ARV-20</td><td>Srednji umetak tankog korniša (konektor)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">24</td><td class="sifra">ARV-21</td><td>Ugaoni umetak debelog korniša</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">25</td><td class="sifra">ARV-22</td><td>Srednji umetak debelog korniša (konektor)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">26</td><td class="sifra">ARV-T</td><td>Tapa — poklopac rupe 20mm</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">27</td><td class="sifra">ARV-D</td><td>Tipla</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">28</td><td class="sifra">PRG-117</td><td>Veliki ležaj</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">29</td><td class="sifra">PRG-119</td><td>Mali ležaj</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-  </tbody>
-</table>
-
-<!-- ════════════════════════════════════════════════
-     3. METAL OKOV
-════════════════════════════════════════════════ -->
-<table>
-  <thead>
-    <tr><th colspan="7" class="sek">③ METAL OKOV — nosači, fiksatori, poklopci</th></tr>
-    <tr>
-      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
-      <th style="width:50px">Jed.</th>
-      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="br">30</td><td class="sifra">ARV-M1</td><td>Zidni nosač šine</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">31</td><td class="sifra">ARV-M2a</td><td>Zadnji spoj šine — SA rupom</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">32</td><td class="sifra">ARV-M2b</td><td>Zadnji spoj šine — BEZ rupe</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">33</td><td class="sifra">ARV-M4</td><td>Fiksator motora na šinu</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">34</td><td class="sifra">ARV-M5</td><td>Podloška fiksatora motora</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">35</td><td class="sifra">ARV-M6</td><td>Spoj šina — veliki oluk</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">36</td><td class="sifra">ARV-M7</td><td>Spoj stub–oluk</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">37</td><td class="sifra">ARV-M8</td><td>Spoj rasponke i raja</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">38</td><td class="sifra">ARV-M10</td><td>Prednji zatezač automat</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">39</td><td class="sifra">ARV-M11</td><td>Prednji poklopac šine</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">40</td><td class="sifra">ARV-M12</td><td>Donja stopa stuba</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">41</td><td class="sifra">ARV-M13</td><td>Bočni poklopac oluka L+D (par)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-  </tbody>
-</table>
-
-<!-- ════════════════════════════════════════════════
-     4. FITILJI / KEDERI / KAIŠEVI
-════════════════════════════════════════════════ -->
-<table>
-  <thead>
-    <tr><th colspan="7" class="sek">④ FITILJI, KEDERI, KAIŠEVI</th></tr>
-    <tr>
-      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
-      <th style="width:50px">Jed.</th>
-      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="br">42</td><td class="sifra">PRG-102</td><td>Fitilj / keder šine</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">43</td><td class="sifra">PRG-104</td><td>Fitilj / keder oluka</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">44</td><td class="sifra">PRG-101</td><td>Fitilj / keder cerade — korniš</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">45</td><td class="sifra">PRG-103</td><td>Fitilj kabla</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">46</td><td class="sifra">PRG-105</td><td>T10×16 zupčasti kaiš</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-  </tbody>
-</table>
-
-<!-- ════════════════════════════════════════════════
-     5. ELEKTRONIKA
-════════════════════════════════════════════════ -->
-<table>
-  <thead>
-    <tr><th colspan="7" class="sek">⑤ ELEKTRONIKA — LED, motori, trafoi</th></tr>
-    <tr>
-      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
-      <th style="width:50px">Jed.</th>
-      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena / model</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="br">47</td><td class="sifra">PRG-108</td><td>24V horizontalni LED (24W yatay led)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">48</td><td class="sifra">PRG-116</td><td>Kabl 2×0,75mm²</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="1"></td><td class="min"><input type="number" min="0" step="5"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">49</td><td class="sifra">MOTOR</td><td>Motor</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text" placeholder="npr. Somfy RTS 120Nm"></td></tr>
-    <tr><td class="br">50</td><td class="sifra">DALJ</td><td>Daljinski upravljač</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">51</td><td class="sifra">TRAFO-10A</td><td>Trafo 10A (do 10A potrošnje)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">52</td><td class="sifra">TRAFO-20A</td><td>Trafo 20A (do 20A potrošnje)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">53</td><td class="sifra">TRAFO-30A</td><td>Trafo 30A (do 30A potrošnje)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">54</td><td class="sifra">DIMER</td><td>Dimer (regulator LED)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-  </tbody>
-</table>
-
-<!-- ════════════════════════════════════════════════
-     6. OSTALI MATERIJAL
-════════════════════════════════════════════════ -->
-<table>
-  <thead>
-    <tr><th colspan="7" class="sek">⑥ OSTALI MATERIJAL — cerada, lim, vijci</th></tr>
-    <tr>
-      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
-      <th style="width:50px">Jed.</th>
-      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena / boja/tip</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="br">55</td><td class="sifra">CER-ANT</td><td>Cerada — Antracit</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">56</td><td class="sifra">CER-KRE</td><td>Cerada — Krem</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">57</td><td class="sifra">CER-CRN</td><td>Cerada — Crna</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">58</td><td class="sifra">CER-MIS</td><td>Cerada — Miš boja</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">59</td><td class="sifra">CER-OST</td><td>Cerada — ostale boje</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text" placeholder="navedi boju"></td></tr>
-    <tr><td class="br">60</td><td class="sifra">LIM-125</td><td>Trapezni lim 125×80</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-    <tr><td class="br">61</td><td class="sifra">VIJCI</td><td>Vijci + pakovanje (paušal kompleti)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
-  </tbody>
-</table>
-
-<div style="margin-top:20px;border-top:2px solid #191814;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;font-size:10px;">
-  <div>Popis izvršio:<br><br>___________________________<br>Potpis</div>
-  <div>Kontrolisao:<br><br>___________________________<br>Potpis</div>
-  <div>Napomene:<br><br><br>___________________________</div>
+<div class="bottom-bar">
+  <button class="btn-save" onclick="manualSave()">💾 Sačuvaj</button>
+  <button class="btn-export" onclick="openExport()">📤 Izvoz</button>
+  <div class="autosave" id="autoSaveTxt"></div>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="exportModal" onclick="if(event.target===this)closeExport()">
+  <div class="modal">
+    <h3>📤 Izvoz podataka popisa</h3>
+    <div class="export-out" id="exportOut"></div>
+    <button class="btn-copy" onclick="copyExport()">Kopiraj sve</button>
+    <button class="btn-modal-close" onclick="closeExport()">Zatvori</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DEFINICIJA SVIH STAVKI
+═══════════════════════════════════════════ */
+const SEKCIJE = [
+  {
+    id:"alu", icon:"🔩", naziv:"Aluminijum profili",
+    tip:"profil",
+    stavke:[
+      {sifra:"10501", naziv:"Šina (raj) 90×150"},
+      {sifra:"10475", naziv:"Šina (raj) 110×150"},
+      {sifra:"10468", naziv:"Oluk"},
+      {sifra:"10471", naziv:"Korniš — TANKI"},
+      {sifra:"10472", naziv:"Korniš — DEBELI"},
+      {sifra:"10470", naziv:"Tanki stringcourse (korniš kedera)"},
+      {sifra:"10419", naziv:"Stub 110×144"},
+      {sifra:"10414", naziv:"Stub 100×100"},
+      {sifra:"10420", naziv:"Panel (između rajeva)"},
+      {sifra:"10417", naziv:"Cev motora"},
+      {sifra:"CEV-80",  naziv:"Cev na zidu 80×40 (čelična)"},
+      {sifra:"CEV-100", naziv:"Cev na zidu 100×100 (čelična)"},
+    ]
+  },
+  {
+    id:"pla", icon:"🔧", naziv:"Plastika",
+    tip:"kom",
+    stavke:[
+      {sifra:"ARV-01", naziv:"Velike plastike za zupčanik"},
+      {sifra:"ARV-02", naziv:"Veliki zupčanik"},
+      {sifra:"ARV-03", naziv:"Kočnica"},
+      {sifra:"ARV-04", naziv:"Prednji zatezač L/D"},
+      {sifra:"ARV-05", naziv:"Komplet za prednji ležaj"},
+      {sifra:"ARV-07", naziv:"Plastika spoja kaiša"},
+      {sifra:"ARV-08", naziv:"Velika kolica"},
+      {sifra:"ARV-09", naziv:"Mala kolica"},
+      {sifra:"ARV-06", naziv:"Odvod vode oluka"},
+      {sifra:"ARV-19", naziv:"Ugaoni umetak tankog korniša"},
+      {sifra:"ARV-20", naziv:"Srednji umetak tankog korniša"},
+      {sifra:"ARV-21", naziv:"Ugaoni umetak debelog korniša"},
+      {sifra:"ARV-22", naziv:"Srednji umetak debelog korniša"},
+      {sifra:"ARV-T",  naziv:"Tapa (poklopac rupe 20mm)"},
+      {sifra:"ARV-D",  naziv:"Tipla"},
+      {sifra:"PRG-117",naziv:"Veliki ležaj"},
+      {sifra:"PRG-119",naziv:"Mali ležaj"},
+    ]
+  },
+  {
+    id:"met", icon:"⚙️", naziv:"Metal okov",
+    tip:"kom",
+    stavke:[
+      {sifra:"ARV-M1",  naziv:"Zidni nosač šine"},
+      {sifra:"ARV-M2a", naziv:"Zadnji spoj šine — SA rupom"},
+      {sifra:"ARV-M2b", naziv:"Zadnji spoj šine — BEZ rupe"},
+      {sifra:"ARV-M4",  naziv:"Fiksator motora na šinu"},
+      {sifra:"ARV-M5",  naziv:"Podloška fiksatora motora"},
+      {sifra:"ARV-M6",  naziv:"Spoj šina–oluk"},
+      {sifra:"ARV-M7",  naziv:"Spoj stub–oluk"},
+      {sifra:"ARV-M8",  naziv:"Spoj rasponke i raja"},
+      {sifra:"ARV-M10", naziv:"Prednji zatezač automat"},
+      {sifra:"ARV-M11", naziv:"Prednji poklopac šine"},
+      {sifra:"ARV-M12", naziv:"Donja stopa stuba"},
+      {sifra:"ARV-M13", naziv:"Bočni poklopac oluka L+D"},
+    ]
+  },
+  {
+    id:"fit", icon:"📏", naziv:"Fitilji, kederi, kaiševi",
+    tip:"metar",
+    stavke:[
+      {sifra:"PRG-102", naziv:"Fitilj / keder šine"},
+      {sifra:"PRG-104", naziv:"Fitilj / keder oluka"},
+      {sifra:"PRG-101", naziv:"Fitilj / keder cerade — korniš"},
+      {sifra:"PRG-103", naziv:"Fitilj kabla"},
+      {sifra:"PRG-105", naziv:"T10×16 zupčasti kaiš"},
+    ]
+  },
+  {
+    id:"elek", icon:"⚡", naziv:"Elektronika",
+    tip:"kom",
+    stavke:[
+      {sifra:"PRG-108",  naziv:"24V LED (24W yatay led)"},
+      {sifra:"PRG-116",  naziv:"Kabl 2×0,75mm²", tip:"metar"},
+      {sifra:"MOTOR",    naziv:"Motor"},
+      {sifra:"DALJ",     naziv:"Daljinski upravljač"},
+      {sifra:"TRAFO-10", naziv:"Trafo 10A"},
+      {sifra:"TRAFO-20", naziv:"Trafo 20A"},
+      {sifra:"TRAFO-30", naziv:"Trafo 30A"},
+      {sifra:"DIMER",    naziv:"Dimer"},
+    ]
+  },
+  {
+    id:"ost", icon:"🏭", naziv:"Cerada i ostalo",
+    tip:"kom",
+    stavke:[
+      {sifra:"CER-ANT", naziv:"Cerada — Antracit",  tip:"metar2"},
+      {sifra:"CER-KRE", naziv:"Cerada — Krem",      tip:"metar2"},
+      {sifra:"CER-CRN", naziv:"Cerada — Crna",      tip:"metar2"},
+      {sifra:"CER-MIS", naziv:"Cerada — Miš boja",  tip:"metar2"},
+      {sifra:"LIM-125", naziv:"Trapezni lim 125×80"},
+      {sifra:"VIJCI",   naziv:"Vijci + pakovanje (kompleti)"},
+    ]
+  },
+];
+
+/* ═══════════════════════════════════════════
+   STANJE — čuva se u localStorage
+═══════════════════════════════════════════ */
+const LS_KEY = 'ag_popis_v1';
+let STATE = {};
+
+function loadState(){
+  try { STATE = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(e){ STATE={}; }
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE));
+  document.getElementById('autoSaveTxt').textContent = 'Sačuvano ' + now();
+}
+function now(){
+  return new Date().toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'});
+}
+function getItem(sifra){ return STATE[sifra] || null; }
+function setItem(sifra, data){ STATE[sifra]=data; saveState(); updateProgress(); }
+
+/* ═══════════════════════════════════════════
+   BUILD UI
+═══════════════════════════════════════════ */
+function build(){
+  const wrap = document.getElementById('mainWrap');
+  wrap.innerHTML = '';
+  SEKCIJE.forEach(sek => {
+    const total = sek.stavke.length;
+    const done  = sek.stavke.filter(s => hasDone(s.sifra)).length;
+    const pct   = Math.round(done/total*100);
+
+    const btn = document.createElement('div');
+    btn.className = 'sek-btn';
+    btn.id = 'btn_'+sek.id;
+    btn.innerHTML = `
+      <div class="sek-left">
+        <span class="sek-icon">${sek.icon}</span>
+        <div>
+          <div class="sek-name">${sek.naziv}</div>
+          <div class="sek-count">${done}/${total} uneto</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="sek-badge ${done===total?'done':''}">${pct}%</span>
+        <span class="sek-arrow">▼</span>
+      </div>`;
+    btn.onclick = () => toggleSek(sek.id);
+
+    const body = document.createElement('div');
+    body.className = 'sek-body';
+    body.id = 'body_'+sek.id;
+    body.innerHTML = sek.stavke.map(s => buildStavka(s, sek.tip)).join('');
+
+    wrap.appendChild(btn);
+    wrap.appendChild(body);
+  });
+}
+
+function buildStavka(s, sekTip){
+  const tip = s.tip || sekTip;
+  const isDone = hasDone(s.sifra);
+  const d = getItem(s.sifra) || {};
+
+  if(tip === 'profil'){
+    const komadi = d.komadi || [];
+    const ukupno = komadi.reduce((a,k)=>a+(+k.duzina||0),0);
+    return `<div class="stavka" id="stav_${s.sifra}">
+      <div class="stavka-top">
+        <div class="stavka-info">
+          <div class="stavka-sifra">${s.sifra}</div>
+          <div class="stavka-naziv">${s.naziv}</div>
+          <div class="stavka-jed">metar · unos po komadima</div>
+        </div>
+        <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
+      </div>
+      <div class="komadi-list" id="kl_${s.sifra}">
+        ${komadi.map((k,i)=>buildKomadRow(s.sifra,i,k)).join('')}
+      </div>
+      <button class="btn-add-komad" onclick="addKomad('${s.sifra}')">＋ Dodaj komad</button>
+      <div class="profil-sum" id="sum_${s.sifra}">${ukupno>0?'Ukupno: '+ukupno+' mm = '+(ukupno/1000).toFixed(2)+' m':''}</div>
+    </div>`;
+  }
+
+  const jed = tip==='metar'?'m':tip==='metar2'?'m²':'kom';
+  const val = d.kolicina ?? '';
+  const min = d.minimum ?? '';
+  const lok = d.lokacija ?? '';
+  return `<div class="stavka" id="stav_${s.sifra}">
+    <div class="stavka-top">
+      <div class="stavka-info">
+        <div class="stavka-sifra">${s.sifra}</div>
+        <div class="stavka-naziv">${s.naziv}</div>
+        <div class="stavka-jed">${jed}</div>
+      </div>
+      <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
+    </div>
+    <div class="kom-row">
+      <button class="kom-btn" style="border-radius:8px 0 0 8px" onclick="adj('${s.sifra}',-1)">−</button>
+      <input class="kom-val" type="number" min="0" step="${tip==='kom'?1:0.5}" inputmode="decimal"
+        value="${val}" id="inp_${s.sifra}"
+        onchange="setKol('${s.sifra}',this.value)"
+        oninput="setKol('${s.sifra}',this.value)">
+      <button class="kom-btn" style="border-radius:0 8px 8px 0" onclick="adj('${s.sifra}',1)">＋</button>
+    </div>
+    <div class="kom-min-row">
+      <span class="kom-min-lbl">Min. upozorenje:</span>
+      <input class="kom-min-inp" type="number" min="0" inputmode="decimal"
+        placeholder="npr. 10" value="${min}" id="min_${s.sifra}"
+        onchange="setMin('${s.sifra}',this.value)">
+      <span class="kom-min-lbl" style="margin-left:6px">Lokacija:</span>
+      <input class="kom-lok-inp" type="text" placeholder="npr. B-03"
+        value="${lok}" id="lok_${s.sifra}"
+        onchange="setLok('${s.sifra}',this.value)">
+    </div>
+  </div>`;
+}
+
+function buildKomadRow(sifra, idx, k){
+  return `<div class="komad-row" id="kr_${sifra}_${idx}">
+    <input class="komad-len" type="number" inputmode="numeric" min="1"
+      placeholder="Dužina (mm)" value="${k.duzina||''}"
+      onchange="setKomadLen('${sifra}',${idx},this.value)"
+      oninput="setKomadLen('${sifra}',${idx},this.value)">
+    <input class="komad-lok" type="text" placeholder="Polica"
+      value="${k.lokacija||''}"
+      onchange="setKomadLok('${sifra}',${idx},this.value)">
+    <button class="komad-del" onclick="delKomad('${sifra}',${idx})">✕</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   AKCIJE — profili (po komadima)
+═══════════════════════════════════════════ */
+function addKomad(sifra){
+  const d = getItem(sifra) || {komadi:[]};
+  if(!d.komadi) d.komadi=[];
+  d.komadi.push({duzina:'', lokacija:''});
+  setItem(sifra, d);
+  refreshStavka(sifra);
+}
+function delKomad(sifra, idx){
+  const d = getItem(sifra)||{komadi:[]};
+  d.komadi.splice(idx,1);
+  setItem(sifra,d);
+  refreshStavka(sifra);
+}
+function setKomadLen(sifra, idx, val){
+  const d = getItem(sifra)||{komadi:[]};
+  if(!d.komadi[idx]) return;
+  d.komadi[idx].duzina = val;
+  setItem(sifra,d);
+  updateSum(sifra);
+  updateOk(sifra);
+}
+function setKomadLok(sifra, idx, val){
+  const d = getItem(sifra)||{komadi:[]};
+  if(!d.komadi[idx]) return;
+  d.komadi[idx].lokacija = val;
+  setItem(sifra,d);
+}
+function updateSum(sifra){
+  const d = getItem(sifra)||{};
+  const komadi = d.komadi||[];
+  const uk = komadi.reduce((a,k)=>a+(+k.duzina||0),0);
+  const el = document.getElementById('sum_'+sifra);
+  if(el) el.textContent = uk>0?'Ukupno: '+uk+' mm = '+(uk/1000).toFixed(2)+' m':'';
+}
+
+/* ═══════════════════════════════════════════
+   AKCIJE — kom / metar
+═══════════════════════════════════════════ */
+function adj(sifra, delta){
+  const inp = document.getElementById('inp_'+sifra);
+  const cur = parseFloat(inp.value)||0;
+  const step = parseFloat(inp.step)||1;
+  const nv = Math.max(0, Math.round((cur+delta*step)*100)/100);
+  inp.value = nv;
+  setKol(sifra, nv);
+}
+function setKol(sifra, val){
+  const d = getItem(sifra)||{};
+  d.kolicina = val===''||val===null?'':+val;
+  setItem(sifra,d);
+  updateOk(sifra);
+}
+function setMin(sifra, val){
+  const d = getItem(sifra)||{};
+  d.minimum = val===''?'':+val;
+  setItem(sifra,d);
+}
+function setLok(sifra, val){
+  const d = getItem(sifra)||{};
+  d.lokacija = val;
+  setItem(sifra,d);
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function hasDone(sifra){
+  const d = STATE[sifra];
+  if(!d) return false;
+  if(d.komadi) return d.komadi.length>0 && d.komadi.some(k=>+k.duzina>0);
+  return d.kolicina!==undefined && d.kolicina!=='';
+}
+function updateOk(sifra){
+  const el = document.getElementById('ok_'+sifra);
+  if(!el) return;
+  const done = hasDone(sifra);
+  el.className = 'stavka-ok '+(done?'done':'');
+  el.textContent = done?'✓':'';
+  updateSekHeader(sifra);
+  updateProgress();
+}
+function updateSekHeader(sifra){
+  SEKCIJE.forEach(sek=>{
+    if(!sek.stavke.find(s=>s.sifra===sifra)) return;
+    const total = sek.stavke.length;
+    const done  = sek.stavke.filter(s=>hasDone(s.sifra)).length;
+    const pct   = Math.round(done/total*100);
+    const btn   = document.getElementById('btn_'+sek.id);
+    if(!btn) return;
+    btn.querySelector('.sek-count').textContent = done+'/'+total+' uneto';
+    const badge = btn.querySelector('.sek-badge');
+    badge.textContent = pct+'%';
+    badge.className = 'sek-badge '+(done===total?'done':'');
+  });
+}
+function updateProgress(){
+  let total=0, done=0;
+  SEKCIJE.forEach(s=>{ s.stavke.forEach(st=>{ total++; if(hasDone(st.sifra)) done++; }); });
+  document.getElementById('progFill').style.width = Math.round(done/total*100)+'%';
+  document.getElementById('progTxt').textContent = done+' / '+total+' stavki ima unos';
+}
+function refreshStavka(sifra){
+  let tip = 'profil', sekTip = 'profil';
+  SEKCIJE.forEach(sek=>{ const s=sek.stavke.find(x=>x.sifra===sifra); if(s){sekTip=sek.tip;tip=s.tip||sek.tip;} });
+  const el = document.getElementById('stav_'+sifra);
+  if(el){
+    const d = getItem(sifra)||{};
+    const komadi = d.komadi||[];
+    document.getElementById('kl_'+sifra).innerHTML = komadi.map((k,i)=>buildKomadRow(sifra,i,k)).join('');
+    updateSum(sifra);
+    updateOk(sifra);
+  }
+}
+function toggleSek(id){
+  const btn  = document.getElementById('btn_'+id);
+  const body = document.getElementById('body_'+id);
+  const open = body.classList.contains('open');
+  btn.classList.toggle('open',!open);
+  body.classList.toggle('open',!open);
+}
+
+/* ═══════════════════════════════════════════
+   SAVE / EXPORT
+═══════════════════════════════════════════ */
+function manualSave(){
+  saveState();
+  showToast('✓ Sačuvano');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+function openExport(){
+  const lines = [];
+  lines.push('AG GROUP — Popis magacina');
+  lines.push('Datum: '+new Date().toLocaleDateString('sr-RS'));
+  lines.push('');
+  SEKCIJE.forEach(sek=>{
+    lines.push('=== '+sek.naziv.toUpperCase()+' ===');
+    sek.stavke.forEach(s=>{
+      const d = getItem(s.sifra);
+      if(!d){ lines.push('  '+s.sifra+' | '+s.naziv+' | —'); return; }
+      if(d.komadi){
+        const uk = d.komadi.reduce((a,k)=>a+(+k.duzina||0),0);
+        lines.push('  '+s.sifra+' | '+s.naziv+' | '+d.komadi.length+' komada | '+uk+' mm ukupno');
+        d.komadi.forEach((k,i)=>{ lines.push('    Komad '+(i+1)+': '+(k.duzina||'?')+' mm'+(k.lokacija?' @ '+k.lokacija:'')); });
+      } else {
+        lines.push('  '+s.sifra+' | '+s.naziv+' | '+d.kolicina+(d.minimum?'  (min: '+d.minimum+')':'')+(d.lokacija?' @ '+d.lokacija:''));
+      }
+    });
+    lines.push('');
+  });
+  document.getElementById('exportOut').textContent = lines.join('\n');
+  document.getElementById('exportModal').classList.add('open');
+}
+function closeExport(){ document.getElementById('exportModal').classList.remove('open'); }
+function copyExport(){
+  const txt = document.getElementById('exportOut').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{ showToast('✓ Kopirano'); closeExport(); });
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+document.getElementById('hdDate').textContent = new Date().toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'});
+loadState();
+build();
+updateProgress();
+</script>
 </body>
 </html>
