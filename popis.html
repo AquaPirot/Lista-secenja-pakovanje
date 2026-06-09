@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8"/>
+<title>AG GROUP — Popis magacina</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap');
+  *{box-sizing:border-box;}
+  body{font-family:'Hanken Grotesk',Arial,sans-serif;font-size:11px;margin:0;padding:16px;color:#111;}
+  h1{font-size:16px;margin:0 0 2px;letter-spacing:.04em;}
+  .meta{font-size:10px;color:#666;margin-bottom:14px;}
+  .meta input{border:none;border-bottom:1px solid #999;width:120px;font-size:10px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:18px;}
+  th{background:#191814;color:#fff;padding:5px 7px;text-align:left;font-size:10px;letter-spacing:.04em;}
+  td{padding:4px 7px;border-bottom:1px solid #ddd;vertical-align:middle;}
+  tr:nth-child(even) td{background:#f7f5ef;}
+  .sek{background:#a9743c!important;color:#fff;font-weight:700;font-size:10px;letter-spacing:.06em;padding:4px 7px;}
+  .sifra{font-family:monospace;font-size:10px;color:#555;white-space:nowrap;}
+  .jed{text-align:center;font-weight:600;}
+  .stanje{width:70px;text-align:center;}
+  .min{width:70px;text-align:center;}
+  .nap{width:140px;font-size:9.5px;color:#888;}
+  input[type=number],input[type=text]{width:100%;border:1px solid #ccc;border-radius:3px;padding:2px 4px;font-size:10px;text-align:center;}
+  .br{font-size:10px;color:#aaa;text-align:right;}
+  @media print{
+    body{padding:8px;}
+    @page{margin:10mm;size:A4;}
+    input{border:none;border-bottom:1px solid #aaa;border-radius:0;background:transparent;}
+  }
+</style>
+</head>
+<body>
+
+<h1>AG GROUP — POPIS MAGACINA</h1>
+<div class="meta">
+  Datum popisa: <input type="text" placeholder="__.__.20____"> &nbsp;&nbsp;
+  Popisao: <input type="text" placeholder="Ime i prezime"> &nbsp;&nbsp;
+  Stranica 1/1
+</div>
+
+<!-- ════════════════════════════════════════════════
+     1. ALUMINIJUM PROFILI
+════════════════════════════════════════════════ -->
+<table>
+  <thead>
+    <tr><th colspan="7" class="sek">① ALUMINIJUM PROFILI</th></tr>
+    <tr>
+      <th class="br">#</th>
+      <th>Šifra</th>
+      <th>Naziv profila</th>
+      <th style="width:50px">Jed.</th>
+      <th class="stanje">Stanje<br>na lageru</th>
+      <th class="min">Min.<br>upozorenje</th>
+      <th class="nap">Napomena</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="br">1</td><td class="sifra">10501</td><td>Šina (raj) 90×150</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">2</td><td class="sifra">10475</td><td>Šina (raj) 110×150</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">3</td><td class="sifra">10468</td><td>Oluk</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">4</td><td class="sifra">10471</td><td>Korniš — TANKI</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">5</td><td class="sifra">10472</td><td>Korniš — DEBELI</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">6</td><td class="sifra">10470</td><td>Tanki stringcourse (korniš kedera)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">7</td><td class="sifra">10419</td><td>Stub 110×144</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">8</td><td class="sifra">10414</td><td>Stub 100×100</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">9</td><td class="sifra">10420</td><td>Panel (između rajeva)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">10</td><td class="sifra">10417</td><td>Cev motora</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">11</td><td class="sifra">CEV-80</td><td>Cev na zidu 80×40 (čelična)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">12</td><td class="sifra">CEV-100</td><td>Cev na zidu 100×100 (čelična)</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.1"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════
+     2. PLASTIKA — KAVEZI, KOČNICE, KOLICA
+════════════════════════════════════════════════ -->
+<table>
+  <thead>
+    <tr><th colspan="7" class="sek">② PLASTIKA — kavezi, kočnice, kolica, takozi</th></tr>
+    <tr>
+      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
+      <th style="width:50px">Jed.</th>
+      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="br">13</td><td class="sifra">ARV-01</td><td>Velike plastike za zupčanik</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">14</td><td class="sifra">ARV-02</td><td>Veliki zupčanik</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">15</td><td class="sifra">ARV-03</td><td>Kočnica</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">16</td><td class="sifra">ARV-04</td><td>Prednji zatezač L/D (par)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">17</td><td class="sifra">ARV-05</td><td>Komplet za prednji ležaj</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">18</td><td class="sifra">ARV-07</td><td>Plastika spoja kaiša</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">19</td><td class="sifra">ARV-08</td><td>Velika kolica</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">20</td><td class="sifra">ARV-09</td><td>Mala kolica</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">21</td><td class="sifra">ARV-06</td><td>Odvod vode oluka</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">22</td><td class="sifra">ARV-19</td><td>Ugaoni umetak tankog korniša</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">23</td><td class="sifra">ARV-20</td><td>Srednji umetak tankog korniša (konektor)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">24</td><td class="sifra">ARV-21</td><td>Ugaoni umetak debelog korniša</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">25</td><td class="sifra">ARV-22</td><td>Srednji umetak debelog korniša (konektor)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">26</td><td class="sifra">ARV-T</td><td>Tapa — poklopac rupe 20mm</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">27</td><td class="sifra">ARV-D</td><td>Tipla</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">28</td><td class="sifra">PRG-117</td><td>Veliki ležaj</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">29</td><td class="sifra">PRG-119</td><td>Mali ležaj</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════
+     3. METAL OKOV
+════════════════════════════════════════════════ -->
+<table>
+  <thead>
+    <tr><th colspan="7" class="sek">③ METAL OKOV — nosači, fiksatori, poklopci</th></tr>
+    <tr>
+      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
+      <th style="width:50px">Jed.</th>
+      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="br">30</td><td class="sifra">ARV-M1</td><td>Zidni nosač šine</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">31</td><td class="sifra">ARV-M2a</td><td>Zadnji spoj šine — SA rupom</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">32</td><td class="sifra">ARV-M2b</td><td>Zadnji spoj šine — BEZ rupe</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">33</td><td class="sifra">ARV-M4</td><td>Fiksator motora na šinu</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">34</td><td class="sifra">ARV-M5</td><td>Podloška fiksatora motora</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">35</td><td class="sifra">ARV-M6</td><td>Spoj šina — veliki oluk</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">36</td><td class="sifra">ARV-M7</td><td>Spoj stub–oluk</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">37</td><td class="sifra">ARV-M8</td><td>Spoj rasponke i raja</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">38</td><td class="sifra">ARV-M10</td><td>Prednji zatezač automat</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">39</td><td class="sifra">ARV-M11</td><td>Prednji poklopac šine</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">40</td><td class="sifra">ARV-M12</td><td>Donja stopa stuba</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">41</td><td class="sifra">ARV-M13</td><td>Bočni poklopac oluka L+D (par)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════
+     4. FITILJI / KEDERI / KAIŠEVI
+════════════════════════════════════════════════ -->
+<table>
+  <thead>
+    <tr><th colspan="7" class="sek">④ FITILJI, KEDERI, KAIŠEVI</th></tr>
+    <tr>
+      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
+      <th style="width:50px">Jed.</th>
+      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="br">42</td><td class="sifra">PRG-102</td><td>Fitilj / keder šine</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">43</td><td class="sifra">PRG-104</td><td>Fitilj / keder oluka</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">44</td><td class="sifra">PRG-101</td><td>Fitilj / keder cerade — korniš</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">45</td><td class="sifra">PRG-103</td><td>Fitilj kabla</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">46</td><td class="sifra">PRG-105</td><td>T10×16 zupčasti kaiš</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════
+     5. ELEKTRONIKA
+════════════════════════════════════════════════ -->
+<table>
+  <thead>
+    <tr><th colspan="7" class="sek">⑤ ELEKTRONIKA — LED, motori, trafoi</th></tr>
+    <tr>
+      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
+      <th style="width:50px">Jed.</th>
+      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena / model</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="br">47</td><td class="sifra">PRG-108</td><td>24V horizontalni LED (24W yatay led)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">48</td><td class="sifra">PRG-116</td><td>Kabl 2×0,75mm²</td><td class="jed">m</td><td class="stanje"><input type="number" min="0" step="1"></td><td class="min"><input type="number" min="0" step="5"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">49</td><td class="sifra">MOTOR</td><td>Motor</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text" placeholder="npr. Somfy RTS 120Nm"></td></tr>
+    <tr><td class="br">50</td><td class="sifra">DALJ</td><td>Daljinski upravljač</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">51</td><td class="sifra">TRAFO-10A</td><td>Trafo 10A (do 10A potrošnje)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">52</td><td class="sifra">TRAFO-20A</td><td>Trafo 20A (do 20A potrošnje)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">53</td><td class="sifra">TRAFO-30A</td><td>Trafo 30A (do 30A potrošnje)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">54</td><td class="sifra">DIMER</td><td>Dimer (regulator LED)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+  </tbody>
+</table>
+
+<!-- ════════════════════════════════════════════════
+     6. OSTALI MATERIJAL
+════════════════════════════════════════════════ -->
+<table>
+  <thead>
+    <tr><th colspan="7" class="sek">⑥ OSTALI MATERIJAL — cerada, lim, vijci</th></tr>
+    <tr>
+      <th class="br">#</th><th>Šifra</th><th>Naziv</th>
+      <th style="width:50px">Jed.</th>
+      <th class="stanje">Stanje</th><th class="min">Min.</th><th class="nap">Napomena / boja/tip</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="br">55</td><td class="sifra">CER-ANT</td><td>Cerada — Antracit</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">56</td><td class="sifra">CER-KRE</td><td>Cerada — Krem</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">57</td><td class="sifra">CER-CRN</td><td>Cerada — Crna</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">58</td><td class="sifra">CER-MIS</td><td>Cerada — Miš boja</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">59</td><td class="sifra">CER-OST</td><td>Cerada — ostale boje</td><td class="jed">m²</td><td class="stanje"><input type="number" min="0" step="0.5"></td><td class="min"><input type="number" min="0" step="1"></td><td class="nap"><input type="text" placeholder="navedi boju"></td></tr>
+    <tr><td class="br">60</td><td class="sifra">LIM-125</td><td>Trapezni lim 125×80</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+    <tr><td class="br">61</td><td class="sifra">VIJCI</td><td>Vijci + pakovanje (paušal kompleti)</td><td class="jed">kom</td><td class="stanje"><input type="number" min="0"></td><td class="min"><input type="number" min="0"></td><td class="nap"><input type="text"></td></tr>
+  </tbody>
+</table>
+
+<div style="margin-top:20px;border-top:2px solid #191814;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;font-size:10px;">
+  <div>Popis izvršio:<br><br>___________________________<br>Potpis</div>
+  <div>Kontrolisao:<br><br>___________________________<br>Potpis</div>
+  <div>Napomene:<br><br><br>___________________________</div>
+</div>
+
+</body>
+</html>
