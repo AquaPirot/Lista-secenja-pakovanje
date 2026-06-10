@@ -62,4 +62,40 @@ if($method === 'POST' && $action === 'setall'){
   json_out(['ok'=>true, 'saved'=>count($state)]);
 }
 
+// POST proizvodnja — novo stanje + upis u magacin_log (jedna transakcija)
+if($method === 'POST' && $action === 'proizvodnja'){
+  $b     = body();
+  $state = $b['state'] ?? [];
+  $log   = $b['log']   ?? [];
+  if(!$state) json_out(['ok'=>false,'err'=>'Empty state'], 400);
+
+  $pdo = db();
+  $pdo->beginTransaction();
+  foreach($state as $sifra => $data){
+    if(isset($data['komadi'])){
+      $q = $pdo->prepare("INSERT INTO magacin (sifra,tip,komadi,updated_at) VALUES(?,?,?,NOW())
+        ON DUPLICATE KEY UPDATE komadi=VALUES(komadi), updated_at=NOW()");
+      $q->execute([$sifra, 'profil', json_encode($data['komadi'], JSON_UNESCAPED_UNICODE)]);
+    } else {
+      $q = $pdo->prepare("INSERT INTO magacin (sifra,tip,kolicina,minimum,updated_at) VALUES(?,?,?,?,NOW())
+        ON DUPLICATE KEY UPDATE kolicina=VALUES(kolicina), minimum=VALUES(minimum), updated_at=NOW()");
+      $q->execute([$sifra, 'kom', $data['kolicina'] ?? 0, $data['minimum'] ?? 0]);
+    }
+  }
+  $ql = $pdo->prepare("INSERT INTO magacin_log (sifra, akcija, detalji) VALUES(?,?,?)");
+  foreach($log as $l){
+    $ql->execute([$l['sifra'] ?? '', $l['akcija'] ?? 'secenje',
+                  json_encode($l['detalji'] ?? [], JSON_UNESCAPED_UNICODE)]);
+  }
+  $pdo->commit();
+  json_out(['ok'=>true, 'log'=>count($log)]);
+}
+
+// GET istorija — poslednje promene
+if($method === 'GET' && $action === 'log'){
+  $rows = db()->query("SELECT sifra, akcija, detalji, vreme FROM magacin_log ORDER BY id DESC LIMIT 100")->fetchAll();
+  foreach($rows as &$r) $r['detalji'] = json_decode($r['detalji'], true);
+  json_out(['ok'=>true, 'data'=>$rows]);
+}
+
 json_out(['ok'=>false,'err'=>'Bad request'], 400);

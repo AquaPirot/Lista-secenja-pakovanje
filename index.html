@@ -179,6 +179,7 @@
     <button class="btn btn-secondary active" id="btnNalog" onclick="switchView('nalog')">Nalog</button>
     <button class="btn btn-secondary" id="btnObracun" onclick="switchView('obracun')">Obračun</button>
     <button class="btn btn-secondary" id="btnSacuvaj" onclick="saveOrder()">💾 Sačuvaj</button>
+    <button class="btn btn-secondary" id="btnProizvodnja" onclick="pustiUProizvodnju()">🏭 Proizvodnja</button>
     <button class="btn btn-secondary" onclick="openArchive()">📁 Arhiva</button>
     <button class="btn btn-primary" onclick="window.print()">⎙ PDF</button>
   </div>
@@ -1355,6 +1356,174 @@ async function deleteOrder(id){
     await fetch(API_URL+'/nalozi.php?action=delete', {method:'POST', headers:apiHeaders(), body:JSON.stringify({id})});
   } catch(e){}
   renderArchive();
+}
+</script>
+
+<div class="arch-overlay no-print" id="prodOverlay" onclick="if(event.target===this)closeProd()">
+  <div class="arch-panel" style="width:min(520px,100vw);">
+    <div class="arch-head">
+      <span class="arch-head-t">🏭 PUŠTANJE U PROIZVODNJU</span>
+      <button class="arch-close" onclick="closeProd()">✕</button>
+    </div>
+    <div id="prodBody" style="padding:14px 16px;font-size:12px;"></div>
+  </div>
+</div>
+
+<script>
+/* ───────── PROIZVODNJA — skidanje sa stanja magacina ───────── */
+// pragovi otpada po šifri (mm) — ispod toga ostatak je otpad
+const OTPAD_PRAG_DEFAULT = 2000;
+const OTPAD_PRAG_MAP = {"10501":1500,"10475":1500,"10419":1500,"10414":1500};
+function getOtpadPrag(sifra){ return OTPAD_PRAG_MAP[sifra] ?? OTPAD_PRAG_DEFAULT; }
+
+let prodPlan = null; // čuva plan između pregleda i potvrde
+
+function trazeniProfili(){
+  // skupi sve aluminijumske pozicije trenutnog naloga: {sifra, naziv, duzina, kom}
+  const I = {
+    sirina:$("sirina").value, dubina:$("dubina").value,
+    zadnjaVisina:$("zadnjaVisina").value, prednjaVisina:$("prednjaVisina").value,
+    cev:$("cev").value, stub:$("stub").value, sirinaRaja:$("sirinaRaja").value,
+    keder:$("keder").value, kornisTip:$("kornisTip").value, cevMotora:$("cevMotora").value,
+    autoInterval:$("autoInterval").checked, brIntervala:$("brIntervala").value,
+    svetalaPoKornizu:$("svetalaPoKornizu").value, celicnaOn:$("celicnaOn").checked,
+    parapetOn:$("parapetOn").checked, parapetVisina:$("parapetVisina").value,
+  };
+  const R = compute(I);
+  const alu = aluCalc(I, R);
+  return alu.items
+    .filter(it => it.kom > 0 && it.mera > 0)
+    .map(it => ({sifra: it.prof.sifra, naziv: it.naziv, duzina: Math.round(it.mera), kom: it.kom}));
+}
+
+function planirajSecenje(trazeni, magacin){
+  // best-fit: za svako traženo sečenje uzmi najmanji komad koji može da ga primi
+  // magacin: {sifra:{komadi:[{duzina}]}}, radimo na kopiji
+  const stanje = {};
+  for(const s in magacin){
+    if(magacin[s].komadi) stanje[s] = magacin[s].komadi.map(k=>+k.duzina).filter(d=>d>0);
+  }
+  const koraci = [], nedostaje = [];
+
+  trazeni.forEach(t => {
+    for(let i=0; i<t.kom; i++){
+      const dostupni = stanje[t.sifra] || [];
+      // najmanji komad >= tražene dužine
+      let bestIdx = -1;
+      dostupni.forEach((d,idx) => {
+        if(d >= t.duzina && (bestIdx===-1 || d < dostupni[bestIdx])) bestIdx = idx;
+      });
+      if(bestIdx === -1){
+        nedostaje.push({sifra:t.sifra, naziv:t.naziv, duzina:t.duzina});
+        continue;
+      }
+      const iz = dostupni[bestIdx];
+      const ostatak = iz - t.duzina;
+      const prag = getOtpadPrag(t.sifra);
+      const vracaSe = ostatak >= prag;
+      dostupni.splice(bestIdx, 1);
+      if(vracaSe) dostupni.push(ostatak);
+      koraci.push({sifra:t.sifra, naziv:t.naziv, duzina:t.duzina, iz, ostatak, vracaSe, prag});
+    }
+  });
+
+  return {koraci, nedostaje, novoStanje: stanje};
+}
+
+async function pustiUProizvodnju(){
+  const body = document.getElementById('prodBody');
+  document.getElementById('prodOverlay').classList.add('open');
+  body.innerHTML = '⏳ Učitavam stanje magacina...';
+
+  let magacin = null;
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok) magacin = json.data;
+  } catch(e){}
+
+  if(!magacin){
+    body.innerHTML = '<div style="color:#e07070;">❌ Ne mogu da učitam magacin — proveri internet konekciju.</div>';
+    return;
+  }
+
+  const trazeni = trazeniProfili();
+  if(!trazeni.length){
+    body.innerHTML = '<div style="color:#e07070;">Nema profila u nalogu — unesi dimenzije pergole.</div>';
+    return;
+  }
+
+  const plan = planirajSecenje(trazeni, magacin);
+  prodPlan = {plan, magacin, brNaloga: $("brNaloga").value || '', kupac: $("kupac").value || ''};
+
+  let html = '';
+  if(plan.koraci.length){
+    html += '<div style="font-weight:700;color:#7dba8a;margin-bottom:8px;">✓ SEČE SE SA STANJA ('+plan.koraci.length+')</div>';
+    html += plan.koraci.map(k =>
+      `<div style="padding:7px 0;border-bottom:1px solid #2e3138;">
+        <b>${k.sifra}</b> ${k.naziv}<br>
+        treba <b>${k.duzina}</b> mm → seče se iz komada <b>${k.iz}</b> mm
+        ${k.ostatak>0
+          ? (k.vracaSe
+            ? `<br><span style="color:#7dba8a;">ostaje ${k.ostatak} mm → vraća se na stanje</span>`
+            : `<br><span style="color:#e07a5f;">ostaje ${k.ostatak} mm → otpad (ispod ${k.prag} mm)</span>`)
+          : ''}
+      </div>`).join('');
+  }
+  if(plan.nedostaje.length){
+    html += '<div style="font-weight:700;color:#e07070;margin:12px 0 8px;">⚠ NEMA NA STANJU ('+plan.nedostaje.length+')</div>';
+    html += plan.nedostaje.map(n =>
+      `<div style="padding:5px 0;border-bottom:1px solid #2e3138;color:#e09080;">
+        <b>${n.sifra}</b> ${n.naziv} — treba ${n.duzina} mm
+      </div>`).join('');
+    html += '<div style="font-size:11px;color:#a09880;margin-top:6px;">Ovi profili moraju da se poruče ili seku iz nove šipke.</div>';
+  }
+
+  if(plan.koraci.length){
+    html += `<button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="potvrdiProizvodnju()">✓ POTVRDI — skini sa stanja</button>`;
+  }
+  html += `<button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeProd()">Otkaži</button>`;
+  body.innerHTML = html;
+}
+
+async function potvrdiProizvodnju(){
+  if(!prodPlan) return;
+  const body = document.getElementById('prodBody');
+  body.innerHTML = '⏳ Ažuriram stanje...';
+
+  const {plan, magacin} = prodPlan;
+  // novo stanje: zameni komade profila novim, ostalo netaknuto
+  const novoStanje = JSON.parse(JSON.stringify(magacin));
+  for(const sifra in plan.novoStanje){
+    novoStanje[sifra] = {komadi: plan.novoStanje[sifra].map(d=>({duzina:String(d)}))};
+  }
+
+  const log = plan.koraci.map(k => ({
+    sifra: k.sifra, akcija: 'secenje',
+    detalji: {duzina:k.duzina, iz:k.iz, ostatak:k.ostatak, vracaSe:k.vracaSe,
+              nalog: prodPlan.brNaloga, kupac: prodPlan.kupac}
+  }));
+
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=proizvodnja', {
+      method:'POST', headers:apiHeaders(),
+      body: JSON.stringify({state: novoStanje, log})
+    });
+    const json = await res.json();
+    if(json.ok){
+      body.innerHTML = '<div style="color:#7dba8a;font-weight:700;font-size:14px;padding:20px 0;text-align:center;">✓ Stanje magacina ažurirano!<br><span style="font-weight:400;font-size:11px;color:#a09880;">Skinuto '+plan.koraci.length+' sečenja, upisano u istoriju.</span></div>'
+        + '<button class="btn btn-secondary" style="width:100%;" onclick="closeProd()">Zatvori</button>';
+      prodPlan = null;
+      return;
+    }
+  } catch(e){}
+  body.innerHTML = '<div style="color:#e07070;">❌ Greška pri čuvanju — pokušaj ponovo.</div>'
+    + '<button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeProd()">Zatvori</button>';
+}
+
+function closeProd(){
+  document.getElementById('prodOverlay').classList.remove('open');
+  prodPlan = null;
 }
 </script>
 </body>
