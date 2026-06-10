@@ -329,7 +329,8 @@ async function loadState(){
   try {
     const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key': API_KEY}});
     const json = await res.json();
-    if(json.ok && Object.keys(json.data).length > 0){
+    if(json.ok){
+      // server je izvor istine — i prazan magacin je validno stanje (posle reseta)
       STATE = json.data;
       localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // keš
       return;
