@@ -1,3 +1,5 @@
 .DS_Store
 Thumbs.db
 *.log
+# Nikad ne commit-ovati config sa lozinkom
+api/config.php

@@ -1214,6 +1214,9 @@ function renderObracun(I, R, alu, okov, obr){
 
 <script>
 /* ───────── ARHIVA ───────── */
+const API_URL = 'https://app.aggroup.rs/api';
+const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
+
 const ARCH_KEY = 'ag_arhiva';
 const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stub',
   'sirinaRaja','keder','kornisTip','cevMotora','bojaRal','bojaCerade',
@@ -1221,7 +1224,16 @@ const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stu
   'parapetOn','parapetVisina',
   'brNaloga','kupac','adresa','datum','rok','radnik'];
 
-function saveOrder(){
+function apiHeaders(){
+  return {'Content-Type':'application/json','X-Api-Key': API_KEY};
+}
+
+async function saveOrder(){
+  const btn = document.getElementById('btnSacuvaj');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Čuvam...';
+  btn.disabled = true;
+
   const fields = {};
   ARCH_FIELDS.forEach(id => {
     const el = document.getElementById(id);
@@ -1229,14 +1241,31 @@ function saveOrder(){
     fields[id] = el.type==='checkbox' ? el.checked : el.value;
   });
   fields._steelRows = JSON.stringify(steelRows);
+
+  const payload = {
+    klijent:  [fields.brNaloga, fields.kupac].filter(Boolean).join(' · ') || '(bez naziva)',
+    napomena: [fields.sirina&&fields.dubina ? fields.sirina+'×'+fields.dubina+'mm' : '', fields.datum].filter(Boolean).join(' · '),
+    status:   'aktivan',
+    input_data:  fields,
+    result_data: null
+  };
+
+  try {
+    const res = await fetch(API_URL+'/nalozi.php?action=save', {method:'POST', headers:apiHeaders(), body:JSON.stringify(payload)});
+    const json = await res.json();
+    if(json.ok){
+      btn.textContent = '✓ Sačuvano';
+      setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; }, 1600);
+      return;
+    }
+  } catch(e){}
+
+  // fallback: localStorage kad nema interneta
   const entry = {id: Date.now(), savedAt: new Date().toLocaleString('sr-RS'), fields};
   const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
   arch.unshift(entry);
   localStorage.setItem(ARCH_KEY, JSON.stringify(arch));
-  const btn = document.getElementById('btnSacuvaj');
-  const orig = btn.textContent;
-  btn.textContent = '✓ Sačuvano';
-  btn.disabled = true;
+  btn.textContent = '✓ Lokalno';
   setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; }, 1600);
 }
 
@@ -1249,21 +1278,39 @@ function closeArchive(){
   document.getElementById('archOverlay').classList.remove('open');
 }
 
-function renderArchive(){
-  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
+async function renderArchive(){
   const cont = document.getElementById('archList');
+  cont.innerHTML = '<div class="arch-empty">⏳ Učitavam...</div>';
+
+  let arch = [];
+  try {
+    const res = await fetch(API_URL+'/nalozi.php?action=list', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok) arch = json.data;
+  } catch(e){
+    // fallback na localStorage
+    arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]').map(o=>({
+      id: o.id,
+      klijent: [o.fields.brNaloga, o.fields.kupac].filter(Boolean).join(' · ') || '(bez naziva)',
+      napomena: [o.fields.sirina&&o.fields.dubina ? o.fields.sirina+'×'+o.fields.dubina+'mm':'', o.fields.datum].filter(Boolean).join(' · '),
+      created_at: o.savedAt,
+      _local: true
+    }));
+  }
+
   if(!arch.length){
     cont.innerHTML = '<div class="arch-empty">Nema sačuvanih naloga.<br>Klikni 💾 Sačuvaj da čuvaš trenutni nalog.</div>';
     return;
   }
   cont.innerHTML = arch.map(o=>{
-    const f = o.fields;
-    const naziv = [f.brNaloga, f.kupac].filter(Boolean).join(' · ') || '(bez naziva)';
-    const opis = [f.sirina&&f.dubina ? f.sirina+'×'+f.dubina+'mm' : '', f.datum].filter(Boolean).join(' · ');
+    const naziv = o.klijent || '(bez naziva)';
+    const opis  = o.napomena || '';
+    const dat   = o.created_at || '';
+    const local = o._local ? ' 📴' : '';
     return `<div class="arch-item">
       <div class="arch-item-head">
-        <span class="arch-item-nr">${naziv}</span>
-        <span class="arch-item-date">${o.savedAt}</span>
+        <span class="arch-item-nr">${naziv}${local}</span>
+        <span class="arch-item-date">${dat}</span>
       </div>
       <div class="arch-item-sub">${opis}</div>
       <div class="arch-item-acts">
@@ -1274,26 +1321,39 @@ function renderArchive(){
   }).join('');
 }
 
-function loadOrder(id){
-  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
-  const entry = arch.find(o=>o.id===id);
-  if(!entry) return;
-  const f = entry.fields;
+async function loadOrder(id){
+  let fields = null;
+
+  try {
+    const res = await fetch(API_URL+'/nalozi.php?action=get&id='+id, {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok) fields = json.data.input_data;
+  } catch(e){}
+
+  if(!fields){
+    // fallback na localStorage
+    const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]');
+    const entry = arch.find(o=>o.id===id);
+    if(entry) fields = entry.fields;
+  }
+
+  if(!fields) return;
   ARCH_FIELDS.forEach(fid=>{
     const el = document.getElementById(fid);
     if(!el) return;
-    if(el.type==='checkbox') el.checked = !!f[fid];
-    else el.value = f[fid]??'';
+    if(el.type==='checkbox') el.checked = !!fields[fid];
+    else el.value = fields[fid]??'';
   });
-  if(f._steelRows){ steelRows=JSON.parse(f._steelRows); renderSteelInputs(); }
+  if(fields._steelRows){ steelRows=JSON.parse(fields._steelRows); renderSteelInputs(); }
   render();
   closeArchive();
 }
 
-function deleteOrder(id){
+async function deleteOrder(id){
   if(!confirm('Obrisati ovaj nalog iz arhive?')) return;
-  const arch = JSON.parse(localStorage.getItem(ARCH_KEY)||'[]').filter(o=>o.id!==id);
-  localStorage.setItem(ARCH_KEY, JSON.stringify(arch));
+  try {
+    await fetch(API_URL+'/nalozi.php?action=delete', {method:'POST', headers:apiHeaders(), body:JSON.stringify({id})});
+  } catch(e){}
   renderArchive();
 }
 </script>

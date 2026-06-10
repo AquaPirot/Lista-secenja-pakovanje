@@ -260,6 +260,9 @@ const SEKCIJE = [
 /* ═══════════════════════════════════════════
    STANJE — čuva se u localStorage
 ═══════════════════════════════════════════ */
+const API_URL = 'https://app.aggroup.rs/api';
+const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
+
 const OTPAD_PRAG_DEFAULT = 2000;
 const OTPAD_PRAG_MAP = {
   "10501": 1500,  // Šina (raj) 90×150
@@ -271,12 +274,34 @@ function getOtpadPrag(sifra){ return OTPAD_PRAG_MAP[sifra] ?? OTPAD_PRAG_DEFAULT
 const LS_KEY = 'ag_popis_v1';
 let STATE = {};
 
-function loadState(){
+async function loadState(){
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok && Object.keys(json.data).length > 0){
+      STATE = json.data;
+      localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // keš
+      return;
+    }
+  } catch(e){}
+  // fallback: localStorage kad nema konekcije
   try { STATE = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(e){ STATE={}; }
 }
-function saveState(){
-  localStorage.setItem(LS_KEY, JSON.stringify(STATE));
-  document.getElementById('autoSaveTxt').textContent = 'Sačuvano ' + now();
+
+async function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // uvek keš
+  document.getElementById('autoSaveTxt').textContent = 'Čuvam...';
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=setall', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
+      body: JSON.stringify({state: STATE})
+    });
+    const json = await res.json();
+    document.getElementById('autoSaveTxt').textContent = json.ok ? 'Sačuvano ' + now() : '⚠ Lokalno ' + now();
+  } catch(e){
+    document.getElementById('autoSaveTxt').textContent = '📴 Lokalno ' + now();
+  }
 }
 function now(){
   return new Date().toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'});
@@ -564,9 +589,7 @@ function copyExport(){
    INIT
 ═══════════════════════════════════════════ */
 document.getElementById('hdDate').textContent = new Date().toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'});
-loadState();
-build();
-updateProgress();
+loadState().then(()=>{ build(); updateProgress(); });
 </script>
 </body>
 </html>
