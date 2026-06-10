@@ -1366,7 +1366,8 @@ async function loadMagacinHints(items){
       if(json.ok) magState = json.data;
     } catch(e){ return; }
   }
-  items.filter(p=>p.kom>0&&p.mera>0).forEach((p,i) => {
+  items.forEach((p,i) => {
+    if(!(p.kom>0 && p.mera>0)) return;
     const el = document.getElementById('mh_'+p.prof.sifra+'_'+i);
     if(!el) return;
     const komadi = (magState[p.prof.sifra]?.komadi || []).map(k=>+k.duzina).filter(d=>d>0);

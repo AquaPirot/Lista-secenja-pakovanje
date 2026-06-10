@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lista-secenja-v3';
+const CACHE_NAME = 'lista-secenja-v4';
 const STATIC_ASSETS = [
   './manifest.json',
   './icons/icon-192.png',
@@ -22,6 +22,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // API pozivi — NIKAD ne keširati, uvek direktno na server
+  if (event.request.method !== 'GET' || url.pathname.includes('/api/')) {
+    return; // browser sam obrađuje, bez keša
+  }
+
   // Network-first za HTML — uvek uzima novu verziju kad je online
   if (event.request.mode === 'navigate') {
     event.respondWith(
@@ -35,6 +42,7 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
+
   // Cache-first za ikone i ostale statične fajlove
   event.respondWith(
     caches.match(event.request).then(cached => {
