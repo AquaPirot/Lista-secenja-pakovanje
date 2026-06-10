@@ -206,6 +206,7 @@
     <button class="btn btn-secondary active" id="btnNalog" onclick="switchView('nalog')">Nalog</button>
     <button class="btn btn-secondary" id="btnObracun" onclick="switchView('obracun')">Obračun</button>
     <button class="btn btn-secondary" id="btnMagacin" onclick="switchView('magacin')">📦 Magacin</button>
+    <button class="btn btn-secondary" id="btnIstorija" onclick="switchView('istorija')">📋 Istorija</button>
     <button class="btn btn-secondary" id="btnSacuvaj" onclick="saveOrder()">💾 Sačuvaj</button>
     <button class="btn btn-secondary" id="btnProizvodnja" onclick="pustiUProizvodnju()">🏭 Proizvodnja</button>
     <button class="btn btn-secondary" onclick="openArchive()">📁 Arhiva</button>
@@ -707,7 +708,9 @@ function switchView(v){
   $("btnNalog").classList.toggle("active", v==='nalog');
   $("btnObracun").classList.toggle("active", v==='obracun');
   $("btnMagacin").classList.toggle("active", v==='magacin');
+  $("btnIstorija").classList.toggle("active", v==='istorija');
   if(v === 'magacin') renderMagacin();
+  else if(v === 'istorija') renderIstorija();
   else render();
 }
 
@@ -1357,6 +1360,73 @@ async function renderMagacin(){
   doc.innerHTML = html;
 }
 
+/* ───────── ISTORIJA (magacin_log) ───────── */
+async function renderIstorija(){
+  const doc = $("doc");
+  doc.innerHTML = '<div class="mag-wrap"><div class="mag-empty">⏳ Učitavam istoriju...</div></div>';
+  let rows = [];
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=log', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok) rows = json.data;
+  } catch(e){}
+
+  if(!rows.length){
+    doc.innerHTML = '<div class="mag-wrap"><div class="mag-empty">Nema zapisa u istoriji.<br>Kada pustiš nalog u proizvodnju, ovde će se pojaviti svako sečenje.</div></div>';
+    return;
+  }
+
+  let html = '<div class="mag-wrap">';
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="color:var(--muted);font-size:11px;">Poslednjih ${rows.length} aktivnosti</div>
+    <button class="btn-xs btn-xs-load" onclick="renderIstorija()">↻ Osveži</button>
+  </div>`;
+  html += `<div class="mag-sek"><div class="mag-sek-h">📋 ISTORIJA MAGACINA</div>`;
+
+  rows.forEach(r => {
+    const d = r.detalji || {};
+    const vreme = (r.vreme||'').substring(0,16).replace('T',' ');
+    let opis = '';
+
+    if(r.akcija === 'secenje'){
+      if(d.cuts && Array.isArray(d.cuts)){
+        // New format: stockLen + cuts[]
+        const cutsStr = d.cuts.map(c=>c+'mm').join(' + ');
+        const ostStr = d.ostatak > 0
+          ? (d.vracaSe ? ` → ↩ ostaje ${d.ostatak}mm` : ` → 🗑 otpad ${d.ostatak}mm`)
+          : ' → tačno';
+        opis = `Iz <b>${d.stockLen}mm</b>: ${cutsStr}${ostStr}`;
+      } else if(d.iz){
+        // Old single-cut format
+        const ostStr = d.ostatak > 0
+          ? (d.vracaSe ? ` → ↩ ostaje ${d.ostatak}mm` : ` → 🗑 otpad ${d.ostatak}mm`)
+          : ' → tačno';
+        opis = `Sečenje <b>${d.duzina}mm</b> iz ${d.iz}mm${ostStr}`;
+      }
+      if(d.nalog) opis += ` &nbsp;·&nbsp; Nalog: <b>${d.nalog}</b>`;
+      if(d.kupac) opis += ` · ${d.kupac}`;
+    } else if(r.akcija === 'korekcija'){
+      opis = `Korekcija stanja`;
+      if(d.razlog) opis += ` — <em>${d.razlog}</em>`;
+    } else {
+      opis = r.akcija;
+    }
+
+    const col = r.akcija === 'secenje' ? '#7dba8a' : '#a9743c';
+    const lbl = r.akcija === 'secenje' ? '✂' : '⚙';
+
+    html += `<div class="mag-row" style="gap:8px;align-items:flex-start;flex-wrap:nowrap;">
+      <div style="font-family:monospace;font-size:9px;color:var(--muted);white-space:nowrap;min-width:92px;padding-top:1px;">${vreme}</div>
+      <div style="font-family:monospace;font-size:10px;color:#c0b08a;min-width:50px;padding-top:1px;">${r.sifra}</div>
+      <div style="flex:1;font-size:11px;line-height:1.55;">${opis}</div>
+      <div style="font-size:13px;color:${col};padding-top:1px;">${lbl}</div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  doc.innerHTML = html;
+}
+
 /* ── Magacin hints za sekciju 01 ── */
 async function loadMagacinHints(items){
   if(!magState){
@@ -1677,35 +1747,60 @@ function trazeniProfili(){
 }
 
 function planirajSecenje(trazeni, magacin){
-  // best-fit: za svako traženo sečenje uzmi najmanji komad koji može da ga primi
-  // magacin: {sifra:{komadi:[{duzina}]}}, radimo na kopiji
+  // Optimizovano sečenje: FFD bin-packing po šipki
+  // Svaka šipka prima max moguće komade (od najvećeg naniže) pre nego što se uzme sledeća
   const stanje = {};
   for(const s in magacin){
     if(magacin[s].komadi) stanje[s] = magacin[s].komadi.map(k=>+k.duzina).filter(d=>d>0);
   }
+
+  // koraci: {sifra, naziv, stockLen, cuts:[], ostatak, vracaSe, prag}
   const koraci = [], nedostaje = [];
 
+  // Grupiši tražene komade po šifri profila
+  const bySifra = {};
   trazeni.forEach(t => {
-    for(let i=0; i<t.kom; i++){
-      const dostupni = stanje[t.sifra] || [];
-      // najmanji komad >= tražene dužine
-      let bestIdx = -1;
-      dostupni.forEach((d,idx) => {
-        if(d >= t.duzina && (bestIdx===-1 || d < dostupni[bestIdx])) bestIdx = idx;
-      });
-      if(bestIdx === -1){
-        nedostaje.push({sifra:t.sifra, naziv:t.naziv, duzina:t.duzina});
-        continue;
-      }
-      const iz = dostupni[bestIdx];
-      const ostatak = iz - t.duzina;
-      const prag = getOtpadPrag(t.sifra);
-      const vracaSe = ostatak >= prag;
-      dostupni.splice(bestIdx, 1);
-      if(vracaSe) dostupni.push(ostatak);
-      koraci.push({sifra:t.sifra, naziv:t.naziv, duzina:t.duzina, iz, ostatak, vracaSe, prag});
-    }
+    if(!bySifra[t.sifra]) bySifra[t.sifra] = {naziv: t.naziv, cuts: []};
+    for(let i = 0; i < t.kom; i++) bySifra[t.sifra].cuts.push(t.duzina);
   });
+
+  for(const sifra in bySifra){
+    const {naziv, cuts} = bySifra[sifra];
+    cuts.sort((a, b) => b - a);  // najveći prvi (FFD)
+    const stock = (stanje[sifra] || []).slice().sort((a, b) => b - a);
+    const prag = getOtpadPrag(sifra);
+    const remaining = cuts.slice();
+
+    stock.forEach(stockLen => {
+      if(!remaining.length) return;
+      const cutsDone = [];
+      let leftover = stockLen;
+      let changed = true;
+      // Pohlepno: ubaci što više komada (od najvećeg) u ovu šipku
+      while(changed && remaining.length > 0){
+        changed = false;
+        for(let i = 0; i < remaining.length; i++){
+          if(remaining[i] <= leftover){
+            leftover -= remaining[i];
+            cutsDone.push(remaining[i]);
+            remaining.splice(i, 1);
+            changed = true;
+            break;  // počni ponovo od najvećeg preostalog
+          }
+        }
+      }
+      if(cutsDone.length > 0){
+        const vracaSe = leftover >= prag;
+        koraci.push({sifra, naziv, stockLen, cuts: cutsDone, ostatak: leftover, vracaSe, prag});
+        const idx = stanje[sifra].indexOf(stockLen);
+        if(idx !== -1) stanje[sifra].splice(idx, 1);
+        if(vracaSe) stanje[sifra].push(leftover);
+        stanje[sifra].sort((a, b) => b - a);
+      }
+    });
+
+    remaining.forEach(duzina => nedostaje.push({sifra, naziv, duzina}));
+  }
 
   return {koraci, nedostaje, novoStanje: stanje};
 }
@@ -1747,26 +1842,36 @@ async function pustiUProizvodnju(){
   }
 
   if(plan.koraci.length){
-    // grupiši po sifri za preglednost
-    const grupe = {};
+    // Grupiši po šifri za pregled
+    const bySifra = {};
     plan.koraci.forEach(k => {
-      if(!grupe[k.sifra]) grupe[k.sifra] = {naziv:k.naziv, duzina:k.duzina, koraci:[]};
-      grupe[k.sifra].koraci.push(k);
+      if(!bySifra[k.sifra]) bySifra[k.sifra] = {naziv: k.naziv, totalCuts: 0, pieces: []};
+      bySifra[k.sifra].totalCuts += k.cuts.length;
+      bySifra[k.sifra].pieces.push(k);
     });
     html += `<div style="font-weight:700;color:#7dba8a;margin-bottom:10px;">✓ SEČE SE SA STANJA</div>`;
-    Object.values(grupe).forEach(g => {
+    Object.entries(bySifra).forEach(([sifra, g]) => {
       html += `<div style="margin-bottom:12px;background:#161d16;border:1px solid #2e4a2e;border-radius:6px;overflow:hidden;">
         <div style="padding:7px 12px;background:#1e2e1e;font-weight:700;font-size:12px;color:#b8d8b0;">
-          ${g.koraci[0].sifra} &nbsp;·&nbsp; ${g.naziv} &nbsp;·&nbsp; seče na <b>${g.duzina} mm</b> &nbsp;·&nbsp; ${g.koraci.length} kom
+          ${sifra} &nbsp;·&nbsp; ${g.naziv} &nbsp;·&nbsp; ${g.totalCuts} kom · ${g.pieces.length} šipki
         </div>`;
-      g.koraci.forEach((k,i) => {
-        const tag = k.vracaSe
-          ? `<span style="color:#7dba8a;">↩ ostaje ${k.ostatak}mm → stanje</span>`
-          : k.ostatak > 0
-            ? `<span style="color:#e07a5f;">🗑 ostaje ${k.ostatak}mm → otpad</span>`
-            : `<span style="color:#7dba8a;">tačno</span>`;
-        html += `<div style="padding:5px 12px;border-top:1px solid #2e3a2e;font-size:11px;color:#c0d8c0;">
-          ${i+1}. iz <b>${k.iz} mm</b> &nbsp; ${tag}
+      g.pieces.forEach((k, pi) => {
+        let cumLeft = k.stockLen;
+        let cutsHtml = '';
+        k.cuts.forEach((cut, ci) => {
+          cumLeft -= cut;
+          const intermed = ci < k.cuts.length - 1
+            ? `<span style="color:#888;"> → ${cumLeft}mm</span>` : '';
+          cutsHtml += `<span style="color:#fff;font-weight:700;">✂ ${cut}mm</span>${intermed} `;
+        });
+        const tag = k.ostatak > 0
+          ? (k.vracaSe
+              ? `<span style="color:#7dba8a;">→ ↩ ostaje <b>${k.ostatak}mm</b> (stanje)</span>`
+              : `<span style="color:#e07a5f;">→ 🗑 otpad <b>${k.ostatak}mm</b></span>`)
+          : `<span style="color:#7dba8a;">→ tačno</span>`;
+        html += `<div style="padding:6px 12px;border-top:1px solid #2e3a2e;font-size:11px;color:#c0d8c0;">
+          <span style="color:#888;font-size:10px;">Šipka ${pi+1} (${k.stockLen}mm):</span> &nbsp;
+          ${cutsHtml} ${tag}
         </div>`;
       });
       html += `</div>`;
@@ -1802,7 +1907,7 @@ async function potvrdiProizvodnju(){
 
   const log = plan.koraci.map(k => ({
     sifra: k.sifra, akcija: 'secenje',
-    detalji: {duzina:k.duzina, iz:k.iz, ostatak:k.ostatak, vracaSe:k.vracaSe,
+    detalji: {stockLen: k.stockLen, cuts: k.cuts, ostatak: k.ostatak, vracaSe: k.vracaSe,
               nalog: prodPlan.brNaloga, kupac: prodPlan.kupac}
   }));
 
@@ -1843,82 +1948,151 @@ function printProizvodnja(){
   if(!p) return;
   const {plan, brNaloga, kupac, datum, radnik} = p;
 
-  // grupiši po sifri
-  const grupe = {};
+  // Grupiši po šifri
+  const bySifra = {};
   plan.koraci.forEach(k => {
-    if(!grupe[k.sifra]) grupe[k.sifra] = {naziv:k.naziv, duzina:k.duzina, koraci:[]};
-    grupe[k.sifra].koraci.push(k);
+    if(!bySifra[k.sifra]) bySifra[k.sifra] = {naziv: k.naziv, pieces: [], totalCuts: 0};
+    bySifra[k.sifra].pieces.push(k);
+    bySifra[k.sifra].totalCuts += k.cuts.length;
   });
 
-  let rows = '';
-  Object.values(grupe).forEach(g => {
-    g.koraci.forEach((k,i) => {
+  let sections = '';
+  Object.entries(bySifra).forEach(([sifra, g]) => {
+    let rows = '';
+    g.pieces.forEach((k, pi) => {
+      const barW = 420;  // px width of bar
+      let barHtml = '';
+      let cumPct = 0;
+      const colors = ['#a9743c','#c0943c','#d4a84c','#b88030','#9a6828'];
+      k.cuts.forEach((cut, ci) => {
+        const pct = (cut / k.stockLen * 100).toFixed(2);
+        const color = colors[ci % colors.length];
+        barHtml += `<div style="width:${pct}%;background:${color};height:100%;display:inline-block;vertical-align:top;position:relative;" title="${cut}mm">
+          <span style="position:absolute;left:50%;transform:translateX(-50%);font-size:8px;color:#fff;white-space:nowrap;top:3px;font-weight:700;">${cut}</span>
+        </div>`;
+        cumPct += parseFloat(pct);
+      });
+      const otpadPct = (100 - cumPct).toFixed(2);
+      if(k.ostatak > 0){
+        const otpadColor = k.vracaSe ? '#3a7a4a' : '#bbb';
+        barHtml += `<div style="width:${otpadPct}%;background:${otpadColor};height:100%;display:inline-block;vertical-align:top;position:relative;" title="${k.ostatak}mm ${k.vracaSe?'vraća se':'otpad'}">
+          <span style="position:absolute;left:50%;transform:translateX(-50%);font-size:7px;color:#fff;white-space:nowrap;top:4px;">${k.ostatak}mm</span>
+        </div>`;
+      }
+
       const ostatakTxt = k.ostatak > 0
-        ? (k.vracaSe ? `${k.ostatak} mm → vraća se` : `${k.ostatak} mm → otpad`)
-        : 'tačno iskorišćeno';
+        ? (k.vracaSe ? `<span style="color:#2a6a3a;font-weight:700;">↩ ${k.ostatak} mm → VRAĆA SE</span>` : `<span style="color:#999;">🗑 ${k.ostatak} mm → otpad</span>`)
+        : '<span style="color:#2a6a3a;">tačno</span>';
+
       rows += `<tr>
-        ${i===0 ? `<td rowspan="${g.koraci.length}" style="font-weight:700;border-right:1px solid #ccc;">${k.sifra}<br><span style="font-weight:400;font-size:10px;">${g.naziv}</span></td>
-                  <td rowspan="${g.koraci.length}" style="font-weight:700;text-align:center;font-size:16px;border-right:1px solid #ccc;">${g.duzina} mm</td>` : ''}
-        <td style="text-align:center;border-right:1px solid #ccc;">${i+1}</td>
-        <td style="text-align:center;font-weight:700;border-right:1px solid #ccc;">${k.iz} mm</td>
-        <td style="color:${k.vracaSe?'#2a6a3a':'#888'}">${ostatakTxt}</td>
-        <td style="text-align:center;font-size:18px;border-left:1px solid #ccc;">☐</td>
+        <td style="font-size:11px;color:#555;padding:4px 8px;">${pi+1}.</td>
+        <td style="padding:4px 8px;">
+          <div style="font-weight:700;font-size:11px;color:#333;margin-bottom:4px;">
+            Uzmi: <span style="font-size:14px;color:#191814;">${k.stockLen} mm</span>
+            &nbsp;→&nbsp; ${k.cuts.length} ${k.cuts.length===1?'komad':'komada'}:
+            <span style="font-weight:400;">${k.cuts.join(' + ')} mm</span>
+          </div>
+          <div style="height:22px;background:#eee;border-radius:3px;overflow:hidden;position:relative;width:100%;">
+            ${barHtml}
+          </div>
+        </td>
+        <td style="padding:4px 8px;font-size:11px;">${ostatakTxt}</td>
+        <td style="text-align:center;font-size:20px;padding:4px 8px;border-left:1px solid #ccc;">☐</td>
       </tr>`;
     });
+
+    sections += `
+      <div style="margin-bottom:20px;page-break-inside:avoid;">
+        <div style="background:#191814;color:#fff;padding:7px 12px;border-radius:4px 4px 0 0;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;font-weight:700;letter-spacing:.04em;">${sifra} &nbsp;·&nbsp; ${g.naziv}</span>
+          <span style="font-size:11px;color:#c0b080;">${g.totalCuts} komada · ${g.pieces.length} šipki</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;border-top:none;">
+          <thead>
+            <tr style="background:#f0ede5;">
+              <th style="width:28px;padding:4px 8px;font-size:10px;text-align:center;">#</th>
+              <th style="padding:4px 8px;font-size:10px;text-align:left;">Šipka → rezovi (vizuelno)</th>
+              <th style="width:160px;padding:4px 8px;font-size:10px;">Ostatak</th>
+              <th style="width:38px;padding:4px 8px;font-size:10px;text-align:center;">✓</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
   });
 
   let nedTxt = '';
   if(plan.nedostaje.length){
-    nedTxt = `<div style="margin-top:16px;padding:10px 12px;background:#fff3f0;border:1px solid #e07070;border-radius:4px;">
-      <b style="color:#c0392b;">⚠ Nema na stanju — naručiti ili uzeti iz nove šipke:</b><br>
-      ${plan.nedostaje.map(n=>`${n.sifra} ${n.naziv} — ${n.duzina} mm`).join(' &nbsp;|&nbsp; ')}
+    nedTxt = `<div style="margin-top:16px;padding:10px 12px;background:#fff3f0;border:2px solid #e07070;border-radius:4px;">
+      <b style="color:#c0392b;font-size:12px;">⚠ NEMA NA STANJU — naručiti ili uzeti iz nove šipke:</b><br><br>
+      ${plan.nedostaje.map(n=>`<span style="display:inline-block;background:#fce;border:1px solid #e07070;border-radius:3px;padding:3px 8px;margin:2px;font-size:11px;"><b>${n.sifra}</b> ${n.naziv} — ${n.duzina} mm</span>`).join('')}
     </div>`;
   }
+
+  const datumStr = datum || new Date().toLocaleDateString('sr-RS');
+  const totalKomada = plan.koraci.reduce((a,k)=>a+k.cuts.length, 0);
+  const totalSipki = plan.koraci.length;
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>Lista sečenja — ${brNaloga||'Nalog'}</title>
   <style>
-    body{font-family:Arial,sans-serif;font-size:12px;margin:20px;color:#111;}
-    h2{font-size:16px;margin:0 0 4px;}
-    .meta{font-size:11px;color:#555;margin-bottom:14px;}
-    table{width:100%;border-collapse:collapse;margin-top:6px;}
-    th{background:#1e2127;color:#fff;padding:7px 10px;text-align:left;font-size:11px;}
-    td{padding:7px 10px;border-bottom:1px solid #ddd;vertical-align:middle;}
-    tr:nth-child(even) td{background:#f8f8f8;}
-    .foot{margin-top:20px;font-size:10px;color:#888;border-top:1px solid #ddd;padding-top:8px;}
-    @media print{button{display:none!important;}}
+    *{box-sizing:border-box;}
+    body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:16px 20px;color:#111;}
+    @page{margin:10mm;}
+    @media print{.no-print{display:none!important;} body{padding:0;}}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #191814;padding-bottom:10px;margin-bottom:14px;}
+    .brand{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#191814;letter-spacing:.05em;}
+    .brand-sub{font-size:9px;color:#a9743c;letter-spacing:.2em;text-transform:uppercase;margin-top:2px;}
+    .doc-title{font-size:16px;font-weight:700;text-align:right;}
+    .doc-sub{font-size:10px;color:#888;text-align:right;margin-top:3px;}
+    .meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;background:#f6f4ee;border:1px solid #e0dcd0;border-radius:5px;padding:10px 12px;}
+    .meta-cell .k{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#888;font-weight:700;}
+    .meta-cell .v{font-size:14px;font-weight:700;color:#191814;margin-top:2px;}
+    .stat-bar{display:flex;gap:16px;margin-bottom:16px;font-size:11px;color:#555;}
+    .stat-bar b{color:#191814;}
+    tr:nth-child(even) td{background:#fafaf7;}
+    .foot{margin-top:20px;border-top:2px solid #191814;padding-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    .foot-cell .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#888;font-weight:700;margin-bottom:18px;}
+    .foot-cell{border-top:1px solid #191814;padding-top:5px;}
   </style></head><body>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+  <div class="header">
     <div>
-      <h2>AG GROUP · LISTA SEČENJA — ALUMINIJUM</h2>
-      <div class="meta">
-        Nalog: <b>${brNaloga||'—'}</b> &nbsp;·&nbsp;
-        Kupac: <b>${kupac||'—'}</b> &nbsp;·&nbsp;
-        Datum: <b>${datum||new Date().toLocaleDateString('sr-RS')}</b> &nbsp;·&nbsp;
-        Radnik: <b>${radnik||'_________________'}</b>
-      </div>
+      <div class="brand">AG GROUP</div>
+      <div class="brand-sub">pergola sistemi</div>
     </div>
-    <button onclick="window.print()" style="padding:8px 16px;background:#a9743c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">🖨 Štampaj</button>
+    <div>
+      <div class="doc-title">LISTA SEČENJA ALUMINIJUMA</div>
+      <div class="doc-sub">Nalog: <b>${brNaloga||'—'}</b></div>
+      <button class="no-print" onclick="window.print()" style="margin-top:6px;padding:7px 14px;background:#a9743c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">🖨 Štampaj / PDF</button>
+    </div>
   </div>
-  <table>
-    <thead><tr>
-      <th>Šifra / Naziv profila</th>
-      <th style="width:90px;text-align:center">Seči na</th>
-      <th style="width:40px;text-align:center">#</th>
-      <th style="width:100px;text-align:center">Iz komada</th>
-      <th>Ostatak</th>
-      <th style="width:40px;text-align:center">✓</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
+
+  <div class="meta-grid">
+    <div class="meta-cell"><div class="k">Kupac</div><div class="v">${kupac||'—'}</div></div>
+    <div class="meta-cell"><div class="k">Radnik</div><div class="v">${radnik||'___________'}</div></div>
+    <div class="meta-cell"><div class="k">Datum</div><div class="v">${datumStr}</div></div>
+    <div class="meta-cell"><div class="k">Nalog</div><div class="v">${brNaloga||'—'}</div></div>
+  </div>
+
+  <div class="stat-bar">
+    <span>Profili: <b>${Object.keys(bySifra).length}</b></span>
+    <span>Komada: <b>${totalKomada}</b></span>
+    <span>Šipki: <b>${totalSipki}</b></span>
+    ${plan.nedostaje.length ? `<span style="color:#c0392b;">⚠ Nedostaje: <b>${plan.nedostaje.length} kom</b></span>` : '<span style="color:#2a6a3a;">✓ Sve dostupno na stanju</span>'}
+  </div>
+
+  ${sections}
   ${nedTxt}
+
   <div class="foot">
-    Potvrda: Pripremio _____________________ &nbsp;&nbsp; Preuzeo _____________________ &nbsp;&nbsp; Datum _____________
+    <div class="foot-cell"><div class="lbl">Pripremio / Sečač</div></div>
+    <div class="foot-cell"><div class="lbl">Preuzeo</div></div>
+    <div class="foot-cell"><div class="lbl">Datum i potpis</div></div>
   </div>
   </body></html>`);
   w.document.close();
-  setTimeout(()=>w.print(), 400);
+  setTimeout(()=>w.print(), 500);
 }
 </script>
 </body>
