@@ -260,7 +260,14 @@ const SEKCIJE = [
 /* ═══════════════════════════════════════════
    STANJE — čuva se u localStorage
 ═══════════════════════════════════════════ */
-const OTPAD_PRAG = 2000; // mm — ispod ove dužine komad je otpad
+const OTPAD_PRAG_DEFAULT = 2000;
+const OTPAD_PRAG_MAP = {
+  "10501": 1500,  // Šina (raj) 90×150
+  "10475": 1500,  // Šina (raj) 110×150
+  "10419": 1500,  // Stub 110×144
+  "10414": 1500,  // Stub 100×100
+};
+function getOtpadPrag(sifra){ return OTPAD_PRAG_MAP[sifra] ?? OTPAD_PRAG_DEFAULT; }
 const LS_KEY = 'ag_popis_v1';
 let STATE = {};
 
@@ -332,7 +339,7 @@ function buildStavka(s, sekTip){
         </div>
         <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Komadi ispod ${OTPAD_PRAG/1000}m se ne unose — smatraju se otpadom</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Komadi ispod ${getOtpadPrag(s.sifra)/1000}m se ne unose — smatraju se otpadom</div>
       <div class="komadi-list" id="kl_${s.sifra}">
         ${komadi.map((k,i)=>buildKomadRow(s.sifra,i,k)).join('')}
       </div>
@@ -372,7 +379,7 @@ function buildStavka(s, sekTip){
 }
 
 function buildKomadRow(sifra, idx, k){
-  const isOtpad = +k.duzina > 0 && +k.duzina < OTPAD_PRAG;
+  const isOtpad = +k.duzina > 0 && +k.duzina < getOtpadPrag(sifra);
   return `<div class="komad-row" id="kr_${sifra}_${idx}">
     <input class="komad-len${isOtpad?' otpad':''}" type="number" inputmode="numeric" min="1"
       placeholder="Dužina (mm)" value="${k.duzina||''}"
@@ -406,6 +413,22 @@ function setKomadLen(sifra, idx, val){
   setItem(sifra,d);
   updateSum(sifra);
   updateOk(sifra);
+  // live otpad highlight
+  const row = document.getElementById('kr_'+sifra+'_'+idx);
+  if(row){
+    const prag = getOtpadPrag(sifra);
+    const isOtpad = +val > 0 && +val < prag;
+    row.querySelector('.komad-len').className = 'komad-len'+(isOtpad?' otpad':'');
+    let tag = row.querySelector('.otpad-tag');
+    if(isOtpad && !tag){
+      tag = document.createElement('span');
+      tag.className = 'otpad-tag';
+      tag.textContent = 'otpad';
+      row.querySelector('.komad-del').before(tag);
+    } else if(!isOtpad && tag){
+      tag.remove();
+    }
+  }
 }
 function updateSum(sifra){
   const d = getItem(sifra)||{};
