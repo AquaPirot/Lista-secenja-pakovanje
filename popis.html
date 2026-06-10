@@ -71,8 +71,6 @@ html,body{background:var(--shell);color:var(--text);font-family:'Segoe UI',syste
 .kom-min-lbl{font-size:10px;color:var(--muted);white-space:nowrap;}
 .kom-min-inp{flex:1;height:34px;background:var(--shell);border:1px solid var(--line);
   border-radius:6px;color:var(--text);font-size:13px;text-align:center;padding:0 8px;}
-.kom-lok-inp{flex:1;height:34px;background:var(--shell);border:1px solid var(--line);
-  border-radius:6px;color:var(--text);font-size:12px;padding:0 8px;}
 
 /* ── PROFIL KOMADI ── */
 .komadi-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
@@ -80,13 +78,12 @@ html,body{background:var(--shell);color:var(--text);font-family:'Segoe UI',syste
 .komad-len{flex:1;height:44px;background:var(--shell);border:1px solid var(--line);
   border-radius:8px;color:#fff;font-size:16px;text-align:center;font-weight:600;padding:0 8px;}
 .komad-len::placeholder{color:var(--muted);font-weight:400;font-size:13px;}
-.komad-lok{width:90px;height:44px;background:var(--shell);border:1px solid var(--line);
-  border-radius:8px;color:var(--text);font-size:12px;padding:0 8px;}
-.komad-lok::placeholder{color:var(--muted);}
 .komad-del{width:44px;height:44px;background:#2e1a1a;border:1px solid #5a2020;
   border-radius:8px;color:#e07070;font-size:18px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .komad-del:active{background:#5a2020;}
+.komad-len.otpad{border-color:var(--warn);color:#e07a5f;}
+.otpad-tag{font-size:10px;color:var(--warn);margin-left:4px;}
 .btn-add-komad{width:100%;height:42px;background:var(--shell);border:1px dashed var(--line);
   border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;gap:6px;}
@@ -263,6 +260,7 @@ const SEKCIJE = [
 /* ═══════════════════════════════════════════
    STANJE — čuva se u localStorage
 ═══════════════════════════════════════════ */
+const OTPAD_PRAG = 2000; // mm — ispod ove dužine komad je otpad
 const LS_KEY = 'ag_popis_v1';
 let STATE = {};
 
@@ -334,6 +332,7 @@ function buildStavka(s, sekTip){
         </div>
         <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
       </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Komadi ispod ${OTPAD_PRAG/1000}m se ne unose — smatraju se otpadom</div>
       <div class="komadi-list" id="kl_${s.sifra}">
         ${komadi.map((k,i)=>buildKomadRow(s.sifra,i,k)).join('')}
       </div>
@@ -368,23 +367,18 @@ function buildStavka(s, sekTip){
       <input class="kom-min-inp" type="number" min="0" inputmode="decimal"
         placeholder="npr. 10" value="${min}" id="min_${s.sifra}"
         onchange="setMin('${s.sifra}',this.value)">
-      <span class="kom-min-lbl" style="margin-left:6px">Lokacija:</span>
-      <input class="kom-lok-inp" type="text" placeholder="npr. B-03"
-        value="${lok}" id="lok_${s.sifra}"
-        onchange="setLok('${s.sifra}',this.value)">
     </div>
   </div>`;
 }
 
 function buildKomadRow(sifra, idx, k){
+  const isOtpad = +k.duzina > 0 && +k.duzina < OTPAD_PRAG;
   return `<div class="komad-row" id="kr_${sifra}_${idx}">
-    <input class="komad-len" type="number" inputmode="numeric" min="1"
+    <input class="komad-len${isOtpad?' otpad':''}" type="number" inputmode="numeric" min="1"
       placeholder="Dužina (mm)" value="${k.duzina||''}"
       onchange="setKomadLen('${sifra}',${idx},this.value)"
       oninput="setKomadLen('${sifra}',${idx},this.value)">
-    <input class="komad-lok" type="text" placeholder="Polica"
-      value="${k.lokacija||''}"
-      onchange="setKomadLok('${sifra}',${idx},this.value)">
+    ${isOtpad?'<span class="otpad-tag">otpad</span>':''}
     <button class="komad-del" onclick="delKomad('${sifra}',${idx})">✕</button>
   </div>`;
 }
@@ -395,7 +389,7 @@ function buildKomadRow(sifra, idx, k){
 function addKomad(sifra){
   const d = getItem(sifra) || {komadi:[]};
   if(!d.komadi) d.komadi=[];
-  d.komadi.push({duzina:'', lokacija:''});
+  d.komadi.push({duzina:''});
   setItem(sifra, d);
   refreshStavka(sifra);
 }
@@ -412,12 +406,6 @@ function setKomadLen(sifra, idx, val){
   setItem(sifra,d);
   updateSum(sifra);
   updateOk(sifra);
-}
-function setKomadLok(sifra, idx, val){
-  const d = getItem(sifra)||{komadi:[]};
-  if(!d.komadi[idx]) return;
-  d.komadi[idx].lokacija = val;
-  setItem(sifra,d);
 }
 function updateSum(sifra){
   const d = getItem(sifra)||{};
@@ -447,11 +435,6 @@ function setKol(sifra, val){
 function setMin(sifra, val){
   const d = getItem(sifra)||{};
   d.minimum = val===''?'':+val;
-  setItem(sifra,d);
-}
-function setLok(sifra, val){
-  const d = getItem(sifra)||{};
-  d.lokacija = val;
   setItem(sifra,d);
 }
 
@@ -538,9 +521,9 @@ function openExport(){
       if(d.komadi){
         const uk = d.komadi.reduce((a,k)=>a+(+k.duzina||0),0);
         lines.push('  '+s.sifra+' | '+s.naziv+' | '+d.komadi.length+' komada | '+uk+' mm ukupno');
-        d.komadi.forEach((k,i)=>{ lines.push('    Komad '+(i+1)+': '+(k.duzina||'?')+' mm'+(k.lokacija?' @ '+k.lokacija:'')); });
+        d.komadi.forEach((k,i)=>{ lines.push('    Komad '+(i+1)+': '+(k.duzina||'?')+' mm'); });
       } else {
-        lines.push('  '+s.sifra+' | '+s.naziv+' | '+d.kolicina+(d.minimum?'  (min: '+d.minimum+')':'')+(d.lokacija?' @ '+d.lokacija:''));
+        lines.push('  '+s.sifra+' | '+s.naziv+' | '+d.kolicina+(d.minimum?'  (min: '+d.minimum+')':''));
       }
     });
     lines.push('');
