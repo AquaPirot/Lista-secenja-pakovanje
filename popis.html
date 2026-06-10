@@ -90,6 +90,57 @@ html,body{background:var(--shell);color:var(--text);font-family:'Segoe UI',syste
 .btn-add-komad:active{border-color:var(--bronze);color:var(--bronze);}
 .profil-sum{font-size:11px;color:var(--muted);margin-top:4px;text-align:right;}
 
+/* ── GRUPISANI KOMADI (bunt prikaz) ── */
+.grp-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;}
+.grp-chip{display:flex;align-items:center;gap:8px;background:var(--shell);
+  border:1px solid var(--line);border-radius:8px;padding:6px 8px 6px 12px;}
+.grp-chip.otpad{border-color:var(--warn);}
+.grp-len{font-size:16px;font-weight:700;color:#fff;font-family:monospace;}
+.grp-len.otpad{color:#e07a5f;}
+.grp-x{font-size:13px;color:var(--muted);}
+.grp-n{font-size:16px;font-weight:700;color:var(--bronze);min-width:30px;}
+.grp-btns{display:flex;gap:4px;margin-left:auto;}
+.grp-btn{width:38px;height:38px;border:1px solid var(--line);background:var(--shell2);
+  color:var(--text);font-size:17px;cursor:pointer;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;}
+.grp-btn:active{background:var(--bronze);}
+.grp-btn.del{background:#2e1a1a;border-color:#5a2020;color:#e07070;font-size:14px;}
+.grp-btn.del:active{background:#5a2020;}
+
+/* ── BUNT UNOS ── */
+.bunt-row{display:flex;align-items:center;gap:6px;}
+.bunt-kom{width:74px;height:46px;background:var(--shell);border:1px solid var(--line);
+  border-radius:8px;color:#fff;font-size:17px;text-align:center;font-weight:700;}
+.bunt-kom::placeholder,.bunt-mm::placeholder{color:var(--muted);font-weight:400;font-size:12px;}
+.bunt-x{color:var(--muted);font-size:14px;flex-shrink:0;}
+.bunt-mm{flex:1;height:46px;background:var(--shell);border:1px solid var(--line);
+  border-radius:8px;color:#fff;font-size:17px;text-align:center;font-weight:700;min-width:0;}
+.bunt-add{height:46px;padding:0 16px;background:var(--bronze);border:none;border-radius:8px;
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.bunt-add:active{background:var(--bronzeD);}
+
+/* ── NOVI ARTIKAL ── */
+.btn-novi-art{width:calc(100% - 28px);margin:10px 14px 12px;height:42px;background:transparent;
+  border:1px dashed var(--bronze);border-radius:8px;color:var(--bronze);font-size:13px;
+  font-weight:600;cursor:pointer;}
+.btn-novi-art:active{background:rgba(169,116,60,.15);}
+.novi-form{margin:0 14px 12px;background:var(--shell);border:1px solid var(--bronze);
+  border-radius:8px;padding:12px;display:none;}
+.novi-form.open{display:block;}
+.novi-form label{display:block;font-size:10px;color:var(--muted);margin:8px 0 3px;}
+.novi-form label:first-child{margin-top:0;}
+.novi-inp{width:100%;height:42px;background:var(--shell2);border:1px solid var(--line);
+  border-radius:7px;color:#fff;font-size:14px;padding:0 10px;}
+.novi-btns{display:flex;gap:8px;margin-top:12px;}
+.novi-save{flex:1;height:42px;background:var(--ok);border:none;border-radius:7px;
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
+.novi-cancel{height:42px;padding:0 14px;background:var(--shell2);border:1px solid var(--line);
+  border-radius:7px;color:var(--text);font-size:13px;cursor:pointer;}
+.custom-tag{font-size:9px;color:var(--bronze);border:1px solid var(--bronze);
+  border-radius:3px;padding:1px 4px;margin-left:5px;vertical-align:middle;}
+.art-del{font-size:10px;color:#e07070;background:none;border:none;cursor:pointer;
+  text-decoration:underline;padding:2px 0;margin-top:2px;}
+
 /* ── BOTTOM BAR ── */
 .bottom-bar{position:sticky;bottom:0;background:var(--ink);border-top:1px solid var(--line);
   padding:10px 12px;display:flex;gap:8px;z-index:100;}
@@ -310,6 +361,43 @@ function getItem(sifra){ return STATE[sifra] || null; }
 function setItem(sifra, data){ STATE[sifra]=data; saveState(); updateProgress(); }
 
 /* ═══════════════════════════════════════════
+   CUSTOM ARTIKLI — iz baze + localStorage keš
+═══════════════════════════════════════════ */
+const ART_LS_KEY = 'ag_custom_artikli';
+
+async function loadArtikli(){
+  let lista = [];
+  try {
+    const res = await fetch(API_URL+'/artikli.php?action=list', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok){
+      lista = json.data;
+      // pokušaj da pošalješ pending artikle koji su čekali konekciju
+      const local = JSON.parse(localStorage.getItem(ART_LS_KEY)||'[]');
+      for(const a of local.filter(x=>x._pending)){
+        try {
+          const r = await fetch(API_URL+'/artikli.php?action=add', {
+            method:'POST', headers:{'Content-Type':'application/json','X-Api-Key':API_KEY},
+            body: JSON.stringify(a)
+          });
+          if((await r.json()).ok){ delete a._pending; lista.push(a); }
+        } catch(e){}
+      }
+      localStorage.setItem(ART_LS_KEY, JSON.stringify(lista));
+    }
+  } catch(e){
+    lista = JSON.parse(localStorage.getItem(ART_LS_KEY)||'[]');
+  }
+  // ubaci u sekcije (preskoči duplikate sa hardkodiranom listom)
+  lista.forEach(a => {
+    const sek = SEKCIJE.find(s => s.id === a.kategorija);
+    if(!sek) return;
+    if(sek.stavke.find(s => s.sifra === a.sifra)) return;
+    sek.stavke.push({sifra: a.sifra, naziv: a.naziv, tip: a.tip, custom: true});
+  });
+}
+
+/* ═══════════════════════════════════════════
    BUILD UI
 ═══════════════════════════════════════════ */
 function build(){
@@ -340,49 +428,131 @@ function build(){
     const body = document.createElement('div');
     body.className = 'sek-body';
     body.id = 'body_'+sek.id;
-    body.innerHTML = sek.stavke.map(s => buildStavka(s, sek.tip)).join('');
+    body.innerHTML = sek.stavke.map(s => buildStavka(s, sek.tip, sek.id)).join('')
+      + buildNoviForm(sek);
 
     wrap.appendChild(btn);
     wrap.appendChild(body);
   });
 }
 
-function buildStavka(s, sekTip){
+function buildNoviForm(sek){
+  return `
+    <button class="btn-novi-art" onclick="openNovi('${sek.id}')">＋ Novi artikal u: ${sek.naziv}</button>
+    <div class="novi-form" id="nf_${sek.id}">
+      <label>Šifra artikla</label>
+      <input class="novi-inp" id="nf_sifra_${sek.id}" placeholder="npr. ARV-23" autocomplete="off">
+      <label>Naziv</label>
+      <input class="novi-inp" id="nf_naziv_${sek.id}" placeholder="naziv artikla" autocomplete="off">
+      <label>Način merenja</label>
+      <select class="novi-inp" id="nf_tip_${sek.id}">
+        <option value="kom"${sek.tip==='kom'?' selected':''}>Komad (kom)</option>
+        <option value="metar"${sek.tip==='metar'?' selected':''}>Dužni metar (m)</option>
+        <option value="metar2">Kvadrat (m²)</option>
+        <option value="profil"${sek.tip==='profil'?' selected':''}>Profil — po komadima i dužinama</option>
+      </select>
+      <div class="novi-btns">
+        <button class="novi-save" onclick="saveNovi('${sek.id}')">✓ Dodaj artikal</button>
+        <button class="novi-cancel" onclick="closeNovi('${sek.id}')">Otkaži</button>
+      </div>
+    </div>`;
+}
+
+function openNovi(sekId){ document.getElementById('nf_'+sekId).classList.add('open'); }
+function closeNovi(sekId){ document.getElementById('nf_'+sekId).classList.remove('open'); }
+
+async function saveNovi(sekId){
+  const sifra = document.getElementById('nf_sifra_'+sekId).value.trim().toUpperCase();
+  const naziv = document.getElementById('nf_naziv_'+sekId).value.trim();
+  const tip   = document.getElementById('nf_tip_'+sekId).value;
+  if(!sifra || !naziv){ showToast('⚠ Unesi šifru i naziv'); return; }
+  // duplikat?
+  for(const sek of SEKCIJE){
+    if(sek.stavke.find(s => s.sifra === sifra)){
+      showToast('⚠ Šifra '+sifra+' već postoji'); return;
+    }
+  }
+  const art = {sifra, naziv, kategorija: sekId, tip};
+  let saved = false;
+  try {
+    const res = await fetch(API_URL+'/artikli.php?action=add', {
+      method:'POST', headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
+      body: JSON.stringify(art)
+    });
+    saved = (await res.json()).ok;
+  } catch(e){}
+  // u localStorage keš (pending ako API nije prošao — sinhronizuje se kasnije)
+  const local = JSON.parse(localStorage.getItem(ART_LS_KEY)||'[]');
+  if(!saved) art._pending = true;
+  local.push(art);
+  localStorage.setItem(ART_LS_KEY, JSON.stringify(local));
+
+  const sek = SEKCIJE.find(s => s.id === sekId);
+  sek.stavke.push({sifra, naziv, tip, custom: true});
+  build();
+  updateProgress();
+  toggleSek(sekId);
+  showToast(saved ? '✓ Artikal dodat' : '📴 Dodat lokalno — sinhronizuje se kasnije');
+}
+
+async function delArtikal(sifra, sekId){
+  if(!confirm('Ukloniti artikal '+sifra+' iz kataloga?\n(Stanje u magacinu ostaje zabeleženo)')) return;
+  try {
+    await fetch(API_URL+'/artikli.php?action=delete', {
+      method:'POST', headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
+      body: JSON.stringify({sifra})
+    });
+  } catch(e){}
+  const local = JSON.parse(localStorage.getItem(ART_LS_KEY)||'[]').filter(a=>a.sifra!==sifra);
+  localStorage.setItem(ART_LS_KEY, JSON.stringify(local));
+  const sek = SEKCIJE.find(s => s.id === sekId);
+  sek.stavke = sek.stavke.filter(s => s.sifra !== sifra);
+  build();
+  updateProgress();
+  toggleSek(sekId);
+}
+
+function buildStavka(s, sekTip, sekId){
   const tip = s.tip || sekTip;
   const isDone = hasDone(s.sifra);
   const d = getItem(s.sifra) || {};
+  const customTag = s.custom ? '<span class="custom-tag">novo</span>' : '';
+  const customDel = s.custom ? `<button class="art-del" onclick="delArtikal('${s.sifra}','${sekId}')">ukloni artikal</button>` : '';
 
   if(tip === 'profil'){
-    const komadi = d.komadi || [];
+    const komadi = (d.komadi || []).filter(k=>+k.duzina>0);
     const ukupno = komadi.reduce((a,k)=>a+(+k.duzina||0),0);
     return `<div class="stavka" id="stav_${s.sifra}">
       <div class="stavka-top">
         <div class="stavka-info">
-          <div class="stavka-sifra">${s.sifra}</div>
+          <div class="stavka-sifra">${s.sifra}${customTag}</div>
           <div class="stavka-naziv">${s.naziv}</div>
-          <div class="stavka-jed">metar · unos po komadima</div>
+          <div class="stavka-jed">unos: broj komada × dužina (mm)</div>
+          ${customDel}
         </div>
         <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Komadi ispod ${getOtpadPrag(s.sifra)/1000}m se ne unose — smatraju se otpadom</div>
-      <div class="komadi-list" id="kl_${s.sifra}">
-        ${komadi.map((k,i)=>buildKomadRow(s.sifra,i,k)).join('')}
+      <div class="grp-list" id="kl_${s.sifra}">${buildGrupe(s.sifra, komadi)}</div>
+      <div class="bunt-row">
+        <input class="bunt-kom" type="number" inputmode="numeric" min="1" placeholder="kom" id="bk_${s.sifra}">
+        <span class="bunt-x">×</span>
+        <input class="bunt-mm" type="number" inputmode="numeric" min="1" placeholder="dužina mm" id="bd_${s.sifra}">
+        <button class="bunt-add" onclick="addBunt('${s.sifra}')">＋ Dodaj</button>
       </div>
-      <button class="btn-add-komad" onclick="addKomad('${s.sifra}')">＋ Dodaj komad</button>
-      <div class="profil-sum" id="sum_${s.sifra}">${ukupno>0?'Ukupno: '+ukupno+' mm = '+(ukupno/1000).toFixed(2)+' m':''}</div>
+      <div class="profil-sum" id="sum_${s.sifra}">${ukupno>0?'Ukupno: '+komadi.length+' kom = '+(ukupno/1000).toFixed(2)+' m':''}</div>
     </div>`;
   }
 
   const jed = tip==='metar'?'m':tip==='metar2'?'m²':'kom';
   const val = d.kolicina ?? '';
   const min = d.minimum ?? '';
-  const lok = d.lokacija ?? '';
   return `<div class="stavka" id="stav_${s.sifra}">
     <div class="stavka-top">
       <div class="stavka-info">
-        <div class="stavka-sifra">${s.sifra}</div>
+        <div class="stavka-sifra">${s.sifra}${customTag}</div>
         <div class="stavka-naziv">${s.naziv}</div>
         <div class="stavka-jed">${jed}</div>
+        ${customDel}
       </div>
       <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
     </div>
@@ -403,64 +573,75 @@ function buildStavka(s, sekTip){
   </div>`;
 }
 
-function buildKomadRow(sifra, idx, k){
-  const isOtpad = +k.duzina > 0 && +k.duzina < getOtpadPrag(sifra);
-  return `<div class="komad-row" id="kr_${sifra}_${idx}">
-    <input class="komad-len${isOtpad?' otpad':''}" type="number" inputmode="numeric" min="1"
-      placeholder="Dužina (mm)" value="${k.duzina||''}"
-      onchange="setKomadLen('${sifra}',${idx},this.value)"
-      oninput="setKomadLen('${sifra}',${idx},this.value)">
-    ${isOtpad?'<span class="otpad-tag">otpad</span>':''}
-    <button class="komad-del" onclick="delKomad('${sifra}',${idx})">✕</button>
-  </div>`;
+/* ═══════════════════════════════════════════
+   AKCIJE — profili (grupisani prikaz, bunt unos)
+═══════════════════════════════════════════ */
+function buildGrupe(sifra, komadi){
+  const grupe = {};
+  komadi.forEach(k => { const len = +k.duzina; grupe[len] = (grupe[len]||0)+1; });
+  const prag = getOtpadPrag(sifra);
+  const lens = Object.keys(grupe).map(Number).sort((a,b)=>b-a);
+  if(!lens.length) return '<div style="font-size:11px;color:var(--muted);padding:4px 2px;">Nema unetih komada</div>';
+  return lens.map(len => {
+    const n = grupe[len];
+    const otp = len < prag;
+    return `<div class="grp-chip${otp?' otpad':''}">
+      <span class="grp-len${otp?' otpad':''}">${len} mm</span>
+      ${otp?'<span class="otpad-tag">ispod praga</span>':''}
+      <span class="grp-x">×</span><span class="grp-n">${n}</span>
+      <div class="grp-btns">
+        <button class="grp-btn" onclick="grpAdj('${sifra}',${len},-1)">−</button>
+        <button class="grp-btn" onclick="grpAdj('${sifra}',${len},1)">＋</button>
+        <button class="grp-btn del" onclick="grpDel('${sifra}',${len})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-/* ═══════════════════════════════════════════
-   AKCIJE — profili (po komadima)
-═══════════════════════════════════════════ */
-function addKomad(sifra){
+function addBunt(sifra){
+  const komInp = document.getElementById('bk_'+sifra);
+  const mmInp  = document.getElementById('bd_'+sifra);
+  const kom = parseInt(komInp.value) || 1;
+  const mm  = parseInt(mmInp.value);
+  if(!mm || mm <= 0){ showToast('⚠ Unesi dužinu u mm'); mmInp.focus(); return; }
   const d = getItem(sifra) || {komadi:[]};
-  if(!d.komadi) d.komadi=[];
-  d.komadi.push({duzina:''});
+  if(!d.komadi) d.komadi = [];
+  for(let i=0; i<kom; i++) d.komadi.push({duzina: String(mm)});
+  setItem(sifra, d);
+  refreshStavka(sifra);
+  komInp.value = ''; mmInp.value = '';
+  showToast('✓ '+kom+' × '+mm+' mm dodato');
+}
+
+function grpAdj(sifra, len, delta){
+  const d = getItem(sifra) || {komadi:[]};
+  if(!d.komadi) d.komadi = [];
+  if(delta > 0){
+    d.komadi.push({duzina: String(len)});
+  } else {
+    const idx = d.komadi.findIndex(k => +k.duzina === len);
+    if(idx === -1) return;
+    d.komadi.splice(idx, 1);
+  }
   setItem(sifra, d);
   refreshStavka(sifra);
 }
-function delKomad(sifra, idx){
-  const d = getItem(sifra)||{komadi:[]};
-  d.komadi.splice(idx,1);
-  setItem(sifra,d);
+
+function grpDel(sifra, len){
+  const d = getItem(sifra) || {komadi:[]};
+  const n = (d.komadi||[]).filter(k => +k.duzina === len).length;
+  if(n > 1 && !confirm('Obrisati svih '+n+' komada od '+len+' mm?')) return;
+  d.komadi = (d.komadi||[]).filter(k => +k.duzina !== len);
+  setItem(sifra, d);
   refreshStavka(sifra);
 }
-function setKomadLen(sifra, idx, val){
-  const d = getItem(sifra)||{komadi:[]};
-  if(!d.komadi[idx]) return;
-  d.komadi[idx].duzina = val;
-  setItem(sifra,d);
-  updateSum(sifra);
-  updateOk(sifra);
-  // live otpad highlight
-  const row = document.getElementById('kr_'+sifra+'_'+idx);
-  if(row){
-    const prag = getOtpadPrag(sifra);
-    const isOtpad = +val > 0 && +val < prag;
-    row.querySelector('.komad-len').className = 'komad-len'+(isOtpad?' otpad':'');
-    let tag = row.querySelector('.otpad-tag');
-    if(isOtpad && !tag){
-      tag = document.createElement('span');
-      tag.className = 'otpad-tag';
-      tag.textContent = 'otpad';
-      row.querySelector('.komad-del').before(tag);
-    } else if(!isOtpad && tag){
-      tag.remove();
-    }
-  }
-}
+
 function updateSum(sifra){
   const d = getItem(sifra)||{};
-  const komadi = d.komadi||[];
+  const komadi = (d.komadi||[]).filter(k=>+k.duzina>0);
   const uk = komadi.reduce((a,k)=>a+(+k.duzina||0),0);
   const el = document.getElementById('sum_'+sifra);
-  if(el) el.textContent = uk>0?'Ukupno: '+uk+' mm = '+(uk/1000).toFixed(2)+' m':'';
+  if(el) el.textContent = uk>0?'Ukupno: '+komadi.length+' kom = '+(uk/1000).toFixed(2)+' m':'';
 }
 
 /* ═══════════════════════════════════════════
@@ -525,13 +706,11 @@ function updateProgress(){
   document.getElementById('progTxt').textContent = done+' / '+total+' stavki ima unos';
 }
 function refreshStavka(sifra){
-  let tip = 'profil', sekTip = 'profil';
-  SEKCIJE.forEach(sek=>{ const s=sek.stavke.find(x=>x.sifra===sifra); if(s){sekTip=sek.tip;tip=s.tip||sek.tip;} });
-  const el = document.getElementById('stav_'+sifra);
+  const el = document.getElementById('kl_'+sifra);
   if(el){
     const d = getItem(sifra)||{};
-    const komadi = d.komadi||[];
-    document.getElementById('kl_'+sifra).innerHTML = komadi.map((k,i)=>buildKomadRow(sifra,i,k)).join('');
+    const komadi = (d.komadi||[]).filter(k=>+k.duzina>0);
+    el.innerHTML = buildGrupe(sifra, komadi);
     updateSum(sifra);
     updateOk(sifra);
   }
@@ -589,7 +768,7 @@ function copyExport(){
    INIT
 ═══════════════════════════════════════════ */
 document.getElementById('hdDate').textContent = new Date().toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'});
-loadState().then(()=>{ build(); updateProgress(); });
+Promise.all([loadState(), loadArtikli()]).then(()=>{ build(); updateProgress(); });
 </script>
 </body>
 </html>

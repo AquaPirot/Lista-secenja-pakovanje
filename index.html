@@ -1276,31 +1276,92 @@ const MAG_PROFILI = [
   {sifra:"CEV-100",naziv:"Cev na zidu 100×100",tip:"profil"},
 ];
 const MAG_SEKCIJE = [
-  {naziv:"Aluminijum profili", stavke: MAG_PROFILI},
-  {naziv:"Fitilji / kederi / kaiševi", stavke:[
+  {id:"alu", naziv:"Aluminijum profili", stavke: MAG_PROFILI},
+  {id:"pla", naziv:"Plastika", stavke:[
+    {sifra:"ARV-01",naziv:"Velike plastike za zupčanik",tip:"kom"},
+    {sifra:"ARV-02",naziv:"Veliki zupčanik",tip:"kom"},
+    {sifra:"ARV-03",naziv:"Kočnica",tip:"kom"},
+    {sifra:"ARV-04",naziv:"Prednji zatezač L/D",tip:"kom"},
+    {sifra:"ARV-05",naziv:"Komplet za prednji ležaj",tip:"kom"},
+    {sifra:"ARV-07",naziv:"Plastika spoja kaiša",tip:"kom"},
+    {sifra:"ARV-08",naziv:"Velika kolica",tip:"kom"},
+    {sifra:"ARV-09",naziv:"Mala kolica",tip:"kom"},
+    {sifra:"ARV-06",naziv:"Odvod vode oluka",tip:"kom"},
+    {sifra:"ARV-19",naziv:"Ugaoni umetak tankog korniša",tip:"kom"},
+    {sifra:"ARV-20",naziv:"Srednji umetak tankog korniša",tip:"kom"},
+    {sifra:"ARV-21",naziv:"Ugaoni umetak debelog korniša",tip:"kom"},
+    {sifra:"ARV-22",naziv:"Srednji umetak debelog korniša",tip:"kom"},
+    {sifra:"ARV-T",naziv:"Tapa (poklopac rupe 20mm)",tip:"kom"},
+    {sifra:"ARV-D",naziv:"Tipla",tip:"kom"},
+    {sifra:"PRG-117",naziv:"Veliki ležaj",tip:"kom"},
+    {sifra:"PRG-119",naziv:"Mali ležaj",tip:"kom"},
+  ]},
+  {id:"met", naziv:"Metal okov", stavke:[
+    {sifra:"ARV-M1",naziv:"Zidni nosač šine",tip:"kom"},
+    {sifra:"ARV-M2a",naziv:"Zadnji spoj šine — SA rupom",tip:"kom"},
+    {sifra:"ARV-M2b",naziv:"Zadnji spoj šine — BEZ rupe",tip:"kom"},
+    {sifra:"ARV-M4",naziv:"Fiksator motora na šinu",tip:"kom"},
+    {sifra:"ARV-M5",naziv:"Podloška fiksatora motora",tip:"kom"},
+    {sifra:"ARV-M6",naziv:"Spoj šina–oluk",tip:"kom"},
+    {sifra:"ARV-M7",naziv:"Spoj stub–oluk",tip:"kom"},
+    {sifra:"ARV-M8",naziv:"Spoj rasponke i raja",tip:"kom"},
+    {sifra:"ARV-M10",naziv:"Prednji zatezač automat",tip:"kom"},
+    {sifra:"ARV-M11",naziv:"Prednji poklopac šine",tip:"kom"},
+    {sifra:"ARV-M12",naziv:"Donja stopa stuba",tip:"kom"},
+    {sifra:"ARV-M13",naziv:"Bočni poklopac oluka L+D",tip:"kom"},
+  ]},
+  {id:"fit", naziv:"Fitilji / kederi / kaiševi", stavke:[
     {sifra:"PRG-102",naziv:"Fitilj keder šine",tip:"metar"},
     {sifra:"PRG-104",naziv:"Fitilj keder oluka",tip:"metar"},
     {sifra:"PRG-101",naziv:"Fitilj keder cerade",tip:"metar"},
     {sifra:"PRG-103",naziv:"Fitilj kabla",tip:"metar"},
     {sifra:"PRG-105",naziv:"T10×16 zupčasti kaiš",tip:"metar"},
-    {sifra:"PRG-116",naziv:"Kabl 2×0,75mm²",tip:"metar"},
   ]},
-  {naziv:"Elektronika", stavke:[
+  {id:"elek", naziv:"Elektronika", stavke:[
+    {sifra:"PRG-108",naziv:"24V LED",tip:"kom"},
+    {sifra:"PRG-116",naziv:"Kabl 2×0,75mm²",tip:"metar"},
     {sifra:"MOTOR",naziv:"Motor",tip:"kom"},
     {sifra:"DALJ",naziv:"Daljinski",tip:"kom"},
     {sifra:"TRAFO-10",naziv:"Trafo 10A",tip:"kom"},
     {sifra:"TRAFO-20",naziv:"Trafo 20A",tip:"kom"},
     {sifra:"TRAFO-30",naziv:"Trafo 30A",tip:"kom"},
     {sifra:"DIMER",naziv:"Dimer",tip:"kom"},
-    {sifra:"PRG-108",naziv:"24V LED",tip:"kom"},
+  ]},
+  {id:"ost", naziv:"Cerada i ostalo", stavke:[
+    {sifra:"CER-ANT",naziv:"Cerada — Antracit",tip:"metar"},
+    {sifra:"CER-KRE",naziv:"Cerada — Krem",tip:"metar"},
+    {sifra:"CER-CRN",naziv:"Cerada — Crna",tip:"metar"},
+    {sifra:"CER-MIS",naziv:"Cerada — Miš boja",tip:"metar"},
+    {sifra:"LIM-125",naziv:"Trapezni lim 125×80",tip:"kom"},
+    {sifra:"VIJCI",naziv:"Vijci + pakovanje (kompleti)",tip:"kom"},
   ]},
 ];
+
+// custom artikli iz baze — spajaju se sa hardkodiranom listom
+let customArtikliLoaded = false;
+async function mergeCustomArtikli(){
+  if(customArtikliLoaded) return;
+  try {
+    const res = await fetch(API_URL+'/artikli.php?action=list', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok){
+      json.data.forEach(a => {
+        const sek = MAG_SEKCIJE.find(s => s.id === a.kategorija);
+        if(!sek) return;
+        if(sek.stavke.find(s => s.sifra === a.sifra)) return;
+        sek.stavke.push({sifra: a.sifra, naziv: a.naziv, tip: a.tip === 'metar2' ? 'metar' : a.tip});
+      });
+      customArtikliLoaded = true;
+    }
+  } catch(e){}
+}
 
 let magState = null;
 
 async function renderMagacin(){
   const doc = $("doc");
   doc.innerHTML = '<div class="mag-wrap"><div class="mag-empty">⏳ Učitavam magacin...</div></div>';
+  await mergeCustomArtikli();
   try {
     const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key': API_KEY}});
     const json = await res.json();
@@ -1351,10 +1412,13 @@ async function renderMagacin(){
     });
     html += `</div>`;
   });
-  html += `<div style="padding:10px 0 20px;text-align:right;color:var(--muted);font-size:11px;">
-    Ukupno profila: <b style="color:#fff">${ukupnoKomada} komada</b> · <b style="color:#fff">${ukupnoMetara.toFixed(1)} m</b>
-    &nbsp;&nbsp;·&nbsp;&nbsp;
-    <button class="btn-xs btn-xs-load" onclick="renderMagacin()">↻ Osveži</button>
+  html += `<div style="padding:10px 0 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px;">
+    <a href="popis.html" style="color:var(--bronze);text-decoration:none;font-weight:600;border:1px solid var(--bronze);border-radius:5px;padding:6px 12px;">📝 Popis magacina (telefon)</a>
+    <span>
+      Ukupno profila: <b style="color:#fff">${ukupnoKomada} komada</b> · <b style="color:#fff">${ukupnoMetara.toFixed(1)} m</b>
+      &nbsp;&nbsp;·&nbsp;&nbsp;
+      <button class="btn-xs btn-xs-load" onclick="renderMagacin()">↻ Osveži</button>
+    </span>
   </div>`;
   html += '</div>';
   doc.innerHTML = html;
