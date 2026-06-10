@@ -787,23 +787,6 @@ function renderNalog(I, R, alu, okov){
     ${R.auto.preko10m?'<span style="color:#bd4a2a;font-weight:700">⚠ ŠIRINA PREKO 10m</span>':''}
   </div>`;
 
-  /* LISTA SEČENJA — istaknuta kartica za radnika */
-  const aluAktivni = alu.items.filter(p => p.kom > 0 && p.mera > 0);
-  if(aluAktivni.length){
-    html += `<div class="cut-list no-print">
-      <div class="cut-list-h">✂ LISTA SEČENJA — ALUMINIJUM</div>`;
-    aluAktivni.forEach(p => {
-      html += `<div class="cut-row">
-        <div class="cut-sifra">${p.prof.sifra}</div>
-        <div class="cut-naziv">${esc(p.naziv)}</div>
-        <div class="cut-dim">${p.mera} mm</div>
-        <div class="cut-kom">× ${p.kom}</div>
-        <div class="cut-chk">☐</div>
-      </div>`;
-    });
-    html += `</div>`;
-  }
-
   /* 01 — ALUMINIJUM sa slikama profila */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">01</span>
     <h3 class="sec-t">Aluminijum — za sečenje</h3></div>
@@ -812,6 +795,7 @@ function renderNalog(I, R, alu, okov){
       <th>Naziv</th>
       <th style="width:110px;text-align:right">Mera</th>
       <th style="width:42px;text-align:center">Kom</th>
+      <th class="no-print" style="min-width:130px;font-size:10px;color:#888;font-weight:400">Na stanju (magacin)</th>
       <th style="width:32px;text-align:center">✓</th>
     </tr></thead><tbody>`;
   alu.items.forEach((p,i)=>{
@@ -820,9 +804,11 @@ function renderNalog(I, R, alu, okov){
       <td><b>${esc(p.naziv)}</b><div style="font-size:10px;color:#5a5446">${esc(p.nap)}</div></td>
       <td class="m" style="text-align:right"><b style="font-size:14px">${p.mera} mm</b></td>
       <td class="m" style="text-align:center;font-weight:700;font-size:14px">${p.kom}</td>
+      <td class="no-print" id="mh_${p.prof.sifra}_${i}" style="font-size:10px;color:#888">⏳</td>
       <td style="text-align:center"><span class="chk"></span></td></tr>`;
   });
   html += `</tbody></table></div>`;
+  setTimeout(() => loadMagacinHints(alu.items), 80);
 
   /* 02 — CERADA + MAPA */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">02</span>
@@ -1371,6 +1357,39 @@ async function renderMagacin(){
   doc.innerHTML = html;
 }
 
+/* ── Magacin hints za sekciju 01 ── */
+async function loadMagacinHints(items){
+  if(!magState){
+    try {
+      const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key':API_KEY}});
+      const json = await res.json();
+      if(json.ok) magState = json.data;
+    } catch(e){ return; }
+  }
+  items.filter(p=>p.kom>0&&p.mera>0).forEach((p,i) => {
+    const el = document.getElementById('mh_'+p.prof.sifra+'_'+i);
+    if(!el) return;
+    const komadi = (magState[p.prof.sifra]?.komadi || []).map(k=>+k.duzina).filter(d=>d>0);
+    if(!komadi.length){
+      el.innerHTML = '<span style="color:#e07070;">⚠ nema na stanju</span>';
+      return;
+    }
+    // best-fit: najmanji koji može da primi traženu dužinu
+    const fit = komadi.filter(d=>d>=p.mera).sort((a,b)=>a-b)[0];
+    if(fit){
+      const ostatak = fit - p.mera;
+      const prag = OTPAD_PRAG_MAP[p.prof.sifra] ?? OTPAD_PRAG_DEFAULT;
+      const ostatakTxt = ostatak > 0
+        ? (ostatak >= prag ? ` → ostatak <b>${ostatak}</b>mm` : ` → ostatak ${ostatak}mm (otpad)`)
+        : '';
+      el.innerHTML = `<span style="color:#7dba8a;">📦 iz <b>${fit}</b>mm${ostatakTxt}</span>`;
+    } else {
+      const maxKom = Math.max(...komadi);
+      el.innerHTML = `<span style="color:#e07a5f;">⚠ max <b>${maxKom}</b>mm — premalo, naručiti</span>`;
+    }
+  });
+}
+
 /* ───────── KOREKCIJA STANJA ───────── */
 let korSifra = '', korTip = '';
 
@@ -1717,30 +1736,42 @@ async function pustiUProizvodnju(){
   prodPlan = {plan, magacin, brNaloga: $("brNaloga").value || '', kupac: $("kupac").value || ''};
 
   let html = '';
+
+  if(!plan.koraci.length && !plan.nedostaje.length){
+    html += `<div style="color:#e07070;padding:16px 0;">
+      ⚠ Magacin je prazan za ovaj nalog.<br>
+      <span style="font-size:11px;color:#a09880;">Prvo uradi popis u tabu <b>📦 Magacin</b> ili pusti uvoz. Sečenje iz cele šipke nije evidentirano.</span>
+    </div>`;
+  }
+
   if(plan.koraci.length){
-    html += '<div style="font-weight:700;color:#7dba8a;margin-bottom:8px;">✓ SEČE SE SA STANJA ('+plan.koraci.length+')</div>';
+    html += `<div style="font-weight:700;color:#7dba8a;margin-bottom:8px;">✓ SEČE SE SA STANJA (${plan.koraci.length})</div>`;
     html += plan.koraci.map(k =>
       `<div style="padding:7px 0;border-bottom:1px solid #2e3138;">
         <b>${k.sifra}</b> ${k.naziv}<br>
-        treba <b>${k.duzina}</b> mm → seče se iz komada <b>${k.iz}</b> mm
+        treba <b>${k.duzina}</b> mm → seče iz komada <b>${k.iz}</b> mm
         ${k.ostatak>0
           ? (k.vracaSe
-            ? `<br><span style="color:#7dba8a;">ostaje ${k.ostatak} mm → vraća se na stanje</span>`
-            : `<br><span style="color:#e07a5f;">ostaje ${k.ostatak} mm → otpad (ispod ${k.prag} mm)</span>`)
-          : ''}
+            ? `<br><span style="color:#7dba8a;">↩ ostaje ${k.ostatak} mm → vraća se na stanje</span>`
+            : `<br><span style="color:#e07a5f;">🗑 ostaje ${k.ostatak} mm → otpad (ispod ${k.prag} mm)</span>`)
+          : '<br><span style="color:#7dba8a;">tačno iskorišćeno</span>'}
       </div>`).join('');
   }
+
   if(plan.nedostaje.length){
-    html += '<div style="font-weight:700;color:#e07070;margin:12px 0 8px;">⚠ NEMA NA STANJU ('+plan.nedostaje.length+')</div>';
+    html += `<div style="font-weight:700;color:#e07070;margin:12px 0 8px;">⚠ NEMA NA STANJU (${plan.nedostaje.length})</div>`;
     html += plan.nedostaje.map(n =>
       `<div style="padding:5px 0;border-bottom:1px solid #2e3138;color:#e09080;">
         <b>${n.sifra}</b> ${n.naziv} — treba ${n.duzina} mm
       </div>`).join('');
-    html += '<div style="font-size:11px;color:#a09880;margin-top:6px;">Ovi profili moraju da se poruče ili seku iz nove šipke.</div>';
+    html += `<div style="font-size:11px;color:#a09880;margin-top:6px;">Ovi profili moraju da se poruče ili seku iz nove šipke — stanje se neće menjati za njih.</div>`;
   }
 
   if(plan.koraci.length){
-    html += `<button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="potvrdiProizvodnju()">✓ POTVRDI — skini sa stanja</button>`;
+    html += `<div style="background:#0d1a0e;border:1px solid #3a5a30;border-radius:6px;padding:10px 12px;margin-top:14px;font-size:11px;color:#9dc89d;">
+      Klikom na POTVRDI: stanje magacina se ažurira i sečenje se evidentira u istoriji.
+    </div>`;
+    html += `<button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="potvrdiProizvodnju()">✓ POTVRDI — skini sa stanja</button>`;
   }
   html += `<button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="closeProd()">Otkaži</button>`;
   body.innerHTML = html;
