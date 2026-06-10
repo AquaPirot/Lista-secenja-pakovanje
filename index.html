@@ -163,6 +163,33 @@
   .btn-xs-load:hover{background:var(--bronzeD);}
   .btn-xs-del{background:#2e1a1a;color:#e07070;border:1px solid #5a2020;}
   .btn-xs-del:hover{background:#3e2020;}
+
+  /* ── MAGACIN TAB ── */
+  .mag-wrap{max-width:820px;margin:14px auto;padding:0 14px;}
+  .mag-sek{background:var(--shell2);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+  .mag-sek-h{background:var(--ink);padding:10px 14px;font-family:'Fjalla One',sans-serif;font-size:13px;color:var(--bronze);letter-spacing:.05em;}
+  .mag-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .mag-row:last-child{border-bottom:none;}
+  .mag-sifra{font-family:'Spline Sans Mono',monospace;font-size:10px;color:var(--muted);width:62px;flex-shrink:0;}
+  .mag-naziv{flex:1;font-size:12px;font-weight:600;min-width:120px;}
+  .mag-komadi{display:flex;flex-wrap:wrap;gap:4px;flex:2;}
+  .mag-chip{background:#2a2d34;border:1px solid var(--line);border-radius:4px;padding:3px 7px;font-family:'Spline Sans Mono',monospace;font-size:11px;color:#e8e4d8;white-space:nowrap;}
+  .mag-chip.warn{border-color:var(--warn);color:#e07a5f;}
+  .mag-qty{font-family:'Spline Sans Mono',monospace;font-size:15px;font-weight:700;color:#fff;min-width:60px;text-align:right;}
+  .mag-qty.low{color:var(--warn);}
+  .mag-kor-btn{background:#1a2218;border:1px solid #3a5a30;border-radius:5px;color:#7dba8a;font-size:11px;padding:4px 9px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .mag-kor-btn:hover{background:#2a3a28;}
+  .mag-empty{padding:30px;text-align:center;color:var(--muted);font-size:13px;}
+
+  /* ── LISTA SEČENJA ZA RADNIKE ── */
+  .cut-list{background:#0d1a0e;border:2px solid #3a5a30;border-radius:8px;padding:12px 14px;margin-bottom:14px;}
+  .cut-list-h{font-family:'Fjalla One',sans-serif;color:#7dba8a;font-size:13px;letter-spacing:.08em;margin-bottom:10px;}
+  .cut-row{display:flex;align-items:center;gap:0;margin-bottom:5px;border-radius:5px;overflow:hidden;}
+  .cut-sifra{background:#1a2e1a;color:#7dba8a;font-family:'Spline Sans Mono',monospace;font-size:11px;padding:7px 10px;width:62px;flex-shrink:0;font-weight:600;}
+  .cut-naziv{background:#1e2820;color:#c8d8c0;font-size:11px;padding:7px 10px;flex:1;}
+  .cut-dim{background:#2a3e2a;color:#fff;font-family:'Spline Sans Mono',monospace;font-size:16px;font-weight:700;padding:7px 14px;min-width:110px;text-align:right;}
+  .cut-kom{background:#3a5a30;color:#fff;font-family:'Fjalla One',sans-serif;font-size:16px;padding:7px 12px;min-width:44px;text-align:center;}
+  .cut-chk{background:#1e2820;color:var(--muted);font-size:18px;padding:7px 10px;width:36px;text-align:center;}
 </style>
 </head>
 <body>
@@ -178,6 +205,7 @@
   <div class="topbar-actions">
     <button class="btn btn-secondary active" id="btnNalog" onclick="switchView('nalog')">Nalog</button>
     <button class="btn btn-secondary" id="btnObracun" onclick="switchView('obracun')">Obračun</button>
+    <button class="btn btn-secondary" id="btnMagacin" onclick="switchView('magacin')">📦 Magacin</button>
     <button class="btn btn-secondary" id="btnSacuvaj" onclick="saveOrder()">💾 Sačuvaj</button>
     <button class="btn btn-secondary" id="btnProizvodnja" onclick="pustiUProizvodnju()">🏭 Proizvodnja</button>
     <button class="btn btn-secondary" onclick="openArchive()">📁 Arhiva</button>
@@ -678,7 +706,9 @@ function switchView(v){
   currentView = v;
   $("btnNalog").classList.toggle("active", v==='nalog');
   $("btnObracun").classList.toggle("active", v==='obracun');
-  render();
+  $("btnMagacin").classList.toggle("active", v==='magacin');
+  if(v === 'magacin') renderMagacin();
+  else render();
 }
 
 function imgTag(key, alt){
@@ -756,6 +786,23 @@ function renderNalog(I, R, alu, okov){
     ${R.in.parapetVis>0?`<span style="color:#a9743c;font-weight:700">Stub seče na: ${R.profili2.duzStuba} mm (${R.in.C} − ${R.in.parapetVis})</span>`:''}
     ${R.auto.preko10m?'<span style="color:#bd4a2a;font-weight:700">⚠ ŠIRINA PREKO 10m</span>':''}
   </div>`;
+
+  /* LISTA SEČENJA — istaknuta kartica za radnika */
+  const aluAktivni = alu.items.filter(p => p.kom > 0 && p.mera > 0);
+  if(aluAktivni.length){
+    html += `<div class="cut-list no-print">
+      <div class="cut-list-h">✂ LISTA SEČENJA — ALUMINIJUM</div>`;
+    aluAktivni.forEach(p => {
+      html += `<div class="cut-row">
+        <div class="cut-sifra">${p.prof.sifra}</div>
+        <div class="cut-naziv">${esc(p.naziv)}</div>
+        <div class="cut-dim">${p.mera} mm</div>
+        <div class="cut-kom">× ${p.kom}</div>
+        <div class="cut-chk">☐</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
 
   /* 01 — ALUMINIJUM sa slikama profila */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">01</span>
@@ -1213,7 +1260,220 @@ function renderObracun(I, R, alu, okov, obr){
   </div>
 </div>
 
+<div class="arch-overlay no-print" id="korOverlay" onclick="if(event.target===this)closeKor()">
+  <div class="arch-panel" style="width:min(480px,100vw);">
+    <div class="arch-head">
+      <span class="arch-head-t" id="korTitle">KOREKCIJA STANJA</span>
+      <button class="arch-close" onclick="closeKor()">✕</button>
+    </div>
+    <div id="korBody" style="padding:14px 16px;font-size:13px;"></div>
+  </div>
+</div>
+
 <script>
+/* ───────── MAGACIN TAB ───────── */
+const MAG_PROFILI = [
+  {sifra:"10501",naziv:"Šina (raj) 90×150",tip:"profil"},
+  {sifra:"10475",naziv:"Šina (raj) 110×150",tip:"profil"},
+  {sifra:"10468",naziv:"Oluk",tip:"profil"},
+  {sifra:"10471",naziv:"Korniš — TANKI",tip:"profil"},
+  {sifra:"10472",naziv:"Korniš — DEBELI",tip:"profil"},
+  {sifra:"10470",naziv:"Tanki stringcourse",tip:"profil"},
+  {sifra:"10419",naziv:"Stub 110×144",tip:"profil"},
+  {sifra:"10414",naziv:"Stub 100×100",tip:"profil"},
+  {sifra:"10420",naziv:"Panel (između rajeva)",tip:"profil"},
+  {sifra:"10417",naziv:"Cev motora",tip:"profil"},
+  {sifra:"CEV-80",naziv:"Cev na zidu 80×40",tip:"profil"},
+  {sifra:"CEV-100",naziv:"Cev na zidu 100×100",tip:"profil"},
+];
+const MAG_SEKCIJE = [
+  {naziv:"Aluminijum profili", stavke: MAG_PROFILI},
+  {naziv:"Fitilji / kederi / kaiševi", stavke:[
+    {sifra:"PRG-102",naziv:"Fitilj keder šine",tip:"metar"},
+    {sifra:"PRG-104",naziv:"Fitilj keder oluka",tip:"metar"},
+    {sifra:"PRG-101",naziv:"Fitilj keder cerade",tip:"metar"},
+    {sifra:"PRG-103",naziv:"Fitilj kabla",tip:"metar"},
+    {sifra:"PRG-105",naziv:"T10×16 zupčasti kaiš",tip:"metar"},
+    {sifra:"PRG-116",naziv:"Kabl 2×0,75mm²",tip:"metar"},
+  ]},
+  {naziv:"Elektronika", stavke:[
+    {sifra:"MOTOR",naziv:"Motor",tip:"kom"},
+    {sifra:"DALJ",naziv:"Daljinski",tip:"kom"},
+    {sifra:"TRAFO-10",naziv:"Trafo 10A",tip:"kom"},
+    {sifra:"TRAFO-20",naziv:"Trafo 20A",tip:"kom"},
+    {sifra:"TRAFO-30",naziv:"Trafo 30A",tip:"kom"},
+    {sifra:"DIMER",naziv:"Dimer",tip:"kom"},
+    {sifra:"PRG-108",naziv:"24V LED",tip:"kom"},
+  ]},
+];
+
+let magState = null;
+
+async function renderMagacin(){
+  const doc = $("doc");
+  doc.innerHTML = '<div class="mag-wrap"><div class="mag-empty">⏳ Učitavam magacin...</div></div>';
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok) magState = json.data;
+  } catch(e){ magState = null; }
+
+  if(!magState){
+    doc.innerHTML = '<div class="mag-wrap"><div class="mag-empty">❌ Ne mogu da učitam magacin — proveri konekciju.</div></div>';
+    return;
+  }
+
+  let html = '<div class="mag-wrap">';
+  // ukupna vrednost metara profila
+  let ukupnoKomada = 0, ukupnoMetara = 0;
+  MAG_SEKCIJE.forEach(sek => {
+    html += `<div class="mag-sek"><div class="mag-sek-h">${sek.naziv}</div>`;
+    sek.stavke.forEach(s => {
+      const d = magState[s.sifra];
+      html += `<div class="mag-row">
+        <div class="mag-sifra">${s.sifra}</div>
+        <div class="mag-naziv">${s.naziv}</div>`;
+      if(s.tip === 'profil'){
+        const komadi = d?.komadi || [];
+        const prag = OTPAD_PRAG_MAP[s.sifra] ?? OTPAD_PRAG_DEFAULT;
+        const uk = komadi.reduce((a,k)=>a+(+k.duzina||0),0);
+        if(komadi.length){
+          ukupnoKomada += komadi.length;
+          ukupnoMetara += uk/1000;
+          html += `<div class="mag-komadi">`;
+          komadi.forEach(k => {
+            const warn = +k.duzina > 0 && +k.duzina < prag;
+            html += `<span class="mag-chip${warn?' warn':''}">${k.duzina} mm</span>`;
+          });
+          html += `</div>
+          <div class="mag-qty">${komadi.length} kom<div style="font-size:9px;color:var(--muted);font-family:monospace">${(uk/1000).toFixed(1)} m</div></div>`;
+        } else {
+          html += `<div class="mag-komadi" style="color:var(--muted);font-size:11px;">nema na stanju</div><div class="mag-qty low">0</div>`;
+        }
+      } else {
+        const kol = d?.kolicina ?? 0;
+        const min = d?.minimum ?? 0;
+        const low = min > 0 && kol <= min;
+        const jed = s.tip === 'metar' ? 'm' : 'kom';
+        html += `<div class="mag-komadi"></div><div class="mag-qty${low?' low':''}">${kol} ${jed}${low?' ⚠':''}</div>`;
+      }
+      html += `<button class="mag-kor-btn" onclick="openKor('${s.sifra}','${s.naziv.replace(/'/g,"\\'")}','${s.tip}')">Korekcija</button>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<div style="padding:10px 0 20px;text-align:right;color:var(--muted);font-size:11px;">
+    Ukupno profila: <b style="color:#fff">${ukupnoKomada} komada</b> · <b style="color:#fff">${ukupnoMetara.toFixed(1)} m</b>
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    <button class="btn-xs btn-xs-load" onclick="renderMagacin()">↻ Osveži</button>
+  </div>`;
+  html += '</div>';
+  doc.innerHTML = html;
+}
+
+/* ───────── KOREKCIJA STANJA ───────── */
+let korSifra = '', korTip = '';
+
+function openKor(sifra, naziv, tip){
+  korSifra = sifra; korTip = tip;
+  $("korTitle").textContent = 'KOREKCIJA — '+sifra;
+  document.getElementById('korOverlay').classList.add('open');
+  buildKorBody();
+}
+function closeKor(){ document.getElementById('korOverlay').classList.remove('open'); }
+
+function buildKorBody(){
+  const body = document.getElementById('korBody');
+  const d = magState?.[korSifra];
+  const razlozi = ['Greška sečenja','Oštećen transport','Proveravana korekcija','Otpad','Ostalo'];
+  let html = `<div style="margin-bottom:12px;">
+    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Razlog korekcije</label>
+    <select id="korRazlog" style="width:100%;padding:8px;background:#101216;border:1px solid var(--line);border-radius:5px;color:#fff;font-size:13px;">
+      ${razlozi.map(r=>`<option>${r}</option>`).join('')}
+    </select>
+  </div>`;
+
+  if(korTip === 'profil'){
+    const komadi = d?.komadi || [];
+    const prag = OTPAD_PRAG_MAP[korSifra] ?? OTPAD_PRAG_DEFAULT;
+    html += `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Klikni × da ukloniš komad koji je pogrešno sečen ili oštećen:</div>`;
+    html += `<div id="korKomadi" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">`;
+    komadi.forEach((k,i) => {
+      const warn = +k.duzina > 0 && +k.duzina < prag;
+      html += `<span class="mag-chip${warn?' warn':''}" style="cursor:pointer;padding:5px 10px;" onclick="korUkloniKomad(${i})" title="Klikni da ukloniš">
+        ${k.duzina} mm <span style="color:#e07070;margin-left:4px;">×</span></span>`;
+    });
+    html += `</div>`;
+    html += `<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Dodaj novi komad (mm):</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <input type="number" id="korNovaDuz" placeholder="dužina mm" style="flex:1;padding:8px;background:#101216;border:1px solid var(--line);border-radius:5px;color:#fff;font-size:14px;font-family:monospace;">
+      <button class="btn btn-secondary" onclick="korDodajKomad()" style="white-space:nowrap">+ Dodaj</button>
+    </div>`;
+  } else {
+    const jed = korTip === 'metar' ? 'm' : 'kom';
+    const kol = d?.kolicina ?? 0;
+    const min = d?.minimum ?? 0;
+    html += `<div style="margin-bottom:12px;">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Nova količina (${jed})</label>
+      <input type="number" id="korKolicina" value="${kol}" min="0" step="${korTip==='kom'?1:0.5}"
+        style="width:100%;padding:8px;background:#101216;border:1px solid var(--line);border-radius:5px;color:#fff;font-size:18px;font-family:monospace;text-align:center;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Min. upozorenje (${jed})</label>
+      <input type="number" id="korMinimum" value="${min}" min="0" step="${korTip==='kom'?1:0.5}"
+        style="width:100%;padding:8px;background:#101216;border:1px solid var(--line);border-radius:5px;color:#fff;font-size:14px;font-family:monospace;text-align:center;">
+    </div>`;
+  }
+
+  html += `<button class="btn btn-primary" style="width:100%;margin-bottom:6px;" onclick="sacuvajKorekciju()">✓ Sačuvaj korekciju</button>
+    <button class="btn btn-secondary" style="width:100%;" onclick="closeKor()">Otkaži</button>`;
+  body.innerHTML = html;
+}
+
+function korUkloniKomad(idx){
+  if(!magState[korSifra]) return;
+  magState[korSifra].komadi.splice(idx, 1);
+  buildKorBody();
+}
+
+function korDodajKomad(){
+  const duz = parseInt($("korNovaDuz").value);
+  if(!duz || duz <= 0) return;
+  if(!magState[korSifra]) magState[korSifra] = {komadi:[]};
+  if(!magState[korSifra].komadi) magState[korSifra].komadi = [];
+  magState[korSifra].komadi.push({duzina: String(duz)});
+  magState[korSifra].komadi.sort((a,b)=>+b.duzina - +a.duzina);
+  buildKorBody();
+}
+
+async function sacuvajKorekciju(){
+  const razlog = $("korRazlog").value;
+  let noviData;
+  if(korTip === 'profil'){
+    noviData = {komadi: magState[korSifra]?.komadi || []};
+  } else {
+    noviData = {
+      kolicina: parseFloat($("korKolicina").value) || 0,
+      minimum:  parseFloat($("korMinimum").value)  || 0,
+    };
+  }
+  try {
+    const res = await fetch(API_URL+'/magacin.php?action=korekcija', {
+      method:'POST', headers:apiHeaders(),
+      body: JSON.stringify({sifra: korSifra, data: noviData, razlog})
+    });
+    const json = await res.json();
+    if(json.ok){
+      if(!magState) magState = {};
+      magState[korSifra] = noviData;
+      closeKor();
+      renderMagacin();
+      return;
+    }
+  } catch(e){}
+  alert('Greška pri čuvanju — proveri konekciju.');
+}
+
 /* ───────── ARHIVA ───────── */
 const API_URL = 'https://app.aggroup.rs/api';
 const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php

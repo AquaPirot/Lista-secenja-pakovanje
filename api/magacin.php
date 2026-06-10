@@ -20,6 +20,31 @@ if($method === 'GET' && $action === 'get'){
   json_out(['ok'=>true, 'data'=>$out]);
 }
 
+// POST korekcija — ručna izmena sa razlogom, upisuje u log
+if($method === 'POST' && $action === 'korekcija'){
+  $b     = body();
+  $sifra = $b['sifra']  ?? '';
+  $data  = $b['data']   ?? [];
+  $razlog = $b['razlog'] ?? 'Ručna korekcija';
+  if(!$sifra) json_out(['ok'=>false,'err'=>'No sifra'], 400);
+
+  $pdo = db();
+  $pdo->beginTransaction();
+  if(isset($data['komadi'])){
+    $q = $pdo->prepare("INSERT INTO magacin (sifra,tip,komadi,updated_at) VALUES(?,?,?,NOW())
+      ON DUPLICATE KEY UPDATE tip=VALUES(tip), komadi=VALUES(komadi), updated_at=NOW()");
+    $q->execute([$sifra, 'profil', json_encode($data['komadi'], JSON_UNESCAPED_UNICODE)]);
+  } else {
+    $q = $pdo->prepare("INSERT INTO magacin (sifra,tip,kolicina,minimum,updated_at) VALUES(?,?,?,?,NOW())
+      ON DUPLICATE KEY UPDATE kolicina=VALUES(kolicina), minimum=VALUES(minimum), updated_at=NOW()");
+    $q->execute([$sifra, 'kom', $data['kolicina'] ?? 0, $data['minimum'] ?? 0]);
+  }
+  $ql = $pdo->prepare("INSERT INTO magacin_log (sifra, akcija, detalji) VALUES(?,?,?)");
+  $ql->execute([$sifra, 'korekcija', json_encode(['razlog'=>$razlog,'data'=>$data], JSON_UNESCAPED_UNICODE)]);
+  $pdo->commit();
+  json_out(['ok'=>true]);
+}
+
 // POST sačuvaj jednu stavku
 if($method === 'POST' && $action === 'set'){
   $b     = body();
