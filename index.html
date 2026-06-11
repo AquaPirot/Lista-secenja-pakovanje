@@ -418,8 +418,10 @@ const PROFILI = {
   raj90: {sifra:"10501", naziv:"Šina 90×150",       nazivSr:"Šina 90×150",       nazivTr:"90x150 mm Rail Profile", img:"prof_10501", kgm:4.129},
   raj110:{sifra:"10475", naziv:"Šina 110×150",      nazivSr:"Šina 110×150",      nazivTr:"110x150 mm Rail Profile",img:"prof_10475", kgm:7.116},
   oluk:  {sifra:"10468", nazivSr:"Oluk",             nazivTr:"Gutter Profile",         img:"prof_10468", kgm:4.006},
-  kornisTanki: {sifra:"10471", nazivSr:"Tanki korniš",   nazivTr:"Thin Cornice Profile",     img:"prof_10471", kgm:0.809},
-  kornisDebeli:{sifra:"10472", nazivSr:"Debeli korniš",  nazivTr:"Thick Stringcourse Profile",img:"prof_10472", kgm:1.491},
+  kornisTanki:  {sifra:"10471", nazivSr:"Tanki korniš",        img:"prof_10471", kgm:0.809},
+  kornisDebeli: {sifra:"10472", nazivSr:"Debeli korniš",       img:"prof_10472", kgm:1.491},
+  kornisD418:   {sifra:"10418", nazivSr:"Korniš 10418 (tanki)",img:null,         kgm:0.737},
+  kornisD416:   {sifra:"10416", nazivSr:"Korniš 10416 (debeli)",img:null,        kgm:1.288},
   kornisTanjiKedera:{sifra:"10470", nazivSr:"Tanki stringcourse", nazivTr:"Thin Stringcourse", img:"prof_10470", kgm:0.59},
   stub110: {sifra:"10419", nazivSr:"Stub 110×144",   nazivTr:"144 mm Counterfort Profile",img:"prof_10419", kgm:2.927},
   stub100: {sifra:"10414", nazivSr:"Stub 100×100",   nazivTr:"100 Foot Profile",         img:"prof_10414", kgm:2.227},
@@ -633,7 +635,11 @@ function aluCalc(I, R){
   // 1. Šina
   const rajKljuc = +I.sirinaRaja === 110 ? "raj110" : +I.sirinaRaja === 75 ? "raj75" : "raj90";
   const rajProf  = PROFILI[rajKljuc];
-  const kProf = R.kornis.kvDebeli ? PROFILI.kornisDebeli : PROFILI.kornisTanki;
+  // Profili korniša — zavise od tipa (jednostrani vs dvostrani keder)
+  const isDvo   = R.kornis.kvObostrani;
+  const kProfDebeli = isDvo ? PROFILI.kornisD416 : PROFILI.kornisDebeli; // 10416 ili 10472
+  const kProfTanki  = isDvo ? PROFILI.kornisD418 : PROFILI.kornisTanki;  // 10418 ili 10471
+  const kProf       = R.kornis.kvDebeli ? kProfDebeli : kProfTanki;
   const kPoPoz = R.kornis.kornisKomPoPoz; // 1 ili 2 (sečeni)
   // 2. Stub
   const stubKljuc = I.stub === "110x144" ? "stub110" : "stub100";
@@ -645,7 +651,7 @@ function aluCalc(I, R){
     {key:"stub",     prof:stubProf,               naziv:"Stub ("+I.stub+")",              mera:R.profili2.duzStuba,  kom:R.auto.brStubova,nap: R.in.parapetVis>0 ? "Prednja "+R.in.C+" − zidić "+R.in.parapetVis+" = "+R.profili2.duzStuba+" mm" : "→ Prednja visina"},
     {key:"cevm",     prof:PROFILI.cevMotora,      naziv:"Cev motora",                      mera:R.profili2.duzCevMotora, kom:R.profili2.brCevMotora, nap: R.profili2.cevMotoraTip==="jednodelna" ? "Jednodelna · širina pergole + 100mm" : `Po poljima · ${R.profili2.brCevMotora} cevi (zbir = širina pergole + 50mm)`},
     {key:"panel",    prof:PROFILI.panel,          naziv:"Panel (između rajeva)",           mera:R.profili2.duzPanela, kom:R.profili2.brPanela, nap:"→ Širina polja + 100"},
-    {key:"kdeb",     prof:PROFILI.kornisDebeli,   naziv:"★ Korniš DEBELI (ivični)",        mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
+    {key:"kdeb",     prof:kProfDebeli,             naziv:"★ Korniš DEBELI (ivični)",        mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
     {key:"ksv",      prof:kProf,                  naziv:"★ Korniš sa svetlom",             mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
     {key:"kbez",     prof:kProf,                  naziv:"★ Korniš bez svetla",             mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
   ];
@@ -777,6 +783,12 @@ function imgTag(key, alt){
   if(!key || !IMG[key]) return '';
   return `<img class="thumb" src="${IMG[key]}" alt="${esc(alt||'')}">`;
 }
+// Ćelija profila: sifra iznad slike (ili placeholder ako nema slike)
+function profCell(prof){
+  const sifra = prof ? `<div style="font-size:9px;font-family:'Spline Sans Mono',monospace;color:#888;margin-bottom:2px">${esc(prof.sifra||'')}</div>` : '';
+  const img   = (prof && prof.img) ? imgTag(prof.img, prof.nazivSr) : `<div style="width:48px;height:36px;background:#2a2d34;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#666">?</div>`;
+  return sifra + img;
+}
 
 function render(){
   const I={
@@ -861,7 +873,7 @@ function renderNalog(I, R, alu, okov){
     </tr></thead><tbody>`;
   alu.items.forEach((p,i)=>{
     html += `<tr style="background:${i%2?'#ebe7db':'transparent'}">
-      <td>${imgTag(p.prof.img, p.prof.nazivSr)}</td>
+      <td style="vertical-align:middle">${profCell(p.prof)}</td>
       <td><b>${esc(p.naziv)}</b><div style="font-size:10px;color:#5a5446">${esc(p.nap)}</div></td>
       <td class="m" style="text-align:right"><b style="font-size:14px">${p.mera} mm</b></td>
       <td class="m" style="text-align:center;font-weight:700;font-size:14px">${p.kom}</td>
