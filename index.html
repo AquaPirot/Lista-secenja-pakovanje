@@ -160,6 +160,54 @@
   .arch-item-date{font-size:10px;color:var(--muted);flex-shrink:0;}
   .arch-item-sub{font-size:11px;color:#a09880;margin-bottom:9px;}
   .arch-item-acts{display:flex;gap:6px;}
+
+  /* ───── Kalendar produkcije ───── */
+  .kal-wrap{max-width:1100px;margin:18px auto;padding:0 14px 40px;}
+  .kal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .kal-title{font-family:'Fjalla One',sans-serif;color:#fff;font-size:22px;letter-spacing:.04em;}
+  .kal-title small{color:var(--bronze);font-size:22px;}
+  .kal-nav{display:flex;gap:6px;align-items:center;}
+  .kal-nav button{background:#2a2d34;border:1px solid var(--line);color:#fff;border-radius:6px;
+    padding:8px 14px;font-size:14px;cursor:pointer;font-family:'Fjalla One',sans-serif;letter-spacing:.03em;}
+  .kal-nav button:hover{border-color:var(--bronze);color:var(--bronze);}
+  .kal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:#a09880;}
+  .kal-legend span{display:flex;align-items:center;gap:5px;}
+  .kal-dot{width:9px;height:9px;border-radius:3px;display:inline-block;}
+  .kal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .kal-dayname{text-align:center;font-size:10px;color:var(--muted);letter-spacing:.1em;
+    text-transform:uppercase;padding:4px 0;font-family:'Fjalla One',sans-serif;}
+  .kal-cell{background:var(--shell2);border:1px solid var(--line);border-radius:8px;
+    min-height:88px;padding:5px;display:flex;flex-direction:column;gap:3px;transition:border-color .15s;}
+  .kal-cell.kal-out{opacity:.32;}
+  .kal-cell.kal-today{border-color:var(--bronze);box-shadow:0 0 0 1px var(--bronze);}
+  .kal-cell.kal-vikend{background:#1a1c21;}
+  .kal-daynum{font-size:11px;color:#888;font-family:'Spline Sans Mono',monospace;padding:1px 3px;}
+  .kal-today .kal-daynum{color:var(--bronze);font-weight:700;}
+  .kal-pill{font-size:10px;line-height:1.25;padding:4px 6px;border-radius:5px;cursor:pointer;
+    color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:none;text-align:left;
+    width:100%;display:block;font-family:'Hanken Grotesk',sans-serif;}
+  .kal-pill:hover{filter:brightness(1.2);}
+  .kal-pill.st-aktivan{background:var(--bronzeD);}
+  .kal-pill.st-proizvodnja{background:#3f7a4d;}
+  .kal-pill.st-isporucen{background:#3a3d45;color:#9aa0a8;text-decoration:line-through;}
+  .kal-pill.kal-kasni{outline:1.5px solid #d8754a;}
+  .kal-bezroka{margin-top:22px;}
+  .kal-bezroka-t{font-family:'Fjalla One',sans-serif;color:#a09880;font-size:13px;letter-spacing:.06em;margin-bottom:8px;}
+  .kal-bezroka .kal-pill{display:inline-block;width:auto;max-width:300px;margin:0 6px 6px 0;font-size:11px;padding:6px 10px;}
+  .kal-modal-card{background:var(--shell2);border:1px solid var(--line);border-radius:12px;
+    width:min(420px,92vw);margin:auto;padding:20px;box-shadow:0 18px 60px rgba(0,0,0,.5);}
+  .kal-modal-t{font-family:'Fjalla One',sans-serif;color:#fff;font-size:17px;margin-bottom:4px;}
+  .kal-modal-sub{font-size:12px;color:#a09880;margin-bottom:14px;}
+  .kal-modal-row{display:flex;justify-content:space-between;font-size:12px;color:#cfcabb;
+    padding:7px 0;border-bottom:1px solid var(--line);}
+  .kal-modal-row b{color:#fff;}
+  .kal-modal-acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .kal-modal-acts .btn{flex:1;min-width:110px;text-align:center;}
+  @media(max-width:640px){
+    .kal-cell{min-height:64px;padding:3px;}
+    .kal-pill{font-size:8.5px;padding:3px 4px;}
+    .kal-title{font-size:17px;}
+  }
   .btn-xs{border:0;padding:5px 11px;border-radius:4px;font-family:'Fjalla One',sans-serif;font-size:11px;cursor:pointer;letter-spacing:.03em;}
   .btn-xs-load{background:var(--bronze);color:#fff;}
   .btn-xs-load:hover{background:var(--bronzeD);}
@@ -221,6 +269,7 @@
     <button class="btn btn-secondary" id="btnObracun" onclick="switchView('obracun')">Obračun</button>
     <button class="btn btn-secondary" id="btnMagacin" onclick="switchView('magacin')">📦 Magacin</button>
     <button class="btn btn-secondary" id="btnIstorija" onclick="switchView('istorija')">📋 Istorija</button>
+    <button class="btn btn-secondary" id="btnKalendar" onclick="switchView('kalendar')">📅 Kalendar</button>
     <button class="btn btn-secondary" id="btnSacuvaj" onclick="saveOrder()">💾 Sačuvaj</button>
     <button class="btn btn-secondary" id="btnProizvodnja" onclick="pustiUProizvodnju()">🏭 Proizvodnja</button>
     <button class="btn btn-secondary" onclick="openArchive()">📁 Arhiva</button>
@@ -318,7 +367,7 @@
       <label><div class="lbl">Kupac / Firma</div><input type="text" id="kupac" placeholder="ime / firma"></label>
       <label><div class="lbl">Adresa</div><input type="text" id="adresa" placeholder="adresa montaže"></label>
       <label><div class="lbl">Datum</div><input type="text" id="datum"></label>
-      <label><div class="lbl">Rok</div><input type="text" id="rok" placeholder="datum isporuke"></label>
+      <label><div class="lbl">Rok isporuke</div><input type="date" id="rok"></label>
       <label><div class="lbl">Zadužen radnik</div><input type="text" id="radnik" placeholder="ime radnika"></label>
     </div>
   </div>
@@ -809,10 +858,12 @@ function switchView(v){
   $("btnObracun").classList.toggle("active", v==='obracun');
   $("btnMagacin").classList.toggle("active", v==='magacin');
   $("btnIstorija").classList.toggle("active", v==='istorija');
+  $("btnKalendar").classList.toggle("active", v==='kalendar');
   // forma za unos se vidi samo na Nalog/Obračun
-  $("inputPanel").style.display = (v==='magacin' || v==='istorija') ? 'none' : '';
+  $("inputPanel").style.display = (v==='magacin' || v==='istorija' || v==='kalendar') ? 'none' : '';
   if(v === 'magacin') renderMagacin();
   else if(v === 'istorija') renderIstorija();
+  else if(v === 'kalendar') renderKalendar();
   else render();
 }
 
@@ -901,7 +952,7 @@ function renderNalog(I, R, alu, okov){
       <div class="doc-sub">AG GROUP · LISTA ZA SEČENJE + MATERIJAL</div></div>
     <div class="doc-meta"><div class="badge">NALOG ZA PROIZVODNJU</div>
       <div style="margin-top:4px">Br. naloga: <b>${esc(I.brNaloga)||"______"}</b></div>
-      <div>Datum: <b>${esc(I.datum)||"—"}</b> · Rok: <b>${esc(I.rok)||"—"}</b></div>
+      <div>Datum: <b>${esc(I.datum)||"—"}</b> · Rok: <b>${/^\d{4}-\d{2}-\d{2}$/.test(I.rok||'') ? I.rok.split('-').reverse().join('.')+'.' : (esc(I.rok)||"—")}</b></div>
     </div></div>`;
 
   html += `<div class="info-row">
@@ -1383,7 +1434,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.5";
+const APP_VER = "v2026-06-11.6";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -1416,6 +1467,10 @@ const APP_VER = "v2026-06-11.5";
     });
   }
   </script>
+
+<div class="arch-overlay no-print" id="kalOverlay" style="align-items:center;justify-content:center;" onclick="if(event.target===this)kalZatvori()">
+  <div class="kal-modal-card" id="kalModalBody"></div>
+</div>
 
 <div class="arch-overlay no-print" id="archOverlay" onclick="if(event.target===this)closeArchive()">
   <div class="arch-panel">
@@ -1721,6 +1776,139 @@ async function renderIstorija(){
 
   html += `</div></div>`;
   doc.innerHTML = html;
+}
+
+/* ───────── KALENDAR PRODUKCIJE ───────── */
+let kalDatum = new Date();   // mesec koji se prikazuje
+let kalNalozi = [];          // keš poslednjeg fetcha
+
+const KAL_MESECI = ['Januar','Februar','Mart','April','Maj','Jun','Jul','Avgust','Septembar','Oktobar','Novembar','Decembar'];
+const KAL_DANI   = ['Pon','Uto','Sre','Čet','Pet','Sub','Ned'];
+const KAL_STATUS = {aktivan:'U pripremi', proizvodnja:'U produkciji', isporucen:'Isporučeno'};
+
+function kalParseRok(s){
+  if(!s) return null;
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return null;
+  return m[1]+'-'+m[2]+'-'+m[3];
+}
+function kalDanas(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function kalPomeri(n){
+  kalDatum = new Date(kalDatum.getFullYear(), kalDatum.getMonth()+n, 1);
+  kalCrtaj();
+}
+function kalNaDanas(){ kalDatum = new Date(); kalCrtaj(); }
+
+async function renderKalendar(){
+  const doc = $("doc");
+  doc.innerHTML = '<div class="kal-wrap"><div class="arch-empty">⏳ Učitavam kalendar...</div></div>';
+  try {
+    const res = await fetch(API_URL+'/nalozi.php?action=kalendar', {headers:{'X-Api-Key': API_KEY}});
+    const json = await res.json();
+    if(json.ok){ kalNalozi = json.data; kalCrtaj(); return; }
+  } catch(e){}
+  doc.innerHTML = '<div class="kal-wrap"><div class="arch-empty">❌ Ne mogu da učitam naloge — proveri konekciju.</div></div>';
+}
+
+function kalCrtaj(){
+  const god = kalDatum.getFullYear(), mes = kalDatum.getMonth();
+  const danas = kalDanas();
+
+  // grupiši naloge po danu roka
+  const poDanu = {}, bezRoka = [];
+  kalNalozi.forEach(o=>{
+    const r = kalParseRok(o.rok);
+    if(r){ (poDanu[r] = poDanu[r] || []).push(o); }
+    else bezRoka.push(o);
+  });
+
+  // prvi ponedeljak u prikazu
+  const prvi = new Date(god, mes, 1);
+  const pomak = (prvi.getDay()+6)%7; // 0=Pon
+  const start = new Date(god, mes, 1-pomak);
+
+  let cells = KAL_DANI.map(d=>`<div class="kal-dayname">${d}</div>`).join('');
+  for(let i=0;i<42;i++){
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate()+i);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const out = d.getMonth()!==mes;
+    const vikend = d.getDay()===0||d.getDay()===6;
+    const cls = ['kal-cell', out?'kal-out':'', key===danas?'kal-today':'', vikend?'kal-vikend':''].filter(Boolean).join(' ');
+    const pills = (poDanu[key]||[]).map(o=>{
+      const kasni = o.status!=='isporucen' && key<danas;
+      return `<button class="kal-pill st-${o.status}${kasni?' kal-kasni':''}" onclick="kalOtvori(${o.id})" title="${esc(o.klijent)}">${esc(o.klijent)}</button>`;
+    }).join('');
+    cells += `<div class="${cls}"><div class="kal-daynum">${d.getDate()}</div>${pills}</div>`;
+  }
+
+  const bez = bezRoka.length ? `
+    <div class="kal-bezroka">
+      <div class="kal-bezroka-t">⏳ BEZ ROKA ISPORUKE (${bezRoka.length})</div>
+      ${bezRoka.map(o=>`<button class="kal-pill st-${o.status}" onclick="kalOtvori(${o.id})">${esc(o.klijent)}</button>`).join('')}
+    </div>` : '';
+
+  $("doc").innerHTML = `
+  <div class="kal-wrap">
+    <div class="kal-head">
+      <div class="kal-title">${KAL_MESECI[mes]} <small>${god}</small></div>
+      <div class="kal-nav">
+        <button onclick="kalPomeri(-1)">‹</button>
+        <button onclick="kalNaDanas()">Danas</button>
+        <button onclick="kalPomeri(1)">›</button>
+        <button onclick="renderKalendar()">↻</button>
+      </div>
+    </div>
+    <div class="kal-legend">
+      <span><span class="kal-dot" style="background:var(--bronzeD)"></span> U pripremi</span>
+      <span><span class="kal-dot" style="background:#3f7a4d"></span> U produkciji</span>
+      <span><span class="kal-dot" style="background:#3a3d45"></span> Isporučeno</span>
+      <span><span class="kal-dot" style="background:transparent;outline:1.5px solid #d8754a"></span> Probijen rok</span>
+    </div>
+    <div class="kal-grid">${cells}</div>
+    ${bez}
+  </div>`;
+}
+
+function kalOtvori(id){
+  const o = kalNalozi.find(n=>n.id===id);
+  if(!o) return;
+  const rok = kalParseRok(o.rok);
+  const rokTxt = rok ? rok.split('-').reverse().join('.')+'.' : '—';
+  const kasni = o.status!=='isporucen' && rok && rok < kalDanas();
+  const ov = $("kalOverlay");
+  $("kalModalBody").innerHTML = `
+    <div class="kal-modal-t">${esc(o.klijent)}</div>
+    <div class="kal-modal-sub">${esc(o.napomena||'')}</div>
+    <div class="kal-modal-row"><span>Status</span><b>${KAL_STATUS[o.status]||o.status}</b></div>
+    <div class="kal-modal-row"><span>Rok isporuke</span><b style="${kasni?'color:#d8754a':''}">${rokTxt}${kasni?' ⚠ probijen':''}</b></div>
+    ${o.radnik?`<div class="kal-modal-row"><span>Zadužen radnik</span><b>${esc(o.radnik)}</b></div>`:''}
+    ${o.dim?`<div class="kal-modal-row"><span>Dimenzije</span><b>${esc(o.dim)} mm</b></div>`:''}
+    <div class="kal-modal-acts">
+      <button class="btn btn-secondary" onclick="kalZatvori();loadOrder(${o.id});switchView('nalog')">📄 Učitaj nalog</button>
+      ${o.status==='aktivan'    ? `<button class="btn btn-primary" onclick="kalStatus(${o.id},'proizvodnja')">🏭 U produkciju</button>` : ''}
+      ${o.status==='proizvodnja'? `<button class="btn btn-primary" onclick="kalStatus(${o.id},'isporucen')">✓ Isporučeno</button>` : ''}
+      ${o.status==='isporucen'  ? `<button class="btn btn-secondary" onclick="kalStatus(${o.id},'proizvodnja')">↩ Vrati u produkciju</button>` : ''}
+    </div>`;
+  ov.classList.add('open');
+}
+function kalZatvori(){ $("kalOverlay").classList.remove('open'); }
+
+async function kalStatus(id, status){
+  try {
+    const res = await fetch(API_URL+'/nalozi.php?action=status', {method:'POST', headers:apiHeaders(), body:JSON.stringify({id, status})});
+    const json = await res.json();
+    if(json.ok){
+      const o = kalNalozi.find(n=>n.id===id);
+      if(o) o.status = status;
+      kalZatvori(); kalCrtaj();
+      return;
+    }
+  } catch(e){}
+  alert('Greška pri promeni statusa — proveri konekciju.');
 }
 
 /* ── Magacin hints za sekciju 01 ── */

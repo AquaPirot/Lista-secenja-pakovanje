@@ -52,6 +52,38 @@ if($method === 'POST' && $action === 'save'){
   }
 }
 
+// GET kalendar — svi nalozi (osim otkazanih) sa rokom isporuke iz input_data
+if($method === 'GET' && $action === 'kalendar'){
+  $st = db()->prepare("SELECT id, klijent, napomena, status, created_at, input_data FROM radni_nalozi WHERE status != 'otkazan' ORDER BY id DESC");
+  $st->execute();
+  $rows = [];
+  foreach($st->fetchAll() as $r){
+    $in = json_decode($r['input_data'], true) ?: [];
+    $rows[] = [
+      'id'       => (int)$r['id'],
+      'klijent'  => $r['klijent'],
+      'napomena' => $r['napomena'],
+      'status'   => $r['status'],
+      'created_at'=> $r['created_at'],
+      'rok'      => $in['rok']    ?? '',
+      'kupac'    => $in['kupac']  ?? '',
+      'radnik'   => $in['radnik'] ?? '',
+      'dim'      => (!empty($in['sirina']) && !empty($in['dubina'])) ? $in['sirina'].'×'.$in['dubina'] : ''
+    ];
+  }
+  json_out(['ok'=>true, 'data'=>$rows]);
+}
+
+// POST samo promena statusa (kalendar produkcije)
+if($method === 'POST' && $action === 'status'){
+  $b   = body();
+  $id  = (int)($b['id'] ?? 0);
+  $stt = $b['status'] ?? 'aktivan';
+  if(!in_array($stt, ['aktivan','proizvodnja','isporucen','otkazan'])) json_out(['ok'=>false,'err'=>'Bad status'], 400);
+  db()->prepare("UPDATE radni_nalozi SET status=?, updated_at=NOW() WHERE id=?")->execute([$stt, $id]);
+  json_out(['ok'=>true]);
+}
+
 // POST obriši (soft delete — status=otkazan)
 if($method === 'POST' && $action === 'delete'){
   $b  = body();
