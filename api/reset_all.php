@@ -29,5 +29,10 @@ echo '<h2>✅ Obrisano — sve je na nuli!</h2>
   <li>istorija: prazna</li>
   <li>nalozi: prazni</li>
 </ul>
-<p>Sada otvori <b>popis.html</b> na telefonu i kreni sa popisom — kako unosiš, tako se puni magacin.</p>
-<p style="color:#c0392b;font-weight:bold;font-size:18px;">⚠ ODMAH OBRIŠI reset_all.php SA SERVERA!</p>';
+<p style="color:#c0392b;font-weight:bold;font-size:18px;">⚠ ODMAH OBRIŠI reset_all.php SA SERVERA!</p>
+<p style="margin-top:16px;">
+  <a href="/popis.html?reset=1" style="background:#2a6a3a;color:#fff;padding:12px 24px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:16px;">
+    → Otvori popis (čisti start)
+  </a>
+</p>
+<p style="font-size:12px;color:#555;margin-top:8px;">Ovaj link čisti i lokalni keš u browseru — koristiti samo ovaj link, ne direktno popis.html</p>';

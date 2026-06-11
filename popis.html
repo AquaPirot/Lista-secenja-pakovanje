@@ -328,23 +328,52 @@ const LS_KEY = 'ag_popis_v1';
 let STATE = {};
 
 async function loadState(){
+  // 1. Lokalni keš je uvek polazna tačka — nikad ga ne gubimo
+  let localState = {};
+  try { localState = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(e){}
+
+  // 2. Ako je URL ?reset=1 (dolazak sa reset_all.php) — lokalni keš se ignoriše
+  if(new URLSearchParams(location.search).get('reset') === '1'){
+    localState = {};
+    localStorage.removeItem(LS_KEY);
+    // Ukloni ?reset=1 iz URL-a bez reload-a
+    history.replaceState({}, '', location.pathname);
+  }
+
+  STATE = localState;
+
+  // 3. Sinhronizuj sa serverom
   try {
     const res = await fetch(API_URL+'/magacin.php?action=get', {headers:{'X-Api-Key': API_KEY}});
     const json = await res.json();
     if(json.ok){
-      // server je izvor istine — i prazan magacin je validno stanje (posle reseta)
-      STATE = json.data;
-      localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // keš
-      return;
+      // Server ima prednost za stavke koje poznaje;
+      // lokalne stavke kojih nema na serveru čuvamo (propušteni API pozivi tokom popisa)
+      const merged = Object.assign({}, localState, json.data);
+      STATE = merged;
+      localStorage.setItem(LS_KEY, JSON.stringify(merged));
+
+      // Pošalji serveru stavke koje su bile samo lokalno (da se nadoknadi propušteno)
+      const localOnly = Object.fromEntries(
+        Object.entries(localState).filter(([k]) => !(k in json.data) && k !== '__v__')
+      );
+      if(Object.keys(localOnly).length > 0){
+        fetch(API_URL+'/magacin.php?action=setall', {
+          method:'POST', headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
+          body: JSON.stringify({state: localOnly})
+        }).catch(()=>{});
+      }
     }
-  } catch(e){}
-  // fallback: localStorage kad nema konekcije
-  try { STATE = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(e){ STATE={}; }
+  } catch(e){
+    // Nema interneta — ostajemo na lokalnom kešu (STATE je već localState)
+  }
 }
 
 async function saveState(){
-  localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // uvek keš
-  document.getElementById('autoSaveTxt').textContent = 'Čuvam...';
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // uvek keš, nikad ne gubi
+  const el = document.getElementById('autoSaveTxt');
+  el.textContent = '⏳ Čuvam...';
+  el.style.color = '';
   try {
     const res = await fetch(API_URL+'/magacin.php?action=setall', {
       method:'POST',
@@ -352,9 +381,16 @@ async function saveState(){
       body: JSON.stringify({state: STATE})
     });
     const json = await res.json();
-    document.getElementById('autoSaveTxt').textContent = json.ok ? 'Sačuvano ' + now() : '⚠ Lokalno ' + now();
+    if(json.ok){
+      el.textContent = '✓ Server ' + now();
+      el.style.color = 'var(--ok)';
+    } else {
+      el.textContent = '⚠ Lokalno ' + now();
+      el.style.color = '#e0a040';
+    }
   } catch(e){
-    document.getElementById('autoSaveTxt').textContent = '📴 Lokalno ' + now();
+    el.textContent = '📴 Lokalno — nema interneta! ' + now();
+    el.style.color = '#e07070';
   }
 }
 function now(){
