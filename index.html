@@ -260,16 +260,15 @@
         <select id="stub"><option selected>110x144</option><option>100x100</option></select></label>
       <label><div class="lbl">Širina raja</div><div class="sub">90×150 ili 110×150</div>
         <select id="sirinaRaja"><option value="75">75</option><option selected>90</option><option>110</option></select></label>
-      <label><div class="lbl">Vrsta korniša</div>
-        <select id="kornisVrsta">
-          <option value="TJ1">Tanki — jednodelni — jednostrani keder</option>
-          <option value="TJS">Tanki — sečeni — jednostrani keder</option>
-          <option value="TOJ" selected>Tanki obostrani — jednodelni</option>
-          <option value="TOS">Tanki obostrani — sečeni</option>
-          <option value="DJ1">Debeli — jednodelni — jednostrani keder</option>
-          <option value="DJS">Debeli — sečeni — jednostrani keder</option>
-          <option value="DOJ">Debeli obostrani — jednodelni</option>
-          <option value="DOS">Debeli obostrani — sečeni</option>
+      <label><div class="lbl">Keder</div>
+        <select id="kederTip">
+          <option value="jednostrani">Jednostrani</option>
+          <option value="obostrani" selected>Obostrani</option>
+        </select></label>
+      <label><div class="lbl">Korniš sklop</div>
+        <select id="kornisSklop">
+          <option value="jednodelni" selected>Jednodelni</option>
+          <option value="seceni">Sečeni</option>
         </select></label>
       <label><div class="lbl">Cev motora</div>
         <select id="cevMotora"><option selected>jednodelna</option><option>po poljima</option></select></label>
@@ -527,23 +526,16 @@ function compute(I){
   const debeli=2, tanki=Math.max(0,kornisaUkupno-2);
   const tankiSvetlo=ceil(tanki/2), tankiBez=tanki-tankiSvetlo;
 
-  // Parsiranje kornisVrsta (npr. "TOJ" = Tanki Obostrani Jednodelni)
-  const kv = I.kornisVrsta || 'TOJ';
-  const kvObostrani = kv[1]==='O';            // O=obostrani, J=jednostrani
-  const kvSeceni    = kv[2]==='S';            // S=sečeni, 1/J=jednodelni
-  const kvDebeli    = kv[0]==='D';            // D=debeli, T=tanki
+  const kvObostrani = (I.kederTip || 'obostrani') === 'obostrani';
+  const kvSeceni    = (I.kornisSklop || 'jednodelni') === 'seceni';
   const keder      = kvObostrani ? 'dvostrani' : 'jednostrani';
   const kornisTip  = kvSeceni    ? 'sečeni'    : 'jednodelni';
-  // Tip sklopa za prikaz
-  const tipSklopa = !kvObostrani&&!kvSeceni ? 'A — jednodelni, jednostrani keder'
-    : kvObostrani&&!kvSeceni ? 'B — jednodelni, obostrani keder'
-    : !kvObostrani&&kvSeceni ? 'C — sečeni, jednostrani keder'
-    : 'D — sečeni, obostrani keder';
+  const tipSklopa  = (kvObostrani ? 'Obostrani' : 'Jednostrani') + ', ' + (kvSeceni ? 'sečeni' : 'jednodelni');
   // Dužina jednog komada korniša
   const duzKornisa = kvSeceni
     ? (kvObostrani ? round((sirinaCerade-150)/2,0) : round((sirinaCerade-50)/2,0))
     : (sirinaCerade - 100);
-  const kornisKomPoPoz = kvSeceni ? 2 : 1; // komada po jednoj poziciji korniša
+  const kornisKomPoPoz = kvSeceni ? 2 : 1;
 
   const duzOluka=D+150;
   const limKom=ceil(D/1250);
@@ -625,7 +617,7 @@ function compute(I){
     raj:{kat1,kat2,pad,padOk,dijagonala,duzRaja},
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
       razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez},
-    kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvDebeli,kvObostrani,kvSeceni,kornisKomPoPoz},
+    kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvObostrani,kvSeceni,kornisKomPoPoz},
     splice:{spliceNeeded,spliceList,spliceRolne,spliceOk},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
     led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,potrosnja,trafo,trafoCena},
@@ -678,11 +670,10 @@ function aluCalc(I, R){
   // 1. Šina
   const rajKljuc = +I.sirinaRaja === 110 ? "raj110" : +I.sirinaRaja === 75 ? "raj75" : "raj90";
   const rajProf  = PROFILI[rajKljuc];
-  // Profili korniša — zavise od tipa (jednostrani vs dvostrani keder)
-  const isDvo   = R.kornis.kvObostrani;
+  // Profili korniša — zavise od kedera (jednostrani vs dvostrani)
+  const isDvo       = R.kornis.kvObostrani;
   const kProfDebeli = isDvo ? PROFILI.kornisD416 : PROFILI.kornisDebeli; // 10416 ili 10472
   const kProfTanki  = isDvo ? PROFILI.kornisD418 : PROFILI.kornisTanki;  // 10418 ili 10471
-  const kProf       = R.kornis.kvDebeli ? kProfDebeli : kProfTanki;
   const kPoPoz = R.kornis.kornisKomPoPoz; // 1 ili 2 (sečeni)
   // 2. Stub
   const stubKljuc = I.stub === "110x144" ? "stub110" : "stub100";
@@ -854,7 +845,7 @@ function render(){
   const I={
     sirina:$("sirina").value,dubina:$("dubina").value,zadnjaVisina:$("zadnjaVisina").value,
     prednjaVisina:$("prednjaVisina").value,cev:$("cev").value,stub:$("stub").value,
-    kornisVrsta:$("kornisVrsta").value,sirinaRaja:$("sirinaRaja").value,
+    kederTip:$("kederTip").value,kornisSklop:$("kornisSklop").value,sirinaRaja:$("sirinaRaja").value,
     cevMotora:$("cevMotora").value,bojaRal:$("bojaRal").value,bojaCerade:$("bojaCerade").value,
     autoInterval:$("autoInterval").checked,brIntervala:$("brIntervala").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value,motor:$("motor").value,
@@ -875,20 +866,13 @@ function render(){
 
   // Sečeni korniš dostupan samo kad ima ≥ 3 raja
   const mozeSeceni = R.auto.brRaja >= 3;
-  const seceniVrednosti = ["TJS","TOS","DJS","DOS"];
-  const sel = $("kornisVrsta");
-  const trenutna = sel.value;
-  Array.from(sel.options).forEach(opt=>{
-    const jeSeceni = seceniVrednosti.includes(opt.value);
-    opt.disabled = jeSeceni && !mozeSeceni;
-    opt.text = opt.text.replace(" ⛔ (min. 3 raja)","");
-    if(jeSeceni && !mozeSeceni) opt.text += " ⛔ (min. 3 raja)";
-  });
-  // Ako je trenutno izabrana sečeni opcija a ne može — prebaci na jednodelnu varijantu
-  // TJS→TJ1, TOS→TOJ, DJS→DJ1, DOS→DOJ
-  if(seceniVrednosti.includes(trenutna) && !mozeSeceni){
-    sel.value = trenutna.slice(0,2) + (trenutna[1]==='O' ? 'J' : '1');
+  const selSklop = $("kornisSklop");
+  const secOpt = Array.from(selSklop.options).find(o=>o.value==='seceni');
+  if(secOpt){
+    secOpt.disabled = !mozeSeceni;
+    secOpt.text = mozeSeceni ? 'Sečeni' : 'Sečeni ⛔ (min. 3 raja)';
   }
+  if(!mozeSeceni && selSklop.value==='seceni') selSklop.value='jednodelni';
   const as=$("autoStat");
   as.textContent = R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
   as.style.color = R.cerada.razmakOk ? "#5fa86f" : "#d8754a";
@@ -1872,7 +1856,7 @@ const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
 
 const ARCH_KEY = 'ag_arhiva';
 const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stub',
-  'sirinaRaja','kornisVrsta','cevMotora','bojaRal','bojaCerade',
+  'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade',
   'autoInterval','brIntervala','svetalaPoKornizu','motor','celicnaOn',
   'parapetOn','parapetVisina',
   'brNaloga','kupac','adresa','datum','rok','radnik'];
@@ -2008,10 +1992,13 @@ async function loadOrder(id){
   }
 
   if(!fields) return;
-  // backward compat: stari nalozi imaju keder+kornisTip, novi kornisVrsta
-  if(!fields.kornisVrsta && fields.keder && fields.kornisTip){
-    const o = fields.keder==='dvostrani', s = fields.kornisTip==='sečeni';
-    fields.kornisVrsta = (o?(s?'TOJ':'TOS'):(s?'TJS':'TJ1')); // approximate mapping
+  // backward compat: stari nalozi
+  if(!fields.kederTip){
+    const kv = fields.kornisVrsta || '';
+    const o = fields.keder==='dvostrani' || kv[1]==='O';
+    const s = fields.kornisTip==='sečeni' || kv[2]==='S';
+    fields.kederTip    = o ? 'obostrani' : 'jednostrani';
+    fields.kornisSklop = s ? 'seceni'    : 'jednodelni';
   }
   ARCH_FIELDS.forEach(fid=>{
     const el = document.getElementById(fid);
@@ -2058,7 +2045,7 @@ function trazeniProfili(){
     sirina:$("sirina").value, dubina:$("dubina").value,
     zadnjaVisina:$("zadnjaVisina").value, prednjaVisina:$("prednjaVisina").value,
     cev:$("cev").value, stub:$("stub").value, sirinaRaja:$("sirinaRaja").value,
-    kornisVrsta:$("kornisVrsta").value, cevMotora:$("cevMotora").value,
+    kederTip:$("kederTip").value,kornisSklop:$("kornisSklop").value, cevMotora:$("cevMotora").value,
     autoInterval:$("autoInterval").checked, brIntervala:$("brIntervala").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value, celicnaOn:$("celicnaOn").checked,
     parapetOn:$("parapetOn").checked, parapetVisina:$("parapetVisina").value,
