@@ -446,14 +446,23 @@ const KATALOG = [
   {grupa:"plastika", img:"plast_kucukAraba",       sifra:"ARV-09", naziv:"Mala kolica", fn:c=>c.tanki*c.raja, opis:"× broj tankih korniša × broj raja", cena:0.55, jed:"kom"},
   // PLASTIKA — po stubu
   {grupa:"plastika", img:"plast_olukSuGideri",     sifra:"ARV-06", naziv:"Odvod vode oluka", pravilo:"stub", m:1, cena:0.30, jed:"kom"},
-  // Plastika po kornišu — takozi
-  {grupa:"plastika", img:null, sifra:"ARV-19", naziv:"Ugaoni umetak tankog korniša", fn:c=>c.tanki*2, opis:"× broj tankih korniša × 2 kraja", cena:0.17, jed:"kom"},
-  {grupa:"plastika", img:null, sifra:"ARV-20", naziv:"Srednji umetak tankog korniša (konektor)", fn:c=>c.kornisSeceni?c.tanki:0, opis:"samo kod sečenog korniša", cena:0.17, jed:"kom"},
-  {grupa:"plastika", img:null, sifra:"ARV-21", naziv:"Ugaoni umetak debelog korniša", fn:c=>c.debeli*2, opis:"× broj debelih korniša × 2 kraja", cena:0.20, jed:"kom"},
-  {grupa:"plastika", img:null, sifra:"ARV-22", naziv:"Srednji umetak debelog korniša (konektor)", fn:c=>c.kornisSeceni?c.debeli:0, opis:"samo kod sečenog korniša", cena:0.20, jed:"kom"},
-  // Tapa + tipla (poklopci rupa)
-  {grupa:"plastika", img:null, sifra:"ARV-T",  naziv:"Tapa (poklopac rupe 20mm)", fn:c=>c.kornisaUkupno*c.raja, opis:"ukupno korniša × broj raja", cena:0.10, jed:"kom"},
-  {grupa:"plastika", img:null, sifra:"ARV-D",  naziv:"Tipla", fn:c=>c.kornisaUkupno*c.raja, opis:"ukupno korniša × broj raja", cena:0.10, jed:"kom"},
+  // Plastika po kornišu — umetci i tapa/tipla
+  // Jednostrani keder: ugaoni umetci + tapa + tipla
+  // Dvostrani keder: samo ugaoni umetci (bez tape i tiple)
+  // Sečeni: + srednji umetci (konektor)
+  {grupa:"plastika", img:null, sifra:"ARV-19", naziv:"Ugaoni umetak tankog korniša",
+   fn:c=>c.tanki*2, opis:"× broj tankih korniša × 2 kraja", cena:0.17, jed:"kom"},
+  {grupa:"plastika", img:null, sifra:"ARV-20", naziv:"Srednji umetak tankog korniša (konektor)",
+   fn:c=>c.kornisSeceni?c.tanki:0, opis:"samo kod sečenog korniša", cena:0.17, jed:"kom"},
+  {grupa:"plastika", img:null, sifra:"ARV-21", naziv:"Ugaoni umetak debelog korniša",
+   fn:c=>c.debeli*2, opis:"× broj debelih korniša × 2 kraja", cena:0.20, jed:"kom"},
+  {grupa:"plastika", img:null, sifra:"ARV-22", naziv:"Srednji umetak debelog korniša (konektor)",
+   fn:c=>c.kornisSeceni?c.debeli:0, opis:"samo kod sečenog korniša", cena:0.20, jed:"kom"},
+  // Tapa + tipla — samo kod jednostranog kedera
+  {grupa:"plastika", img:null, sifra:"ARV-T",  naziv:"Tapa (poklopac rupe 20mm)",
+   fn:c=>c.kederJednostrani?c.kornisaUkupno*c.raja:0, opis:"samo jednostrani keder: ukupno korniša × broj raja", cena:0.10, jed:"kom"},
+  {grupa:"plastika", img:null, sifra:"ARV-D",  naziv:"Tipla",
+   fn:c=>c.kederJednostrani?c.kornisaUkupno*c.raja:0, opis:"samo jednostrani keder: ukupno korniša × broj raja", cena:0.10, jed:"kom"},
   // Lezajevi
   {grupa:"plastika", img:"fit_PRG117", sifra:"PRG-117", naziv:"Veliki ležaj", pravilo:"raj", m:2, cena:0.70, jed:"kom"},
   {grupa:"plastika", img:"fit_PRG119", sifra:"PRG-119", naziv:"Mali ležaj", pravilo:"raj", m:2, cena:0.50, jed:"kom"},
@@ -477,7 +486,7 @@ const KATALOG = [
   {grupa:"fitilj", img:"fit_PRG104", sifra:"PRG-104", naziv:"Fitilj / keder oluka", fn:c=>round(c.duzOluka/1000,1), opis:"dužina oluka", cena:0.35, jed:"m"},
   {grupa:"fitilj", img:"fit_PRG101", sifra:"PRG-101", naziv:"Fitilj / keder cerade — korniš", fn:c=>round(c.kornisaUkupno*c.duzKornisa/1000,1), opis:"sve korniše (tanki + debeli) × dužina korniša", cena:0.35, jed:"m"},
   {grupa:"fitilj", img:"fit_PRG103", sifra:"PRG-103", naziv:"Fitilj kabla", fn:c=>round(2*c.korisnaCerade/1000,1), opis:"2 × korisna dužina cerade (od 1. do zadnjeg kedera)", cena:0.32, jed:"m"},
-  {grupa:"fitilj", img:"fit_PRG105", sifra:"PRG-105", naziv:"T10×16 zupčasti kaiš", fn:c=>round(c.raja*c.duzRaja/1000*2.5,1), opis:"raja × dužina raja × 2,5", cena:1.55, jed:"m"},
+  {grupa:"fitilj", img:"fit_PRG105", sifra:"PRG-105", naziv:"T10×16 zupčasti kaiš", fn:c=>round(c.raja*(2*c.duzRaja+500)/1000,1), opis:"raja × (2 × dužina raja + 500mm)", cena:1.55, jed:"m"},
 
   // ELEKTRONIKA — LED (zaseban prikaz)
   {grupa:"led", img:"fit_PRG108", sifra:"PRG-108", naziv:"24V horizontalni LED (24W yatay led)", pravilo:"svetlo", m:1, cena:0.52, jed:"kom"},
@@ -617,6 +626,7 @@ function applyOkov(R, I){
     sirina:R.in.D,
     kornisSeceni: R.kornis.kornisTip === "sečeni",
     keder: R.kornis.keder,
+    kederJednostrani: R.kornis.keder === "jednostrani",
     korisnaCerade: R.cerada.brIntervala * R.cerada.razmakKornisa, // od 1. do zadnjeg kedera (mm)
   };
   const baze = {raj:c.raja, stub:c.stubova, kornis:c.kornisaUkupno, svetlo:c.svetla, fiksno:1};
@@ -814,6 +824,23 @@ function render(){
   $("brIntervala").disabled=autoOn;
   if(autoOn) $("brIntervala").value=R.cerada.predlogIntervala;
   $("intervalSub").textContent = autoOn ? ("auto-predlog: "+R.cerada.predlogIntervala) : "ručni unos";
+
+  // Sečeni korniš dostupan samo kad ima ≥ 3 raja
+  const mozeSeceni = R.auto.brRaja >= 3;
+  const seceniVrednosti = ["TJS","TOS","DJS","DOS"];
+  const sel = $("kornisVrsta");
+  const trenutna = sel.value;
+  Array.from(sel.options).forEach(opt=>{
+    const jeSeceni = seceniVrednosti.includes(opt.value);
+    opt.disabled = jeSeceni && !mozeSeceni;
+    opt.text = opt.text.replace(" ⛔ (min. 3 raja)","");
+    if(jeSeceni && !mozeSeceni) opt.text += " ⛔ (min. 3 raja)";
+  });
+  // Ako je trenutno izabrana sečeni opcija a ne može — prebaci na jednodelnu varijantu
+  // TJS→TJ1, TOS→TOJ, DJS→DJ1, DOS→DOJ
+  if(seceniVrednosti.includes(trenutna) && !mozeSeceni){
+    sel.value = trenutna.slice(0,2) + (trenutna[1]==='O' ? 'J' : '1');
+  }
   const as=$("autoStat");
   as.textContent = R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
   as.style.color = R.cerada.razmakOk ? "#5fa86f" : "#d8754a";
