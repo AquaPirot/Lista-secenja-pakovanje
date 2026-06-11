@@ -1348,7 +1348,8 @@ async function mergeCustomArtikli(){
       json.data.forEach(a => {
         const sek = MAG_SEKCIJE.find(s => s.id === a.kategorija);
         if(!sek) return;
-        if(sek.stavke.find(s => s.sifra === a.sifra)) return;
+        const postojeci = sek.stavke.find(s => s.sifra === a.sifra);
+        if(postojeci){ postojeci.naziv = a.naziv; return; }  // izmena naziva iz popisa
         sek.stavke.push({sifra: a.sifra, naziv: a.naziv, tip: a.tip === 'metar2' ? 'metar' : a.tip});
       });
       customArtikliLoaded = true;

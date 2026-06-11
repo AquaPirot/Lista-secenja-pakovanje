@@ -140,6 +140,8 @@ html,body{background:var(--shell);color:var(--text);font-family:'Segoe UI',syste
   border-radius:3px;padding:1px 4px;margin-left:5px;vertical-align:middle;}
 .art-del{font-size:10px;color:#e07070;background:none;border:none;cursor:pointer;
   text-decoration:underline;padding:2px 0;margin-top:2px;}
+.art-edit{font-size:10px;color:var(--bronze);background:none;border:none;cursor:pointer;
+  text-decoration:underline;padding:2px 0;margin-top:2px;margin-right:10px;}
 
 /* ── BOTTOM BAR ── */
 .bottom-bar{position:sticky;bottom:0;background:var(--ink);border-top:1px solid var(--line);
@@ -389,11 +391,12 @@ async function loadArtikli(){
   } catch(e){
     lista = JSON.parse(localStorage.getItem(ART_LS_KEY)||'[]');
   }
-  // ubaci u sekcije (preskoči duplikate sa hardkodiranom listom)
+  // ubaci u sekcije — ako šifra već postoji, red iz baze je izmena naziva
   lista.forEach(a => {
     const sek = SEKCIJE.find(s => s.id === a.kategorija);
     if(!sek) return;
-    if(sek.stavke.find(s => s.sifra === a.sifra)) return;
+    const postojeci = sek.stavke.find(s => s.sifra === a.sifra);
+    if(postojeci){ postojeci.naziv = a.naziv; return; }
     sek.stavke.push({sifra: a.sifra, naziv: a.naziv, tip: a.tip, custom: true});
   });
 }
@@ -508,6 +511,65 @@ async function saveNovi(sekId){
   showToast(saved ? '✓ Artikal dodat' : '📴 Dodat lokalno — sinhronizuje se kasnije');
 }
 
+function toggleEdit(sifra){
+  const el = document.getElementById('ef_'+sifra);
+  if(el) el.classList.toggle('open');
+}
+
+async function saveEdit(oldSifra, sekId){
+  const sek = SEKCIJE.find(s => s.id === sekId);
+  const item = sek.stavke.find(s => s.sifra === oldSifra);
+  if(!item) return;
+  const naziv = document.getElementById('ef_naziv_'+oldSifra).value.trim();
+  if(!naziv){ showToast('⚠ Naziv ne može biti prazan'); return; }
+  let sifra = oldSifra;
+  if(item.custom){
+    sifra = document.getElementById('ef_sifra_'+oldSifra).value.trim().toUpperCase() || oldSifra;
+  }
+
+  if(sifra !== oldSifra){
+    for(const sk of SEKCIJE){
+      if(sk.stavke.find(s => s.sifra === sifra)){ showToast('⚠ Šifra '+sifra+' već postoji'); return; }
+    }
+    // prenesi stanje magacina na novu šifru, staru isprazni
+    if(STATE[oldSifra]){
+      STATE[sifra] = STATE[oldSifra];
+      STATE[oldSifra] = STATE[oldSifra].komadi !== undefined ? {komadi:[]} : {kolicina:0, minimum:0};
+      saveState();
+    }
+    try {
+      await fetch(API_URL+'/artikli.php?action=delete', {
+        method:'POST', headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
+        body: JSON.stringify({sifra: oldSifra})
+      });
+    } catch(e){}
+  }
+
+  const tip = item.tip || sek.tip;
+  const art = {sifra, naziv, kategorija: sekId, tip};
+  let saved = false;
+  try {
+    const res = await fetch(API_URL+'/artikli.php?action=add', {
+      method:'POST', headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
+      body: JSON.stringify(art)
+    });
+    saved = (await res.json()).ok;
+  } catch(e){}
+
+  let local = JSON.parse(localStorage.getItem(ART_LS_KEY)||'[]')
+    .filter(a => a.sifra !== oldSifra && a.sifra !== sifra);
+  if(!saved) art._pending = true;
+  local.push(art);
+  localStorage.setItem(ART_LS_KEY, JSON.stringify(local));
+
+  item.sifra = sifra;
+  item.naziv = naziv;
+  build();
+  updateProgress();
+  toggleSek(sekId);
+  showToast(saved ? '✓ Izmena sačuvana' : '📴 Sačuvano lokalno — sinhronizuje se kasnije');
+}
+
 async function delArtikal(sifra, sekId){
   if(!confirm('Ukloniti artikal '+sifra+' iz kataloga?\n(Stanje u magacinu ostaje zabeleženo)')) return;
   try {
@@ -525,11 +587,28 @@ async function delArtikal(sifra, sekId){
   toggleSek(sekId);
 }
 
+function escAttr(t){ return String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function buildEditForm(s, sekId){
+  const lock = !s.custom;
+  return `<div class="novi-form" id="ef_${s.sifra}" style="margin:0 0 10px;">
+    <label>Šifra${lock?' — fiksna (koristi je kalkulator naloga)':''}</label>
+    <input class="novi-inp" id="ef_sifra_${s.sifra}" value="${escAttr(s.sifra)}" ${lock?'disabled style="opacity:.5"':'style="text-transform:uppercase"'}>
+    <label>Naziv</label>
+    <input class="novi-inp" id="ef_naziv_${s.sifra}" value="${escAttr(s.naziv)}">
+    <div class="novi-btns">
+      <button class="novi-save" onclick="saveEdit('${s.sifra}','${sekId}')">✓ Sačuvaj izmenu</button>
+      <button class="novi-cancel" onclick="toggleEdit('${s.sifra}')">Otkaži</button>
+    </div>
+  </div>`;
+}
+
 function buildStavka(s, sekTip, sekId){
   const tip = s.tip || sekTip;
   const isDone = hasDone(s.sifra);
   const d = getItem(s.sifra) || {};
   const customTag = s.custom ? '<span class="custom-tag">novo</span>' : '';
+  const editBtn = `<button class="art-edit" onclick="toggleEdit('${s.sifra}')">✎ izmeni</button>`;
   const customDel = s.custom ? `<button class="art-del" onclick="delArtikal('${s.sifra}','${sekId}')">ukloni artikal</button>` : '';
 
   if(tip === 'profil'){
@@ -541,10 +620,11 @@ function buildStavka(s, sekTip, sekId){
           <div class="stavka-sifra">${s.sifra}${customTag}</div>
           <div class="stavka-naziv">${s.naziv}</div>
           <div class="stavka-jed">unos: broj komada × dužina (mm)</div>
-          ${customDel}
+          ${editBtn}${customDel}
         </div>
         <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
       </div>
+      ${buildEditForm(s, sekId)}
       <div class="grp-list" id="kl_${s.sifra}">${buildGrupe(s.sifra, komadi)}</div>
       <div class="bunt-row">
         <input class="bunt-kom" type="number" inputmode="numeric" min="1" placeholder="kom" id="bk_${s.sifra}">
@@ -565,10 +645,11 @@ function buildStavka(s, sekTip, sekId){
         <div class="stavka-sifra">${s.sifra}${customTag}</div>
         <div class="stavka-naziv">${s.naziv}</div>
         <div class="stavka-jed">${jed}</div>
-        ${customDel}
+        ${editBtn}${customDel}
       </div>
       <div class="stavka-ok ${isDone?'done':''}" id="ok_${s.sifra}">${isDone?'✓':''}</div>
     </div>
+    ${buildEditForm(s, sekId)}
     <div class="kom-row">
       <button class="kom-btn" style="border-radius:8px 0 0 8px" onclick="adj('${s.sifra}',-1)">−</button>
       <input class="kom-val" type="number" min="0" step="${tip==='kom'?1:0.5}" inputmode="decimal"
