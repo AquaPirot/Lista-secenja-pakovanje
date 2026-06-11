@@ -350,6 +350,15 @@ async function loadState(){
       // Server ima prednost za stavke koje poznaje;
       // lokalne stavke kojih nema na serveru čuvamo (propušteni API pozivi tokom popisa)
       const merged = Object.assign({}, localState, json.data);
+      // Očisti pogrešan format: profil sifre ne smeju da imaju kolicina umesto komadi
+      // (dešava se kad stari import ili setall upiše profil kao tip='kom')
+      const profilSifre = new Set(
+        SEKCIJE.flatMap(s => s.stavke.filter(x => (x.tip||s.tip) === 'profil').map(x => x.sifra))
+      );
+      for(const [k, v] of Object.entries(merged)){
+        if(profilSifre.has(k) && v && !v.komadi) delete merged[k];
+      }
+
       STATE = merged;
       localStorage.setItem(LS_KEY, JSON.stringify(merged));
 
@@ -817,11 +826,22 @@ function setMin(sifra, val){
 /* ═══════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════ */
+function getItemTip(sifra){
+  for(const sek of SEKCIJE){
+    const s = sek.stavke.find(x => x.sifra === sifra);
+    if(s) return s.tip || sek.tip;
+  }
+  return null;
+}
+
 function hasDone(sifra){
   const d = STATE[sifra];
   if(!d) return false;
-  if(d.komadi) return d.komadi.length>0 && d.komadi.some(k=>+k.duzina>0);
-  return d.kolicina!==undefined && d.kolicina!=='';
+  const tip = getItemTip(sifra);
+  // Profil: mora da ima komade sa pozitivnom dužinom
+  if(tip === 'profil') return !!(d.komadi && d.komadi.length>0 && d.komadi.some(k=>+k.duzina>0));
+  // Kom/metar: kolicina postavljeno (i 0 znači "pregledano — nema na stanju")
+  return d.kolicina !== undefined && d.kolicina !== '';
 }
 function updateOk(sifra){
   const el = document.getElementById('ok_'+sifra);
