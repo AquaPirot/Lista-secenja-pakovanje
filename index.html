@@ -532,9 +532,12 @@ function compute(I){
   const kornisTip  = kvSeceni    ? 'sečeni'    : 'jednodelni';
   const tipSklopa  = (kvObostrani ? 'Obostrani' : 'Jednostrani') + ', ' + (kvSeceni ? 'sečeni' : 'jednodelni');
   // Dužina jednog komada korniša
+  // Jednostrani keder: jednodelni = puna širina (bez umanjenja)
+  // Obostrani keder:   jednodelni = širina − 100
+  // Sečeni: jednostrani (širina−50)/2 · obostrani (širina−150)/2
   const duzKornisa = kvSeceni
     ? (kvObostrani ? round((sirinaCerade-150)/2,0) : round((sirinaCerade-50)/2,0))
-    : (sirinaCerade - 100);
+    : (kvObostrani ? sirinaCerade - 100 : sirinaCerade);
   const kornisKomPoPoz = kvSeceni ? 2 : 1;
 
   const duzOluka=D+150;
@@ -685,9 +688,9 @@ function aluCalc(I, R){
     {key:"stub",     prof:stubProf,               naziv:"Stub ("+I.stub+")",              mera:R.profili2.duzStuba,  kom:R.auto.brStubova,nap: R.in.parapetVis>0 ? "Prednja "+R.in.C+" − zidić "+R.in.parapetVis+" = "+R.profili2.duzStuba+" mm" : "→ Prednja visina"},
     {key:"cevm",     prof:PROFILI.cevMotora,      naziv:"Cev motora",                      mera:R.profili2.duzCevMotora, kom:R.profili2.brCevMotora, nap: R.profili2.cevMotoraTip==="jednodelna" ? "Jednodelna · širina pergole + 100mm" : `Po poljima · ${R.profili2.brCevMotora} cevi (zbir = širina pergole + 50mm)`},
     {key:"panel",    prof:PROFILI.panel,          naziv:"Panel (između rajeva)",           mera:R.profili2.duzPanela, kom:R.profili2.brPanela, nap:"→ Širina polja + 100"},
-    {key:"kdeb",     prof:kProfDebeli,             naziv:"★ Korniš DEBELI (ivični)",        mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
-    {key:"ksv",      prof:kProfTanki,             naziv:"★ Korniš TANKI sa svetlom",       mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
-    {key:"kbez",     prof:kProfTanki,             naziv:"★ Korniš TANKI bez svetla",       mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
+    {key:"kdeb",     prof:kProfDebeli,             naziv:"★ "+kProfDebeli.nazivSr+" (ivični)",   mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
+    {key:"ksv",      prof:kProfTanki,             naziv:"★ "+kProfTanki.nazivSr+" — sa svetlom", mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
+    {key:"kbez",     prof:kProfTanki,             naziv:"★ "+kProfTanki.nazivSr+" — bez svetla", mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
   ];
   let totalKg = 0, totalEur = 0;
   items.forEach(it => {
@@ -1376,7 +1379,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.2";
+const APP_VER = "v2026-06-11.3";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
