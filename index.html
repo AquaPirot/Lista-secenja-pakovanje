@@ -686,8 +686,8 @@ function aluCalc(I, R){
     {key:"cevm",     prof:PROFILI.cevMotora,      naziv:"Cev motora",                      mera:R.profili2.duzCevMotora, kom:R.profili2.brCevMotora, nap: R.profili2.cevMotoraTip==="jednodelna" ? "Jednodelna · širina pergole + 100mm" : `Po poljima · ${R.profili2.brCevMotora} cevi (zbir = širina pergole + 50mm)`},
     {key:"panel",    prof:PROFILI.panel,          naziv:"Panel (između rajeva)",           mera:R.profili2.duzPanela, kom:R.profili2.brPanela, nap:"→ Širina polja + 100"},
     {key:"kdeb",     prof:kProfDebeli,             naziv:"★ Korniš DEBELI (ivični)",        mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
-    {key:"ksv",      prof:kProf,                  naziv:"★ Korniš sa svetlom",             mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
-    {key:"kbez",     prof:kProf,                  naziv:"★ Korniš bez svetla",             mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
+    {key:"ksv",      prof:kProfTanki,             naziv:"★ Korniš TANKI sa svetlom",       mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
+    {key:"kbez",     prof:kProfTanki,             naziv:"★ Korniš TANKI bez svetla",       mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
   ];
   let totalKg = 0, totalEur = 0;
   items.forEach(it => {
