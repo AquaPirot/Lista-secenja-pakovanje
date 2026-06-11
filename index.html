@@ -412,7 +412,7 @@ const CELIK_CEV_PER_M_EUR  = din2eur(1100);  // ~9,40 €/m
 /* ───────── KATALOG PROFILA — šifre NOR + težine ─────────
    Težine direktno iz NOR proforme (Kg/m). */
 const PROFILI = {
-  raj75: {sifra:"RAJ-75",naziv:"Šina 75×150",       nazivSr:"Šina 75×150",       nazivTr:"75x150 mm Rail Profile", img:null, kgm:null},
+  raj75: {sifra:"Raj75", naziv:"Šina 75×150",       nazivSr:"Šina 75×150",       nazivTr:"75x150 mm Rail Profile", img:null, kgm:null},
   raj90: {sifra:"10501", naziv:"Šina 90×150",       nazivSr:"Šina 90×150",       nazivTr:"90x150 mm Rail Profile", img:"prof_10501", kgm:4.129},
   raj110:{sifra:"10475", naziv:"Šina 110×150",      nazivSr:"Šina 110×150",      nazivTr:"110x150 mm Rail Profile",img:"prof_10475", kgm:7.116},
   oluk:  {sifra:"10468", nazivSr:"Oluk",             nazivTr:"Gutter Profile",         img:"prof_10468", kgm:4.006},
@@ -547,21 +547,18 @@ function compute(I){
   const spliceNeeded = duzCerade > 3000;
   let spliceInfo = null;
   if(spliceNeeded){
-    // Korniš pozicije od prednje ivice (manji = bliže frontu)
-    // pos se meri od ZADNJE ivice (zida); fromFront = duzCerade - pos
-    // Tražimo poslednji korniš čija je pos >= duzCerade - 3000
-    //  (= prvi korniš koji je unutar 3000mm od fronta)
-    const threshold = duzCerade - 3000;
+    // Pozicije kedera se mere od PREDNJE ivice (oluk = 0mm).
+    // Sastav ide na poslednji keder čija je pozicija <= 3000mm od fronta.
     for(let i=kornisaUkupno; i>=1; i--){
       const pi = i===1 ? 100
                : i===kornisaUkupno ? duzCerade-470
                : Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
-      if(pi >= threshold){
+      if(pi <= 3000){
         spliceInfo = {
           kornis: i,
-          odZida: pi,
-          odFronta: duzCerade - pi,
-          rolna2: pi + 100  // malo preklopa
+          odFronta: pi,
+          rolna1: pi,
+          rolna2: duzCerade - pi
         };
         break;
       }
@@ -895,10 +892,10 @@ function renderNalog(I, R, alu, okov){
           <b style="color:#e0a040">⚠ SPAJANJE CERADE — ukupna dubina ${R.cerada.duzCerade} mm &gt; 3000 mm</b>
           <div style="margin-top:5px;font-size:11px;line-height:1.7;font-family:'Spline Sans Mono',monospace;">
             ${s ? `
-            Spoj na korniš <b>K${s.kornis}</b> — <b>${s.odFronta} mm od fronta</b> (${s.odZida} mm od zida)<br>
-            Rolna 1 (od fronta): <b style="font-size:13px;">3000 mm</b><br>
-            Rolna 2 (od spoja do zida): <b style="font-size:13px;">${s.rolna2} mm</b>
-            ` : 'Spoj nije moguće izračunati — proveri broj korniša.'}
+            Sastav na keder <b>K${s.kornis}</b> — <b>${s.odFronta} mm od fronta</b><br>
+            Rolna 1 (od fronta do K${s.kornis}): <b style="font-size:13px;">${s.rolna1} mm</b><br>
+            Rolna 2 (od K${s.kornis} do zadnje ivice): <b style="font-size:13px;">${s.rolna2} mm</b>
+            ` : 'Sastav nije moguće izračunati — proveri broj korniša.'}
           </div>
         </div>`;
       })() : ''}
