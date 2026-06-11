@@ -536,8 +536,8 @@ function compute(I){
   // Obostrani keder:   jednodelni = širina − 100
   // Sečeni: jednostrani (širina−50)/2 · obostrani (širina−150)/2
   const duzKornisa = kvSeceni
-    ? (kvObostrani ? round((sirinaCerade-150)/2,0) : round((sirinaCerade-50)/2,0))
-    : (kvObostrani ? sirinaCerade - 100 : sirinaCerade);
+    ? (kvObostrani ? round((D-150)/2,0) : round((D-50)/2,0))
+    : (kvObostrani ? D - 100 : D);
   const kornisKomPoPoz = kvSeceni ? 2 : 1;
 
   const duzOluka=D+150;
@@ -1383,7 +1383,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.4";
+const APP_VER = "v2026-06-11.5";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
