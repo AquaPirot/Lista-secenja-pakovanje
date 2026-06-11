@@ -887,9 +887,9 @@ function renderNalog(I, R, alu, okov){
         ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}</div>
       ${R.splice.spliceNeeded ? (() => {
         const s = R.splice.spliceInfo;
-        return `<div class="note-warn splice-warn" style="margin-top:6px;background:#2a1e0a;border-color:#7a5020;">
-          <b style="color:#e0a040">⚠ SPAJANJE CERADE — ukupna dubina ${R.cerada.duzCerade} mm &gt; 3000 mm</b>
-          <div style="margin-top:5px;font-size:11px;line-height:1.9;font-family:'Spline Sans Mono',monospace;">
+        return `<div class="note-warn splice-warn" style="margin-top:6px;background:#fdf3e3;border:2px solid #c07000;color:#191814;">
+          <b style="color:#9a5a00">⚠ SPAJANJE CERADE — ukupna dubina ${R.cerada.duzCerade} mm &gt; 3000 mm</b>
+          <div style="margin-top:5px;font-size:11px;line-height:1.9;font-family:'Spline Sans Mono',monospace;color:#191814;">
             ${s ? `
             Sastav na keder <b>K${s.kornis}</b> — <b>${s.odFronta} mm od fronta (uz oluk)</b><br>
             ✂ Rolna 1 — od prednje ivice do K${s.kornis}: <b style="font-size:14px;">${s.rolna1} mm</b><br>
@@ -1004,36 +1004,17 @@ function renderNalog(I, R, alu, okov){
   });
   html += `</tbody></table>`;
 
-  // Bušenje rupa
+  // LED — samo broj svetala, bez pozicija rupa
   if(R.led.svetalaPoKornizu > 0){
-    // Vizuelna mapa rupa
-    const dk = R.kornis.duzKornisa;
-    const nR = R.led.svetalaPoKornizu;
-    const razmak = R.led.razmakRupa;
-    const odIvice = R.led.odIviceDoRupe;
-    const barW = Math.min(560, dk/10); // px (scale: 1mm = 0.1px)
-    const scale = barW / dk;
-    let dotHtml = '';
-    for(let r=0; r<nR; r++){
-      const px = Math.round((odIvice + r*razmak) * scale);
-      dotHtml += `<div style="position:absolute;left:${px}px;top:50%;transform:translate(-50%,-50%);">
-        <div style="width:8px;height:8px;border-radius:50%;background:#a9743c;border:2px solid #fff;"></div>
-        <div style="font-size:7px;color:#8a5d2e;text-align:center;margin-top:1px;font-family:'Spline Sans Mono',monospace;white-space:nowrap;">${odIvice+r*razmak}</div>
-      </div>`;
-    }
     html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
       <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
-        BUŠENJE RUPA ZA LED — korniši sa ★ (${R.cerada.tankiSvetlo} kom)</div>
-      <div>Svetala po kornišu: <b>${nR}</b> &nbsp;·&nbsp; Razmak (c–c): <b>${razmak} mm</b> &nbsp;·&nbsp; Od ivice do 1. rupe: <b>${odIvice} mm</b></div>
-      <div style="position:relative;height:36px;width:${barW}px;background:#e8e0d0;border-radius:3px;margin:8px 0 18px;border:1px solid #c9b896;">
-        ${dotHtml}
-        <div style="position:absolute;left:0;top:-14px;font-size:8px;color:#888;font-family:'Spline Sans Mono',monospace;">0</div>
-        <div style="position:absolute;right:0;top:-14px;font-size:8px;color:#888;font-family:'Spline Sans Mono',monospace;">${dk} mm</div>
-      </div>
+        LED SVETLA — korniši sa ★ (${R.cerada.tankiSvetlo} kom)</div>
+      <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b></div>
       <div style="margin-top:4px;padding-top:4px;border-top:1px solid #ebe7db">
         ★ UKUPNO LED: <b style="font-size:14px">${R.led.svetalaUkupno} kom</b></div>
-    </div></div>`;
+    </div>`;
   }
+  html += `</div>`;
 
   /* 05 — ČELIČNA KONSTRUKCIJA */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n">05</span>
