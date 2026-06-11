@@ -438,20 +438,32 @@ function build(){
 }
 
 function buildNoviForm(sek){
+  // Sekcije sa jednim fiksnim tipom ne treba da imaju dropdown — ne može da se pogreši
+  // Samo "elek" i "ost" imaju mešane tipove pa prikazujemo izbor
+  const mixed = ['elek','ost'].includes(sek.id);
+  const tipField = mixed
+    ? `<label>Način merenja</label>
+      <select class="novi-inp" id="nf_tip_${sek.id}">
+        <option value="kom">Komad (kom)</option>
+        <option value="metar">Dužni metar (m)</option>
+        <option value="metar2">Kvadrat (m²)</option>
+      </select>`
+    : `<input type="hidden" id="nf_tip_${sek.id}" value="${sek.tip}">
+      <div style="font-size:10px;color:var(--muted);margin:6px 0 2px;">
+        Tip: <b style="color:var(--bronze)">${
+          sek.tip==='profil' ? 'Profil — unos po komadima i dužinama' :
+          sek.tip==='metar'  ? 'Dužni metar (m)' : 'Komad (kom)'
+        }</b>
+      </div>`;
+
   return `
     <button class="btn-novi-art" onclick="openNovi('${sek.id}')">＋ Novi artikal u: ${sek.naziv}</button>
     <div class="novi-form" id="nf_${sek.id}">
       <label>Šifra artikla</label>
-      <input class="novi-inp" id="nf_sifra_${sek.id}" placeholder="npr. ARV-23" autocomplete="off">
+      <input class="novi-inp" id="nf_sifra_${sek.id}" placeholder="npr. STR75" autocomplete="off" style="text-transform:uppercase">
       <label>Naziv</label>
       <input class="novi-inp" id="nf_naziv_${sek.id}" placeholder="naziv artikla" autocomplete="off">
-      <label>Način merenja</label>
-      <select class="novi-inp" id="nf_tip_${sek.id}">
-        <option value="kom"${sek.tip==='kom'?' selected':''}>Komad (kom)</option>
-        <option value="metar"${sek.tip==='metar'?' selected':''}>Dužni metar (m)</option>
-        <option value="metar2">Kvadrat (m²)</option>
-        <option value="profil"${sek.tip==='profil'?' selected':''}>Profil — po komadima i dužinama</option>
-      </select>
+      ${tipField}
       <div class="novi-btns">
         <button class="novi-save" onclick="saveNovi('${sek.id}')">✓ Dodaj artikal</button>
         <button class="novi-cancel" onclick="closeNovi('${sek.id}')">Otkaži</button>
