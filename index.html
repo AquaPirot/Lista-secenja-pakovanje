@@ -558,32 +558,62 @@ function compute(I){
   const duzStuba = Math.max(0, Cc - parapetVis);
 
   const svetalaPoKornizu=+I.svetalaPoKornizu||0;
-  // Cerada spajanje — rolna je max 3000mm u dubini
+  // Cerada spajanje — NIJEDNA rolna ne sme biti preko 3000mm
+  // Pozicije kedera se mere od PREDNJE ivice (oluk = 0mm).
+  // Sastav uvek pada na keder; idemo redom: od početka tekuće rolne
+  // tražimo poslednji keder unutar 3000mm i tu sečemo. Ponavljamo do kraja.
+  const kederPos = i => i===1 ? 100
+    : i===kornisaUkupno ? duzCerade-470
+    : Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
   const spliceNeeded = duzCerade > 3000;
-  let spliceInfo = null;
+  let spliceList = [];   // [{kornis, pos}] — mesta sastava
+  let spliceRolne = [];  // dužine rolni redom od fronta
+  let spliceOk = true;
   if(spliceNeeded){
-    // Pozicije kedera se mere od PREDNJE ivice (oluk = 0mm).
-    // Sastav ide na poslednji keder čija je pozicija <= 3000mm od fronta.
-    for(let i=kornisaUkupno; i>=1; i--){
-      const pi = i===1 ? 100
-               : i===kornisaUkupno ? duzCerade-470
-               : Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
-      if(pi <= 3000){
-        spliceInfo = {
-          kornis: i,
-          odFronta: pi,
-          rolna1: pi,
-          rolna2: duzCerade - pi
-        };
-        break;
+    let start = 0;
+    while(duzCerade - start > 3000){
+      let found = null;
+      for(let i=kornisaUkupno; i>=1; i--){
+        const p = kederPos(i);
+        if(p > start && p <= start + 3000){ found = {kornis:i, pos:p}; break; }
       }
+      if(!found){ spliceOk = false; break; }
+      spliceList.push(found);
+      start = found.pos;
+    }
+    if(spliceOk){
+      let prev = 0;
+      spliceList.forEach(s=>{ spliceRolne.push(s.pos - prev); prev = s.pos; });
+      spliceRolne.push(duzCerade - prev);
     }
   }
 
-  const odbitakRupa = keder==="jednostrani" ? 0 : 200;
-  const razmakRupa=svetalaPoKornizu?round((duzKornisa-odbitakRupa)/svetalaPoKornizu,0):0;
-  const odIviceDoRupe=round(razmakRupa/2,0);
+  // LED — ravnomerna raspodela po dužini korniša:
+  // korniš se deli na n jednakih segmenata, svetlo u CENTRU svakog segmenta.
+  // → razmak između svetala = L/n, od ivice do prvog = L/(2n) (pola razmaka).
+  // Pozicije se računaju direktno iz formule (bez sabiranja zaokruženih
+  // vrednosti) pa nema nagomilavanja greške.
+  const nLed = svetalaPoKornizu;
+  const ledPozicije = [];
+  for(let k=1; k<=nLed; k++) ledPozicije.push(Math.round(duzKornisa*(2*k-1)/(2*nLed)));
+  const razmakRupa  = nLed ? Math.round(duzKornisa/nLed) : 0;
+  const odIviceDoRupe = nLed ? ledPozicije[0] : 0;
   const svetalaUkupno=svetalaPoKornizu*tankiSvetlo;
+
+  // Rupe za kolica na kornišu — SAMO jednostrani keder
+  // (kod dvostranog rupe postoje u umetcima, korniš se ne buši)
+  // Po jedna rupa za svaki raj: 45mm od obe ivice, ostale ravnomerno između.
+  let kolicaRupe = [];
+  if(keder==="jednostrani" && brRaja>=2){
+    const m = 45;
+    if(brRaja===2) kolicaRupe = [m, duzKornisa-m];
+    else {
+      kolicaRupe = [m];
+      for(let k=1; k<brRaja-1; k++)
+        kolicaRupe.push(Math.round(m + k*(duzKornisa-2*m)/(brRaja-1)));
+      kolicaRupe.push(duzKornisa-m);
+    }
+  }
 
   const potrosnja=round(svetalaUkupno*0.34,2);
   const trafo = potrosnja<=10?"10A":potrosnja<=20?"20A":potrosnja<=30?"30A":"⚠ preko 30A";
@@ -596,9 +626,10 @@ function compute(I){
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
       razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez},
     kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvDebeli,kvObostrani,kvSeceni,kornisKomPoPoz},
-    splice:{spliceNeeded,spliceInfo},
+    splice:{spliceNeeded,spliceList,spliceRolne,spliceOk},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
-    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,svetalaUkupno,potrosnja,trafo,trafoCena},
+    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,potrosnja,trafo,trafoCena},
+    kolica:{rupe:kolicaRupe},
   };
 }
 
@@ -795,6 +826,23 @@ function imgTag(key, alt){
   if(!key || !IMG[key]) return '';
   return `<img class="thumb" src="${IMG[key]}" alt="${esc(alt||'')}">`;
 }
+// Vizuelna lenta rupa: dužina L (mm), pozicije (mm od leve ivice), boja markera
+function rupeBar(L, pozicije, boja){
+  const barW = 540; // px, fiksno — skalira se na L
+  let dots = '';
+  pozicije.forEach(p=>{
+    const px = Math.round(p/L*barW);
+    dots += `<div style="position:absolute;left:${px}px;top:0;transform:translateX(-50%);text-align:center">
+      <div style="width:9px;height:9px;border-radius:50%;background:${boja};border:2px solid #fff;box-shadow:0 0 0 1px ${boja};margin:6px auto 2px"></div>
+      <div style="font-size:8px;color:#4a4636;font-family:'Spline Sans Mono',monospace;white-space:nowrap">${p}</div>
+    </div>`;
+  });
+  return `<div style="position:relative;height:40px;max-width:${barW}px;background:#eee8da;border:1px solid #c9b896;border-radius:3px;margin:10px 0 4px">
+    ${dots}
+    <div style="position:absolute;left:2px;bottom:1px;font-size:7.5px;color:#999;font-family:'Spline Sans Mono',monospace">0</div>
+    <div style="position:absolute;right:2px;bottom:1px;font-size:7.5px;color:#999;font-family:'Spline Sans Mono',monospace">${L}</div>
+  </div>`;
+}
 // Ćelija profila: sifra iznad slike (ili placeholder ako nema slike)
 function profCell(prof){
   const sifra = prof ? `<div style="font-size:9px;font-family:'Spline Sans Mono',monospace;color:#888;margin-bottom:2px">${esc(prof.sifra||'')}</div>` : '';
@@ -927,16 +975,22 @@ function renderNalog(I, R, alu, okov){
         <b style="color:${R.cerada.razmakOk?'#3f7a4d':'#bd4a2a'}">${R.cerada.razmakOk?'✓':'⚠'} Razmak ${R.cerada.razmakKornisa} mm</b> —
         ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}</div>
       ${R.splice.spliceNeeded ? (() => {
-        const s = R.splice.spliceInfo;
+        let inner;
+        if(!R.splice.spliceOk){
+          inner = 'Sastav nije moguće izračunati — proveri broj korniša.';
+        } else {
+          const sastavi = R.splice.spliceList.map(s=>`Sastav na keder <b>K${s.kornis}</b> — <b>${s.pos} mm od fronta</b>`).join('<br>');
+          const opis = i => i===0 ? 'od prednje ivice'
+            : `od K${R.splice.spliceList[i-1].kornis}`;
+          const kraj = i => i===R.splice.spliceRolne.length-1 ? 'do zadnje ivice'
+            : `do K${R.splice.spliceList[i].kornis}`;
+          const rolne = R.splice.spliceRolne.map((d,i)=>
+            `✂ Rolna ${i+1} — ${opis(i)} ${kraj(i)}: <b style="font-size:14px;">${d} mm</b>`).join('<br>');
+          inner = sastavi + '<br>' + rolne;
+        }
         return `<div class="note-warn splice-warn" style="margin-top:6px;background:#fdf3e3;border:2px solid #c07000;color:#191814;">
-          <b style="color:#9a5a00">⚠ SPAJANJE CERADE — ukupna dubina ${R.cerada.duzCerade} mm &gt; 3000 mm</b>
-          <div style="margin-top:5px;font-size:11px;line-height:1.9;font-family:'Spline Sans Mono',monospace;color:#191814;">
-            ${s ? `
-            Sastav na keder <b>K${s.kornis}</b> — <b>${s.odFronta} mm od fronta (uz oluk)</b><br>
-            ✂ Rolna 1 — od prednje ivice do K${s.kornis}: <b style="font-size:14px;">${s.rolna1} mm</b><br>
-            ✂ Rolna 2 — od K${s.kornis} do zadnje ivice: <b style="font-size:14px;">${s.rolna2} mm</b>
-            ` : 'Sastav nije moguće izračunati — proveri broj korniša.'}
-          </div>
+          <b style="color:#9a5a00">⚠ SPAJANJE CERADE — ukupna dubina ${R.cerada.duzCerade} mm &gt; 3000 mm · ${R.splice.spliceRolne.length||'?'} rolne</b>
+          <div style="margin-top:5px;font-size:11px;line-height:1.9;font-family:'Spline Sans Mono',monospace;color:#191814;">${inner}</div>
         </div>`;
       })() : ''}
     </div>`;
@@ -1045,15 +1099,33 @@ function renderNalog(I, R, alu, okov){
   });
   html += `</tbody></table>`;
 
-  // LED — samo broj svetala, bez pozicija rupa
+  // LED — mapa bušenja sa ravnomernim pozicijama
   if(R.led.svetalaPoKornizu > 0){
+    const L = R.kornis.duzKornisa;
+    const poz = R.led.ledPozicije;
     html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
       <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
-        LED SVETLA — korniši sa ★ (${R.cerada.tankiSvetlo} kom)</div>
-      <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b></div>
+        BUŠENJE RUPA ZA LED — korniši sa ★ (${R.cerada.tankiSvetlo} kom) · dužina korniša ${L} mm</div>
+      <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b>
+        &nbsp;·&nbsp; Od ivice do 1. rupe: <b>${R.led.odIviceDoRupe} mm</b>
+        &nbsp;·&nbsp; Razmak (c–c): <b>${R.led.razmakRupa} mm</b></div>
+      ${rupeBar(L, poz, '#a9743c')}
       <div style="margin-top:4px;padding-top:4px;border-top:1px solid #ebe7db">
         ★ UKUPNO LED: <b style="font-size:14px">${R.led.svetalaUkupno} kom</b></div>
     </div>`;
+  }
+  // Rupe za kolica — samo jednostrani keder
+  if(R.kolica.rupe.length){
+    const L = R.kornis.duzKornisa;
+    html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
+      <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
+        BUŠENJE RUPA ZA KOLICA — SVI korniši (${R.cerada.kornisaUkupno} kom) · po ${R.kolica.rupe.length} rupe (1 po raju)</div>
+      <div>45 mm od obe ivice${R.kolica.rupe.length>2?', ostale ravnomerno između':''}</div>
+      ${rupeBar(L, R.kolica.rupe, '#3f7a4d')}
+    </div>`;
+  } else if(R.kornis.keder==="dvostrani"){
+    html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8;color:#5a5446">
+      Rupe za kolica se NE buše — dvostrani keder, kolica idu kroz rupe u umetcima.</div>`;
   }
   html += `</div>`;
 
