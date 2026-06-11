@@ -873,11 +873,24 @@ function toggleSek(id){
 /* ═══════════════════════════════════════════
    SAVE / EXPORT
 ═══════════════════════════════════════════ */
-function manualSave(){
-  clearTimeout(_syncTimer); // otkaži pending debounce, sačuvaj odmah
-  syncToServer();
-  showToast('✓ Sačuvano');
+async function manualSave(){
+  clearTimeout(_syncTimer);
+  const el = document.getElementById('autoSaveTxt');
+  el.textContent = '⏳ Čuvam...';
+  el.style.color = '';
+  await syncToServer();
+  // toast tek nakon što server potvrdi (syncToServer ažurira el.textContent)
+  const ok = el.textContent.startsWith('✓');
+  showToast(ok ? '✓ Sačuvano na server' : '⚠ Sačuvano samo lokalno — proveri internet');
 }
+
+// Poslednja odbrana: sendBeacon garantovano šalje čak i kad se tab zatvori
+window.addEventListener('beforeunload', () => {
+  navigator.sendBeacon(
+    API_URL+'/magacin.php?action=setall&key='+API_KEY,
+    new Blob([JSON.stringify({state: STATE})], {type:'application/json'})
+  );
+});
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
