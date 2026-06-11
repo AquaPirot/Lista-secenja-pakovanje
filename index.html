@@ -226,7 +226,7 @@
   </div>
 </div>
 
-<div class="panel no-print">
+<div class="panel no-print" id="inputPanel">
   <div class="card-in">
     <div class="grp">① TERENSKE MERE (mm)</div>
     <div class="row">
@@ -721,6 +721,8 @@ function switchView(v){
   $("btnObracun").classList.toggle("active", v==='obracun');
   $("btnMagacin").classList.toggle("active", v==='magacin');
   $("btnIstorija").classList.toggle("active", v==='istorija');
+  // forma za unos se vidi samo na Nalog/Obračun
+  $("inputPanel").style.display = (v==='magacin' || v==='istorija') ? 'none' : '';
   if(v === 'magacin') renderMagacin();
   else if(v === 'istorija') renderIstorija();
   else render();
@@ -1257,6 +1259,10 @@ function renderObracun(I, R, alu, okov, obr){
       <span class="arch-head-t">ARHIVA NALOGA</span>
       <button class="arch-close" onclick="closeArchive()">✕</button>
     </div>
+    <div style="display:flex;gap:6px;padding:10px 16px 0;">
+      <button class="btn-xs btn-xs-load" id="archTabAktivni" onclick="setArchTab('aktivni')">📋 Sačuvani</button>
+      <button class="btn-xs" id="archTabProd" style="background:#2a2d34;color:#aaa;" onclick="setArchTab('proizvodnja')">🏭 U proizvodnji</button>
+    </div>
     <div id="archList"></div>
   </div>
 </div>
@@ -1280,8 +1286,11 @@ const MAG_PROFILI = [
   {sifra:"10419",  naziv:"Stub 145×110",           tip:"profil", kg_m:2.927},
   {sifra:"10414",  naziv:"Stub 100×100",           tip:"profil", kg_m:null},
   {sifra:"10471",  naziv:"Korniš — tanki",         tip:"profil", kg_m:0.809},
+  {sifra:"10418",  naziv:"Korniš — tanki tip 2",   tip:"profil", kg_m:0.737},
   {sifra:"10470",  naziv:"Korniš tanki — ek",      tip:"profil", kg_m:0.590},
   {sifra:"10472",  naziv:"Korniš — debeli",        tip:"profil", kg_m:1.491},
+  {sifra:"10416",  naziv:"Korniš — debeli tip 2",  tip:"profil", kg_m:1.288},
+  {sifra:"10515",  naziv:"Korniš debeli — ek",     tip:"profil", kg_m:1.161},
   {sifra:"10420",  naziv:"Panel (orta kayıt)",     tip:"profil", kg_m:1.355},
   {sifra:"10417",  naziv:"Cev motora (tambur)",    tip:"profil", kg_m:1.071},
   {sifra:"CEV-80", naziv:"Cev na zidu 80×40",      tip:"profil", kg_m:null},
@@ -1742,6 +1751,8 @@ async function saveOrder(){
   setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; }, 1600);
 }
 
+let archTab = 'aktivni';
+
 function openArchive(){
   document.getElementById('archOverlay').classList.add('open');
   renderArchive();
@@ -1751,13 +1762,25 @@ function closeArchive(){
   document.getElementById('archOverlay').classList.remove('open');
 }
 
+function setArchTab(t){
+  archTab = t;
+  const a = document.getElementById('archTabAktivni');
+  const p = document.getElementById('archTabProd');
+  const on  = 'background:var(--bronze);color:#fff;';
+  const off = 'background:#2a2d34;color:#aaa;';
+  a.style.cssText = t==='aktivni' ? on : off;
+  p.style.cssText = t==='proizvodnja' ? on : off;
+  renderArchive();
+}
+
 async function renderArchive(){
   const cont = document.getElementById('archList');
   cont.innerHTML = '<div class="arch-empty">⏳ Učitavam...</div>';
 
+  const qs = archTab === 'proizvodnja' ? '&status=proizvodnja' : '';
   let arch = [];
   try {
-    const res = await fetch(API_URL+'/nalozi.php?action=list', {headers:{'X-Api-Key': API_KEY}});
+    const res = await fetch(API_URL+'/nalozi.php?action=list'+qs, {headers:{'X-Api-Key': API_KEY}});
     const json = await res.json();
     if(json.ok) arch = json.data;
   } catch(e){
@@ -1772,17 +1795,20 @@ async function renderArchive(){
   }
 
   if(!arch.length){
-    cont.innerHTML = '<div class="arch-empty">Nema sačuvanih naloga.<br>Klikni 💾 Sačuvaj da čuvaš trenutni nalog.</div>';
+    cont.innerHTML = archTab === 'proizvodnja'
+      ? '<div class="arch-empty">Još nijedan nalog nije pušten u proizvodnju.</div>'
+      : '<div class="arch-empty">Nema sačuvanih naloga.<br>Klikni 💾 Sačuvaj da čuvaš trenutni nalog.</div>';
     return;
   }
   cont.innerHTML = arch.map(o=>{
     const naziv = o.klijent || '(bez naziva)';
     const opis  = o.napomena || '';
-    const dat   = o.created_at || '';
+    const dat   = (o.created_at || '').substring(0,16).replace('T',' ');
     const local = o._local ? ' 📴' : '';
+    const badge = o.status === 'proizvodnja' ? ' <span style="background:#2a3a28;color:#7dba8a;font-size:9px;padding:2px 6px;border-radius:3px;">🏭 PROIZVODNJA</span>' : '';
     return `<div class="arch-item">
       <div class="arch-item-head">
-        <span class="arch-item-nr">${naziv}${local}</span>
+        <span class="arch-item-nr">${naziv}${local}${badge}</span>
         <span class="arch-item-date">${dat}</span>
       </div>
       <div class="arch-item-sub">${opis}</div>
@@ -2042,6 +2068,26 @@ async function potvrdiProizvodnju(){
     if(json.ok){
       const savedPlan = prodPlan; // čuvamo za print
       prodPlan = null;
+      // upiši nalog u arhivu sa statusom 'proizvodnja' — tab „U proizvodnji"
+      try {
+        const fields = {};
+        ARCH_FIELDS.forEach(id => {
+          const el = document.getElementById(id);
+          if(!el) return;
+          fields[id] = el.type==='checkbox' ? el.checked : el.value;
+        });
+        fields._steelRows = JSON.stringify(steelRows);
+        await fetch(API_URL+'/nalozi.php?action=save', {
+          method:'POST', headers:apiHeaders(),
+          body: JSON.stringify({
+            klijent:  [fields.brNaloga, fields.kupac].filter(Boolean).join(' · ') || '(bez naziva)',
+            napomena: [fields.sirina&&fields.dubina ? fields.sirina+'×'+fields.dubina+'mm' : '', fields.datum].filter(Boolean).join(' · '),
+            status:   'proizvodnja',
+            input_data:  fields,
+            result_data: {koraci: savedPlan.plan.koraci}
+          })
+        });
+      } catch(e){}
       body.innerHTML = `
         <div style="color:#7dba8a;font-weight:700;font-size:14px;padding:14px 0 10px;text-align:center;">
           ✓ Stanje magacina ažurirano!

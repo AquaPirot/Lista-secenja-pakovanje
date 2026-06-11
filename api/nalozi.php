@@ -6,12 +6,17 @@ auth();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
-// GET lista — svi nalozi (bez punih podataka, samo pregled)
+// GET lista — pregled naloga; ?status=proizvodnja za puštene u proizvodnju,
+// podrazumevano aktivni (obrisani/otkazani se ne prikazuju)
 if($method === 'GET' && $action === 'list'){
-  $rows = db()->query(
-    "SELECT id, klijent, napomena, status, created_at FROM radni_nalozi ORDER BY id DESC"
-  )->fetchAll();
-  json_out(['ok'=>true, 'data'=>$rows]);
+  $status = $_GET['status'] ?? '';
+  if($status === 'proizvodnja'){
+    $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status='proizvodnja' ORDER BY id DESC");
+  } else {
+    $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status NOT IN ('otkazan','proizvodnja') ORDER BY id DESC");
+  }
+  $st->execute();
+  json_out(['ok'=>true, 'data'=>$st->fetchAll()]);
 }
 
 // GET jedan nalog sa svim podacima
