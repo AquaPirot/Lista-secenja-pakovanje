@@ -180,6 +180,18 @@
   .mag-kor-btn{background:#1a2218;border:1px solid #3a5a30;border-radius:5px;color:#7dba8a;font-size:11px;padding:4px 9px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
   .mag-kor-btn:hover{background:#2a3a28;}
   .mag-empty{padding:30px;text-align:center;color:var(--muted);font-size:13px;}
+  .mag-summary{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .mag-stat{background:var(--shell2);border:1px solid var(--line);border-radius:8px;padding:10px 16px;flex:1;min-width:90px;text-align:center;}
+  .mag-stat-val{font-family:'Fjalla One',sans-serif;font-size:18px;color:#fff;display:block;line-height:1.2;}
+  .mag-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-top:2px;}
+  .mag-thead .mag-sifra,.mag-thead .mag-naziv,.mag-thead .mag-kgm,.mag-thead .mag-stan,.mag-thead .mag-kg{
+    font-family:'Fjalla One',sans-serif;font-size:9.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:400;}
+  .mag-thead{padding:6px 14px;border-bottom:1px solid var(--line);}
+  .mag-kgm{font-family:'Spline Sans Mono',monospace;font-size:11px;color:var(--muted);width:62px;text-align:right;flex-shrink:0;}
+  .mag-stan{font-family:'Spline Sans Mono',monospace;font-size:13px;font-weight:700;color:#fff;min-width:130px;text-align:right;flex-shrink:0;}
+  .mag-stan.low{color:var(--warn);}
+  .mag-stan.zero{color:var(--muted);font-size:11px;font-weight:400;}
+  .mag-kg{font-family:'Spline Sans Mono',monospace;font-size:11px;color:#a0a88e;min-width:58px;text-align:right;flex-shrink:0;}
 
   /* ── LISTA SEČENJA ZA RADNIKE ── */
   .cut-list{background:#0d1a0e;border:2px solid #3a5a30;border-radius:8px;padding:12px 14px;margin-bottom:14px;}
@@ -1262,18 +1274,18 @@ function renderObracun(I, R, alu, okov, obr){
 <script>
 /* ───────── MAGACIN TAB ───────── */
 const MAG_PROFILI = [
-  {sifra:"10501",naziv:"Šina (raj) 90×150",tip:"profil"},
-  {sifra:"10475",naziv:"Šina (raj) 110×150",tip:"profil"},
-  {sifra:"10468",naziv:"Oluk",tip:"profil"},
-  {sifra:"10471",naziv:"Korniš — TANKI",tip:"profil"},
-  {sifra:"10472",naziv:"Korniš — DEBELI",tip:"profil"},
-  {sifra:"10470",naziv:"Tanki stringcourse",tip:"profil"},
-  {sifra:"10419",naziv:"Stub 110×144",tip:"profil"},
-  {sifra:"10414",naziv:"Stub 100×100",tip:"profil"},
-  {sifra:"10420",naziv:"Panel (između rajeva)",tip:"profil"},
-  {sifra:"10417",naziv:"Cev motora",tip:"profil"},
-  {sifra:"CEV-80",naziv:"Cev na zidu 80×40",tip:"profil"},
-  {sifra:"CEV-100",naziv:"Cev na zidu 100×100",tip:"profil"},
+  {sifra:"10501",  naziv:"Šina (raj) 90×150",      tip:"profil", kg_m:4.129},
+  {sifra:"10475",  naziv:"Šina (raj) 110×150",     tip:"profil", kg_m:7.116},
+  {sifra:"10468",  naziv:"Oluk",                   tip:"profil", kg_m:4.006},
+  {sifra:"10419",  naziv:"Stub 145×110",           tip:"profil", kg_m:2.927},
+  {sifra:"10414",  naziv:"Stub 100×100",           tip:"profil", kg_m:null},
+  {sifra:"10471",  naziv:"Korniš — tanki",         tip:"profil", kg_m:0.809},
+  {sifra:"10470",  naziv:"Korniš tanki — ek",      tip:"profil", kg_m:0.590},
+  {sifra:"10472",  naziv:"Korniš — debeli",        tip:"profil", kg_m:1.491},
+  {sifra:"10420",  naziv:"Panel (orta kayıt)",     tip:"profil", kg_m:1.355},
+  {sifra:"10417",  naziv:"Cev motora (tambur)",    tip:"profil", kg_m:1.071},
+  {sifra:"CEV-80", naziv:"Cev na zidu 80×40",      tip:"profil", kg_m:null},
+  {sifra:"CEV-100",naziv:"Cev na zidu 100×100",    tip:"profil", kg_m:null},
 ];
 const MAG_SEKCIJE = [
   {id:"alu", naziv:"Aluminijum profili", stavke: MAG_PROFILI},
@@ -1374,52 +1386,97 @@ async function renderMagacin(){
     return;
   }
 
+  // Ukupni stats profila
+  let totalKom = 0, totalM = 0, totalKg = 0;
+  MAG_PROFILI.forEach(s => {
+    const komadi = magState[s.sifra]?.komadi || [];
+    if(!komadi.length) return;
+    const m = komadi.reduce((a,k)=>a+(+k.duzina||0),0)/1000;
+    totalKom += komadi.length;
+    totalM   += m;
+    if(s.kg_m) totalKg += m * s.kg_m;
+  });
+
+  const kgStr = totalKg >= 1000 ? (totalKg/1000).toFixed(2)+' t' : Math.round(totalKg)+' kg';
+
   let html = '<div class="mag-wrap">';
-  // ukupna vrednost metara profila
-  let ukupnoKomada = 0, ukupnoMetara = 0;
-  MAG_SEKCIJE.forEach(sek => {
+
+  // Summary kartice
+  html += `<div class="mag-summary">
+    <div class="mag-stat">
+      <span class="mag-stat-val">${totalKom}</span>
+      <span class="mag-stat-lbl">Komada profila</span>
+    </div>
+    <div class="mag-stat">
+      <span class="mag-stat-val">${totalM.toFixed(1)} m</span>
+      <span class="mag-stat-lbl">Ukupno metara</span>
+    </div>
+    <div class="mag-stat">
+      <span class="mag-stat-val">${kgStr}</span>
+      <span class="mag-stat-lbl">Ukupno aluminijum</span>
+    </div>
+    <div class="mag-stat" style="cursor:pointer;" onclick="renderMagacin()">
+      <span class="mag-stat-val" style="font-size:14px;">↻</span>
+      <span class="mag-stat-lbl">Osveži</span>
+    </div>
+  </div>`;
+
+  // Profili — clean table, bez chipova
+  html += `<div class="mag-sek">
+    <div class="mag-sek-h">Aluminijum profili</div>
+    <div class="mag-row mag-thead">
+      <div class="mag-sifra">Šifra</div>
+      <div class="mag-naziv">Naziv</div>
+      <div class="mag-kgm">kg/m</div>
+      <div class="mag-stan">Na stanju</div>
+      <div class="mag-kg">Težina</div>
+      <div style="width:80px;flex-shrink:0;"></div>
+    </div>`;
+
+  MAG_PROFILI.forEach(s => {
+    const komadi = magState[s.sifra]?.komadi || [];
+    const prag   = OTPAD_PRAG_MAP[s.sifra] ?? OTPAD_PRAG_DEFAULT;
+    const ukM    = komadi.reduce((a,k)=>a+(+k.duzina||0),0)/1000;
+    const ukKg   = s.kg_m && ukM > 0 ? (ukM * s.kg_m).toFixed(0)+' kg' : '—';
+    const hasWarn = komadi.some(k => +k.duzina > 0 && +k.duzina < prag);
+    const stanCls = komadi.length === 0 ? 'zero' : hasWarn ? 'low' : '';
+    const stanTxt = komadi.length
+      ? `${komadi.length} kom · ${ukM.toFixed(1)} m`
+      : 'nema na stanju';
+    html += `<div class="mag-row">
+      <div class="mag-sifra">${s.sifra}</div>
+      <div class="mag-naziv">${s.naziv}</div>
+      <div class="mag-kgm">${s.kg_m != null ? s.kg_m.toFixed(3) : '—'}</div>
+      <div class="mag-stan ${stanCls}">${stanTxt}</div>
+      <div class="mag-kg">${ukKg}</div>
+      <button class="mag-kor-btn" onclick="openKor('${s.sifra}','${s.naziv.replace(/'/g,"\\'")}','profil')">Korekcija</button>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Ostale sekcije — kompaktan prikaz
+  MAG_SEKCIJE.filter(sek => sek.id !== 'alu').forEach(sek => {
     html += `<div class="mag-sek"><div class="mag-sek-h">${sek.naziv}</div>`;
     sek.stavke.forEach(s => {
-      const d = magState[s.sifra];
+      const d   = magState[s.sifra];
+      const tip = s.tip || sek.tip || 'kom';
+      const kol = d?.kolicina ?? 0;
+      const min = d?.minimum  ?? 0;
+      const low = min > 0 && kol <= min;
+      const jed = tip === 'metar' ? 'm' : 'kom';
+      const cls = kol === 0 ? 'zero' : low ? 'low' : '';
       html += `<div class="mag-row">
         <div class="mag-sifra">${s.sifra}</div>
-        <div class="mag-naziv">${s.naziv}</div>`;
-      if(s.tip === 'profil'){
-        const komadi = d?.komadi || [];
-        const prag = OTPAD_PRAG_MAP[s.sifra] ?? OTPAD_PRAG_DEFAULT;
-        const uk = komadi.reduce((a,k)=>a+(+k.duzina||0),0);
-        if(komadi.length){
-          ukupnoKomada += komadi.length;
-          ukupnoMetara += uk/1000;
-          html += `<div class="mag-komadi">`;
-          komadi.forEach(k => {
-            const warn = +k.duzina > 0 && +k.duzina < prag;
-            html += `<span class="mag-chip${warn?' warn':''}">${k.duzina} mm</span>`;
-          });
-          html += `</div>
-          <div class="mag-qty">${komadi.length} kom<div style="font-size:9px;color:var(--muted);font-family:monospace">${(uk/1000).toFixed(1)} m</div></div>`;
-        } else {
-          html += `<div class="mag-komadi" style="color:var(--muted);font-size:11px;">nema na stanju</div><div class="mag-qty low">0</div>`;
-        }
-      } else {
-        const kol = d?.kolicina ?? 0;
-        const min = d?.minimum ?? 0;
-        const low = min > 0 && kol <= min;
-        const jed = s.tip === 'metar' ? 'm' : 'kom';
-        html += `<div class="mag-komadi"></div><div class="mag-qty${low?' low':''}">${kol} ${jed}${low?' ⚠':''}</div>`;
-      }
-      html += `<button class="mag-kor-btn" onclick="openKor('${s.sifra}','${s.naziv.replace(/'/g,"\\'")}','${s.tip}')">Korekcija</button>
+        <div class="mag-naziv">${s.naziv}</div>
+        <div class="mag-stan ${cls}">${kol} ${jed}${low?' ⚠':''}</div>
+        <button class="mag-kor-btn" onclick="openKor('${s.sifra}','${s.naziv.replace(/'/g,"\\'")}','${tip}')">Korekcija</button>
       </div>`;
     });
     html += `</div>`;
   });
-  html += `<div style="padding:10px 0 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px;">
-    <a href="popis.html" style="color:var(--bronze);text-decoration:none;font-weight:600;border:1px solid var(--bronze);border-radius:5px;padding:6px 12px;">📝 Popis magacina (telefon)</a>
-    <span>
-      Ukupno profila: <b style="color:#fff">${ukupnoKomada} komada</b> · <b style="color:#fff">${ukupnoMetara.toFixed(1)} m</b>
-      &nbsp;&nbsp;·&nbsp;&nbsp;
-      <button class="btn-xs btn-xs-load" onclick="renderMagacin()">↻ Osveži</button>
-    </span>
+
+  html += `<div style="padding:10px 0 20px;text-align:center;">
+    <a href="popis.html" style="color:var(--bronze);text-decoration:none;font-weight:600;border:1px solid var(--bronze);border-radius:5px;padding:8px 18px;font-size:12px;">📝 Popis magacina (telefon)</a>
   </div>`;
   html += '</div>';
   doc.innerHTML = html;
