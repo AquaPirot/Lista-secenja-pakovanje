@@ -75,14 +75,14 @@ if($method === 'POST' && $action === 'setall'){
   foreach($state as $sifra => $data){
     if(isset($data['komadi'])){
       $q = $pdo->prepare("INSERT INTO magacin (sifra,tip,komadi,updated_at) VALUES(?,?,?,NOW())
-        ON DUPLICATE KEY UPDATE komadi=VALUES(komadi), updated_at=NOW()");
+        ON DUPLICATE KEY UPDATE tip=VALUES(tip), komadi=VALUES(komadi), updated_at=NOW()");
       $q->execute([$sifra, 'profil', json_encode($data['komadi'], JSON_UNESCAPED_UNICODE)]);
     } else {
       // kolicina/minimum mogu biti '' (prazan input) — kastujemo u float
       $kol = isset($data['kolicina']) && is_numeric($data['kolicina']) ? (float)$data['kolicina'] : 0;
       $min = isset($data['minimum'])  && is_numeric($data['minimum'])  ? (float)$data['minimum']  : 0;
       $q = $pdo->prepare("INSERT INTO magacin (sifra,tip,kolicina,minimum,updated_at) VALUES(?,?,?,?,NOW())
-        ON DUPLICATE KEY UPDATE kolicina=VALUES(kolicina), minimum=VALUES(minimum), updated_at=NOW()");
+        ON DUPLICATE KEY UPDATE tip=VALUES(tip), kolicina=VALUES(kolicina), minimum=VALUES(minimum), updated_at=NOW()");
       $q->execute([$sifra, 'kom', $kol, $min]);
     }
   }
