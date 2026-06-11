@@ -322,7 +322,7 @@
       <label><div class="lbl">Zadužen radnik</div><input type="text" id="radnik" placeholder="ime radnika"></label>
     </div>
   </div>
-  <div class="hint" id="hintLine">Popuni mere → <b style="color:#cfcabb">Nalog</b> ili <b style="color:#cfcabb">Obračun</b> → <b style="color:#cfcabb">⎙ PDF</b>. Radi i bez interneta.</div>
+  <div class="hint" id="hintLine">Popuni mere → <b style="color:#cfcabb">Nalog</b> ili <b style="color:#cfcabb">Obračun</b> → <b style="color:#cfcabb">⎙ PDF</b>. Radi i bez interneta. <span id="appVer" style="opacity:.55"></span></div>
 </div>
 
 <div class="doc" id="doc"></div>
@@ -1376,7 +1376,10 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
+const APP_VER = "v2026-06-11.2";
 (function(){
+  $("appVer").textContent = "· " + APP_VER;
+  console.log("Lista sečenja — verzija " + APP_VER);
   $("datum").value = new Date().toLocaleDateString("sr-RS");
   $("celicnaOn").addEventListener("change",()=>{renderSteelInputs();render();});
   $("parapetOn").addEventListener("change",()=>{
