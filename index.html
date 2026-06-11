@@ -516,7 +516,7 @@ function compute(I){
   const dijagonala = round(Math.sqrt(kat1*kat1+kat2*kat2),0);
   const duzRaja = dijagonala-200;
 
-  const sirinaCerade=D, duzCerade=dijagonala+400;
+  const sirinaCerade=D-20, duzCerade=dijagonala+400;
   const korisnaZaKornize = dijagonala-100-70;
   const predlogIntervala = suggestIntervala(korisnaZaKornize);
   const brIntervala = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
@@ -867,15 +867,19 @@ function render(){
   if(autoOn) $("brIntervala").value=R.cerada.predlogIntervala;
   $("intervalSub").textContent = autoOn ? ("auto-predlog: "+R.cerada.predlogIntervala) : "ručni unos";
 
-  // Sečeni korniš dostupan samo kad ima ≥ 3 raja
+  // Sečeni korniš: dostupan samo kad ≥ 3 raja; obavezan kad obostrani + ≥ 3 raja
   const mozeSeceni = R.auto.brRaja >= 3;
+  const moraSeceni = mozeSeceni && $("kederTip").value === 'obostrani';
   const selSklop = $("kornisSklop");
-  const secOpt = Array.from(selSklop.options).find(o=>o.value==='seceni');
+  const secOpt  = Array.from(selSklop.options).find(o=>o.value==='seceni');
+  const jedOpt  = Array.from(selSklop.options).find(o=>o.value==='jednodelni');
   if(secOpt){
     secOpt.disabled = !mozeSeceni;
     secOpt.text = mozeSeceni ? 'Sečeni' : 'Sečeni ⛔ (min. 3 raja)';
   }
+  if(jedOpt) jedOpt.disabled = moraSeceni;
   if(!mozeSeceni && selSklop.value==='seceni') selSklop.value='jednodelni';
+  if(moraSeceni) selSklop.value='seceni';
   const as=$("autoStat");
   as.textContent = R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
   as.style.color = R.cerada.razmakOk ? "#5fa86f" : "#d8754a";
@@ -1379,7 +1383,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.3";
+const APP_VER = "v2026-06-11.4";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
