@@ -171,7 +171,7 @@
   .mag-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
   .mag-row:last-child{border-bottom:none;}
   .mag-sifra{font-family:'Spline Sans Mono',monospace;font-size:10px;color:var(--muted);width:62px;flex-shrink:0;}
-  .mag-naziv{flex:1;font-size:12px;font-weight:600;min-width:120px;}
+  .mag-naziv{flex:1;font-size:12px;font-weight:600;min-width:120px;color:#e8e4d8;}
   .mag-komadi{display:flex;flex-wrap:wrap;gap:4px;flex:2;}
   .mag-chip{background:#2a2d34;border:1px solid var(--line);border-radius:4px;padding:3px 7px;font-family:'Spline Sans Mono',monospace;font-size:11px;color:#e8e4d8;white-space:nowrap;}
   .mag-chip.warn{border-color:var(--warn);color:#e07a5f;}
@@ -257,11 +257,18 @@
       <label><div class="lbl">Stub</div>
         <select id="stub"><option selected>110x144</option><option>100x100</option></select></label>
       <label><div class="lbl">Širina raja</div><div class="sub">90×150 ili 110×150</div>
-        <select id="sirinaRaja"><option selected>90</option><option>110</option></select></label>
-      <label><div class="lbl">Model kedera</div>
-        <select id="keder"><option>jednostrani</option><option selected>dvostrani</option></select></label>
-      <label><div class="lbl">Korniš sklop</div>
-        <select id="kornisTip"><option selected>jednodelni</option><option>sečeni</option></select></label>
+        <select id="sirinaRaja"><option value="75">75</option><option selected>90</option><option>110</option></select></label>
+      <label><div class="lbl">Vrsta korniša</div>
+        <select id="kornisVrsta">
+          <option value="TJ1">Tanki — jednodelni — jednostrani keder</option>
+          <option value="TJS">Tanki — sečeni — jednostrani keder</option>
+          <option value="TOJ" selected>Tanki obostrani — jednodelni</option>
+          <option value="TOS">Tanki obostrani — sečeni</option>
+          <option value="DJ1">Debeli — jednodelni — jednostrani keder</option>
+          <option value="DJS">Debeli — sečeni — jednostrani keder</option>
+          <option value="DOJ">Debeli obostrani — jednodelni</option>
+          <option value="DOS">Debeli obostrani — sečeni</option>
+        </select></label>
       <label><div class="lbl">Cev motora</div>
         <select id="cevMotora"><option selected>jednodelna</option><option>po poljima</option></select></label>
       <label><div class="lbl">Boja (RAL)</div><div class="sub">važi za sve — profili + okov</div>
@@ -405,8 +412,9 @@ const CELIK_CEV_PER_M_EUR  = din2eur(1100);  // ~9,40 €/m
 /* ───────── KATALOG PROFILA — šifre NOR + težine ─────────
    Težine direktno iz NOR proforme (Kg/m). */
 const PROFILI = {
-  raj90: {sifra:"10501", nazivSr:"Šina 90×150",      nazivTr:"90x150 mm Rail Profile", img:"prof_10501", kgm:4.129},
-  raj110:{sifra:"10475", nazivSr:"Šina 110×150",     nazivTr:"110x150 mm Rail Profile",img:"prof_10475", kgm:7.116},
+  raj75: {sifra:"RAJ-75",naziv:"Šina 75×150",       nazivSr:"Šina 75×150",       nazivTr:"75x150 mm Rail Profile", img:null, kgm:null},
+  raj90: {sifra:"10501", naziv:"Šina 90×150",       nazivSr:"Šina 90×150",       nazivTr:"90x150 mm Rail Profile", img:"prof_10501", kgm:4.129},
+  raj110:{sifra:"10475", naziv:"Šina 110×150",      nazivSr:"Šina 110×150",      nazivTr:"110x150 mm Rail Profile",img:"prof_10475", kgm:7.116},
   oluk:  {sifra:"10468", nazivSr:"Oluk",             nazivTr:"Gutter Profile",         img:"prof_10468", kgm:4.006},
   kornisTanki: {sifra:"10471", nazivSr:"Tanki korniš",   nazivTr:"Thin Cornice Profile",     img:"prof_10471", kgm:0.809},
   kornisDebeli:{sifra:"10472", nazivSr:"Debeli korniš",  nazivTr:"Thick Stringcourse Profile",img:"prof_10472", kgm:1.491},
@@ -504,13 +512,23 @@ function compute(I){
   const debeli=2, tanki=Math.max(0,kornisaUkupno-2);
   const tankiSvetlo=ceil(tanki/2), tankiBez=tanki-tankiSvetlo;
 
-  const keder=I.keder, kornisTip=I.kornisTip;
-  const tipSklopa = keder==="jednostrani"?"A — jednodelni (jednostrani)"
-    :kornisTip==="jednodelni"?"B — jednodelni + 2 konektora"
-    :"C — sečen + "+(brPolja+1)+" konektora";
-  const duzKornisa = keder==="jednostrani"?sirinaCerade
-    :kornisTip==="jednodelni"?sirinaCerade-100
-    :brPolja?round((sirinaCerade-(brPolja+1)*50)/brPolja,0):0;
+  // Parsiranje kornisVrsta (npr. "TOJ" = Tanki Obostrani Jednodelni)
+  const kv = I.kornisVrsta || 'TOJ';
+  const kvObostrani = kv[1]==='O';            // O=obostrani, J=jednostrani
+  const kvSeceni    = kv[2]==='S';            // S=sečeni, 1/J=jednodelni
+  const kvDebeli    = kv[0]==='D';            // D=debeli, T=tanki
+  const keder      = kvObostrani ? 'dvostrani' : 'jednostrani';
+  const kornisTip  = kvSeceni    ? 'sečeni'    : 'jednodelni';
+  // Tip sklopa za prikaz
+  const tipSklopa = !kvObostrani&&!kvSeceni ? 'A — jednodelni, jednostrani keder'
+    : kvObostrani&&!kvSeceni ? 'B — jednodelni, obostrani keder'
+    : !kvObostrani&&kvSeceni ? 'C — sečeni, jednostrani keder'
+    : 'D — sečeni, obostrani keder';
+  // Dužina jednog komada korniša
+  const duzKornisa = kvSeceni
+    ? (kvObostrani ? round((sirinaCerade-150)/2,0) : round((sirinaCerade-50)/2,0))
+    : (sirinaCerade - 100);
+  const kornisKomPoPoz = kvSeceni ? 2 : 1; // komada po jednoj poziciji korniša
 
   const duzOluka=D+150;
   const limKom=ceil(D/1250);
@@ -525,6 +543,31 @@ function compute(I){
   const duzStuba = Math.max(0, Cc - parapetVis);
 
   const svetalaPoKornizu=+I.svetalaPoKornizu||0;
+  // Cerada spajanje — rolna je max 3000mm u dubini
+  const spliceNeeded = duzCerade > 3000;
+  let spliceInfo = null;
+  if(spliceNeeded){
+    // Korniš pozicije od prednje ivice (manji = bliže frontu)
+    // pos se meri od ZADNJE ivice (zida); fromFront = duzCerade - pos
+    // Tražimo poslednji korniš čija je pos >= duzCerade - 3000
+    //  (= prvi korniš koji je unutar 3000mm od fronta)
+    const threshold = duzCerade - 3000;
+    for(let i=kornisaUkupno; i>=1; i--){
+      const pi = i===1 ? 100
+               : i===kornisaUkupno ? duzCerade-470
+               : Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
+      if(pi >= threshold){
+        spliceInfo = {
+          kornis: i,
+          odZida: pi,
+          odFronta: duzCerade - pi,
+          rolna2: pi + 100  // malo preklopa
+        };
+        break;
+      }
+    }
+  }
+
   const odbitakRupa = keder==="jednostrani" ? 0 : 200;
   const razmakRupa=svetalaPoKornizu?round((duzKornisa-odbitakRupa)/svetalaPoKornizu,0):0;
   const odIviceDoRupe=round(razmakRupa/2,0);
@@ -540,7 +583,8 @@ function compute(I){
     raj:{kat1,kat2,pad,padOk,dijagonala,duzRaja},
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
       razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez},
-    kornis:{tipSklopa,duzKornisa,kornisTip,keder},
+    kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvDebeli,kvObostrani,kvSeceni,kornisKomPoPoz},
+    splice:{spliceNeeded,spliceInfo},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
     led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,svetalaUkupno,potrosnja,trafo,trafoCena},
   };
@@ -588,8 +632,10 @@ function applyOkov(R, I){
 /* ───────── ALUMINIJUM — težina + cena ───────── */
 function aluCalc(I, R){
   // 1. Šina
-  const rajKljuc = +I.sirinaRaja === 110 ? "raj110" : "raj90";
+  const rajKljuc = +I.sirinaRaja === 110 ? "raj110" : +I.sirinaRaja === 75 ? "raj75" : "raj90";
   const rajProf  = PROFILI[rajKljuc];
+  const kProf = R.kornis.kvDebeli ? PROFILI.kornisDebeli : PROFILI.kornisTanki;
+  const kPoPoz = R.kornis.kornisKomPoPoz; // 1 ili 2 (sečeni)
   // 2. Stub
   const stubKljuc = I.stub === "110x144" ? "stub110" : "stub100";
   const stubProf  = PROFILI[stubKljuc];
@@ -600,9 +646,9 @@ function aluCalc(I, R){
     {key:"stub",     prof:stubProf,               naziv:"Stub ("+I.stub+")",              mera:R.profili2.duzStuba,  kom:R.auto.brStubova,nap: R.in.parapetVis>0 ? "Prednja "+R.in.C+" − zidić "+R.in.parapetVis+" = "+R.profili2.duzStuba+" mm" : "→ Prednja visina"},
     {key:"cevm",     prof:PROFILI.cevMotora,      naziv:"Cev motora",                      mera:R.profili2.duzCevMotora, kom:R.profili2.brCevMotora, nap: R.profili2.cevMotoraTip==="jednodelna" ? "Jednodelna · širina pergole + 100mm" : `Po poljima · ${R.profili2.brCevMotora} cevi (zbir = širina pergole + 50mm)`},
     {key:"panel",    prof:PROFILI.panel,          naziv:"Panel (između rajeva)",           mera:R.profili2.duzPanela, kom:R.profili2.brPanela, nap:"→ Širina polja + 100"},
-    {key:"kdeb",     prof:PROFILI.kornisDebeli,   naziv:"★ Korniš — VELIKI DEBELI",       mera:R.kornis.duzKornisa,  kom:R.cerada.debeli, nap:"Uz zid + uz oluk, BEZ rupa"},
-    {key:"ksv",      prof:PROFILI.kornisTanki,    naziv:"★ Korniš — TANKI sa svetlom",    mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo, nap:"★ Izbušene rupe za LED"},
-    {key:"kbez",     prof:PROFILI.kornisTanki,    naziv:"★ Korniš — TANKI bez svetla",    mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez, nap:"Bez rupa"},
+    {key:"kdeb",     prof:PROFILI.kornisDebeli,   naziv:"★ Korniš DEBELI (ivični)",        mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
+    {key:"ksv",      prof:kProf,                  naziv:"★ Korniš sa svetlom",             mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
+    {key:"kbez",     prof:kProf,                  naziv:"★ Korniš bez svetla",             mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
   ];
   let totalKg = 0, totalEur = 0;
   items.forEach(it => {
@@ -737,7 +783,7 @@ function render(){
   const I={
     sirina:$("sirina").value,dubina:$("dubina").value,zadnjaVisina:$("zadnjaVisina").value,
     prednjaVisina:$("prednjaVisina").value,cev:$("cev").value,stub:$("stub").value,
-    keder:$("keder").value,sirinaRaja:$("sirinaRaja").value,kornisTip:$("kornisTip").value,
+    kornisVrsta:$("kornisVrsta").value,sirinaRaja:$("sirinaRaja").value,
     cevMotora:$("cevMotora").value,bojaRal:$("bojaRal").value,bojaCerade:$("bojaCerade").value,
     autoInterval:$("autoInterval").checked,brIntervala:$("brIntervala").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value,motor:$("motor").value,
@@ -787,7 +833,7 @@ function renderNalog(I, R, alu, okov){
     <div class="card"><div class="card-t">KONFIGURACIJA</div>
       <div class="mono" style="font-size:11px;margin-top:3px;line-height:1.65">
         Cev: <b>${esc(I.cev)}</b> · Stub: <b>${esc(I.stub)}</b> · Šina: <b>${esc(I.sirinaRaja)}×150 mm</b><br>
-        Keder: <b>${esc(I.keder)}</b> · Korniš: <b>${esc(I.kornisTip)}</b><br>
+        Korniš: <b>${esc(R.kornis.tipSklopa)}</b><br>
         <b>Boja (sve): ${esc(bojaTxt)}</b> · Cerada: <b>${esc(I.bojaCerade)}</b><br>
         Sklop korniša: <b>${esc(R.kornis.tipSklopa)}</b></div></div></div>`;
 
@@ -843,6 +889,19 @@ function renderNalog(I, R, alu, okov){
       <div class="${R.cerada.razmakOk?'note-ok':'note-warn'}">
         <b style="color:${R.cerada.razmakOk?'#3f7a4d':'#bd4a2a'}">${R.cerada.razmakOk?'✓':'⚠'} Razmak ${R.cerada.razmakKornisa} mm</b> —
         ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}</div>
+      ${R.splice.spliceNeeded ? (() => {
+        const s = R.splice.spliceInfo;
+        return `<div class="note-warn" style="margin-top:6px;background:#2a1e0a;border-color:#7a5020;">
+          <b style="color:#e0a040">⚠ SPAJANJE CERADE — ukupna dubina ${R.cerada.duzCerade} mm &gt; 3000 mm</b>
+          <div style="margin-top:5px;font-size:11px;line-height:1.7;font-family:'Spline Sans Mono',monospace;">
+            ${s ? `
+            Spoj na korniš <b>K${s.kornis}</b> — <b>${s.odFronta} mm od fronta</b> (${s.odZida} mm od zida)<br>
+            Rolna 1 (od fronta): <b style="font-size:13px;">3000 mm</b><br>
+            Rolna 2 (od spoja do zida): <b style="font-size:13px;">${s.rolna2} mm</b>
+            ` : 'Spoj nije moguće izračunati — proveri broj korniša.'}
+          </div>
+        </div>`;
+      })() : ''}
     </div>`;
 
   const mapH=300;
@@ -950,14 +1009,35 @@ function renderNalog(I, R, alu, okov){
   html += `</tbody></table>`;
 
   // Bušenje rupa
-  html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
-    <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
-      BUŠENJE RUPA ZA LED — samo na tankim kornišima sa svetlom (${R.cerada.tankiSvetlo} kom)</div>
-    <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b></div>
-    <div>Razmak rupa (centri): <b>${R.led.razmakRupa} mm</b></div>
-    <div>Od ivice do prve rupe: <b>${R.led.odIviceDoRupe} mm</b></div>
-    <div style="margin-top:4px;padding-top:4px;border-top:1px solid #ebe7db">
-      ★ UKUPNO LED: <b style="font-size:14px">${R.led.svetalaUkupno} kom</b></div></div></div>`;
+  if(R.led.svetalaPoKornizu > 0){
+    // Vizuelna mapa rupa
+    const dk = R.kornis.duzKornisa;
+    const nR = R.led.svetalaPoKornizu;
+    const razmak = R.led.razmakRupa;
+    const odIvice = R.led.odIviceDoRupe;
+    const barW = Math.min(560, dk/10); // px (scale: 1mm = 0.1px)
+    const scale = barW / dk;
+    let dotHtml = '';
+    for(let r=0; r<nR; r++){
+      const px = Math.round((odIvice + r*razmak) * scale);
+      dotHtml += `<div style="position:absolute;left:${px}px;top:50%;transform:translate(-50%,-50%);">
+        <div style="width:8px;height:8px;border-radius:50%;background:#a9743c;border:2px solid #fff;"></div>
+        <div style="font-size:7px;color:#8a5d2e;text-align:center;margin-top:1px;font-family:'Spline Sans Mono',monospace;white-space:nowrap;">${odIvice+r*razmak}</div>
+      </div>`;
+    }
+    html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
+      <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
+        BUŠENJE RUPA ZA LED — korniši sa ★ (${R.cerada.tankiSvetlo} kom)</div>
+      <div>Svetala po kornišu: <b>${nR}</b> &nbsp;·&nbsp; Razmak (c–c): <b>${razmak} mm</b> &nbsp;·&nbsp; Od ivice do 1. rupe: <b>${odIvice} mm</b></div>
+      <div style="position:relative;height:36px;width:${barW}px;background:#e8e0d0;border-radius:3px;margin:8px 0 18px;border:1px solid #c9b896;">
+        ${dotHtml}
+        <div style="position:absolute;left:0;top:-14px;font-size:8px;color:#888;font-family:'Spline Sans Mono',monospace;">0</div>
+        <div style="position:absolute;right:0;top:-14px;font-size:8px;color:#888;font-family:'Spline Sans Mono',monospace;">${dk} mm</div>
+      </div>
+      <div style="margin-top:4px;padding-top:4px;border-top:1px solid #ebe7db">
+        ★ UKUPNO LED: <b style="font-size:14px">${R.led.svetalaUkupno} kom</b></div>
+    </div></div>`;
+  }
 
   /* 05 — ČELIČNA KONSTRUKCIJA */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n">05</span>
@@ -1701,7 +1781,7 @@ const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
 
 const ARCH_KEY = 'ag_arhiva';
 const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stub',
-  'sirinaRaja','keder','kornisTip','cevMotora','bojaRal','bojaCerade',
+  'sirinaRaja','kornisVrsta','cevMotora','bojaRal','bojaCerade',
   'autoInterval','brIntervala','svetalaPoKornizu','motor','celicnaOn',
   'parapetOn','parapetVisina',
   'brNaloga','kupac','adresa','datum','rok','radnik'];
@@ -1837,6 +1917,11 @@ async function loadOrder(id){
   }
 
   if(!fields) return;
+  // backward compat: stari nalozi imaju keder+kornisTip, novi kornisVrsta
+  if(!fields.kornisVrsta && fields.keder && fields.kornisTip){
+    const o = fields.keder==='dvostrani', s = fields.kornisTip==='sečeni';
+    fields.kornisVrsta = (o?(s?'TOJ':'TOS'):(s?'TJS':'TJ1')); // approximate mapping
+  }
   ARCH_FIELDS.forEach(fid=>{
     const el = document.getElementById(fid);
     if(!el) return;
@@ -1882,7 +1967,7 @@ function trazeniProfili(){
     sirina:$("sirina").value, dubina:$("dubina").value,
     zadnjaVisina:$("zadnjaVisina").value, prednjaVisina:$("prednjaVisina").value,
     cev:$("cev").value, stub:$("stub").value, sirinaRaja:$("sirinaRaja").value,
-    keder:$("keder").value, kornisTip:$("kornisTip").value, cevMotora:$("cevMotora").value,
+    kornisVrsta:$("kornisVrsta").value, cevMotora:$("cevMotora").value,
     autoInterval:$("autoInterval").checked, brIntervala:$("brIntervala").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value, celicnaOn:$("celicnaOn").checked,
     parapetOn:$("parapetOn").checked, parapetVisina:$("parapetVisina").value,
