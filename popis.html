@@ -369,35 +369,52 @@ async function loadState(){
   }
 }
 
-async function saveState(){
-  localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // uvek keš, nikad ne gubi
+async function syncToServer(){
   const el = document.getElementById('autoSaveTxt');
   el.textContent = '⏳ Čuvam...';
   el.style.color = '';
+  const snapshot = JSON.parse(JSON.stringify(STATE)); // tačan snimak u ovom trenutku
   try {
     const res = await fetch(API_URL+'/magacin.php?action=setall', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Api-Key': API_KEY},
-      body: JSON.stringify({state: STATE})
+      body: JSON.stringify({state: snapshot})
     });
     const json = await res.json();
     if(json.ok){
       el.textContent = '✓ Server ' + now();
       el.style.color = 'var(--ok)';
     } else {
-      el.textContent = '⚠ Lokalno ' + now();
+      el.textContent = '⚠ Greška servera ' + now();
       el.style.color = '#e0a040';
     }
   } catch(e){
-    el.textContent = '📴 Lokalno — nema interneta! ' + now();
+    el.textContent = '📴 Samo lokalno — bez interneta! ' + now();
     el.style.color = '#e07070';
   }
+}
+
+async function saveState(){
+  // lokalno odmah (poziva se iz loadState/init putanje)
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE));
+  await syncToServer();
 }
 function now(){
   return new Date().toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'});
 }
 function getItem(sifra){ return STATE[sifra] || null; }
-function setItem(sifra, data){ STATE[sifra]=data; saveState(); updateProgress(); }
+function setItem(sifra, data){
+  STATE[sifra] = data;
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE)); // odmah lokalno — nikad ne čeka
+  scheduleSync();   // server: pošalji 1.5s posle poslednje promene
+  updateProgress();
+}
+
+let _syncTimer = null;
+function scheduleSync(){
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToServer, 1500);
+}
 
 /* ═══════════════════════════════════════════
    CUSTOM ARTIKLI — iz baze + localStorage keš
@@ -857,7 +874,8 @@ function toggleSek(id){
    SAVE / EXPORT
 ═══════════════════════════════════════════ */
 function manualSave(){
-  saveState();
+  clearTimeout(_syncTimer); // otkaži pending debounce, sačuvaj odmah
+  syncToServer();
   showToast('✓ Sačuvano');
 }
 function showToast(msg){
