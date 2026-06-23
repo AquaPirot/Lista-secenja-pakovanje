@@ -586,7 +586,7 @@ function compute(I){
   // Obostrani keder:   jednodelni = širina − 100
   // Sečeni: jednostrani (širina−50)/2 · obostrani (širina−150)/2
   const duzKornisa = kvSeceni
-    ? (kvObostrani ? round((D-150)/2,0) : round(D/2,0))
+    ? (kvObostrani ? round((D-150)/2,0) : round((D-50)/2,0))
     : (kvObostrani ? D - 100 : D);
   const kornisKomPoPoz = kvSeceni ? 2 : 1;
 
@@ -649,7 +649,7 @@ function compute(I){
   // (kod dvostranog rupe postoje u umetcima, korniš se ne buši)
   // Po jedna rupa za svaki raj: 45mm od obe ivice, ostale ravnomerno između.
   let kolicaRupe = [];
-  if(keder==="jednostrani" && brRaja>=2){
+  if(keder==="jednostrani" && !kvSeceni && brRaja>=2){
     const m = 45;
     if(brRaja===2) kolicaRupe = [m, duzKornisa-m];
     else {
@@ -1166,6 +1166,9 @@ function renderNalog(I, R, alu, okov){
       <div>45 mm od obe ivice${R.kolica.rupe.length>2?', ostale ravnomerno između':''}</div>
       ${rupeBar(L, R.kolica.rupe, '#3f7a4d')}
     </div>`;
+  } else if(R.kornis.kvSeceni && R.kornis.keder==="jednostrani"){
+    html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8;color:#5a5446">
+      Rupe za kolica — sečeni korniš: svaki komad se buši na jednu stranu (45mm od ivice), srednja rupa se buši u konektoru.</div>`;
   } else if(R.kornis.keder==="dvostrani"){
     html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8;color:#5a5446">
       Rupe za kolica se NE buše — dvostrani keder, kolica idu kroz rupe u umetcima.</div>`;
@@ -1435,7 +1438,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.9";
+const APP_VER = "v2026-06-11.10";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
