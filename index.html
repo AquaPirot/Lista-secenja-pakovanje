@@ -554,7 +554,8 @@ function compute(I){
   const cev=I.cev, sirinaRaja=+I.sirinaRaja||90;
   const cevHoriz = cev==="100x100"?100:cev==="80x40"?40:0;
 
-  const brStubova = D<=3900?2:D<=7800?3:D<=10000?4:0;
+  const MAX_RAZMAK_RAJA = 4150;
+  const brStubova = Math.max(2, Math.ceil((D + MAX_RAZMAK_RAJA) / (MAX_RAZMAK_RAJA + sirinaRaja)));
   const brRaja=brStubova, brPolja=Math.max(0,brRaja-1);
   const sirinaPolja = brPolja?round((D-brRaja*sirinaRaja)/brPolja,0):0;
   const preko10m = D>10000;
@@ -1434,7 +1435,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.7";
+const APP_VER = "v2026-06-11.8";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
