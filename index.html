@@ -1438,7 +1438,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.10";
+const APP_VER = "v2026-06-11.11";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -2260,8 +2260,10 @@ function trazeniProfili(){
 }
 
 function planirajSecenje(trazeni, magacin){
-  // Optimizovano sečenje: FFD bin-packing po šipki
-  // Svaka šipka prima max moguće komade (od najvećeg naniže) pre nego što se uzme sledeća
+  // Optimizovano sečenje — BEST FIT DECREASING:
+  // za svaki rez biramo šipku koja ostavlja NAJMANJI otpad (ne uvek najveću).
+  // Tako se npr. rez 5500 seče iz šipke 5500 (0 otpada), a ne iz 7500 (2000 otpada),
+  // ako 5500 postoji na stanju.
   const stanje = {};
   for(const s in magacin){
     if(magacin[s].komadi) stanje[s] = magacin[s].komadi.map(k=>+k.duzina).filter(d=>d>0);
@@ -2279,40 +2281,47 @@ function planirajSecenje(trazeni, magacin){
 
   for(const sifra in bySifra){
     const {naziv, cuts} = bySifra[sifra];
-    cuts.sort((a, b) => b - a);  // najveći prvi (FFD)
-    const stock = (stanje[sifra] || []).slice().sort((a, b) => b - a);
+    cuts.sort((a, b) => b - a);  // najveći rez prvi
     const prag = getOtpadPrag(sifra);
-    const remaining = cuts.slice();
+    const stockPool = (stanje[sifra] || []).slice();  // neotvorene šipke na stanju
+    const open = [];   // šipke koje već sečemo: {stockLen, remaining, cuts:[]}
+    const unmet = [];
 
-    stock.forEach(stockLen => {
-      if(!remaining.length) return;
-      const cutsDone = [];
-      let leftover = stockLen;
-      let changed = true;
-      // Pohlepno: ubaci što više komada (od najvećeg) u ovu šipku
-      while(changed && remaining.length > 0){
-        changed = false;
-        for(let i = 0; i < remaining.length; i++){
-          if(remaining[i] <= leftover){
-            leftover -= remaining[i];
-            cutsDone.push(remaining[i]);
-            remaining.splice(i, 1);
-            changed = true;
-            break;  // počni ponovo od najvećeg preostalog
-          }
-        }
-      }
-      if(cutsDone.length > 0){
-        const vracaSe = leftover >= prag;
-        koraci.push({sifra, naziv, stockLen, cuts: cutsDone, ostatak: leftover, vracaSe, prag});
-        const idx = stanje[sifra].indexOf(stockLen);
-        if(idx !== -1) stanje[sifra].splice(idx, 1);
-        if(vracaSe) stanje[sifra].push(leftover);
-        stanje[sifra].sort((a, b) => b - a);
+    cuts.forEach(c => {
+      // 1) najbolja VEĆ OTVORENA šipka (najmanji ostatak nakon reza)
+      let bo = -1, boLeft = Infinity;
+      open.forEach((b, i) => {
+        if(b.remaining >= c && b.remaining - c < boLeft){ boLeft = b.remaining - c; bo = i; }
+      });
+      // 2) najbolja NOVA šipka sa stanja (najmanji ostatak nakon reza)
+      let bs = -1, bsLeft = Infinity;
+      stockPool.forEach((len, i) => {
+        if(len >= c && len - c < bsLeft){ bsLeft = len - c; bs = i; }
+      });
+
+      if(bo === -1 && bs === -1){ unmet.push(c); return; }
+
+      // biramo najmanji otpad; pri izjednačenju koristimo već otvorenu šipku
+      if(bo !== -1 && (bs === -1 || boLeft <= bsLeft)){
+        open[bo].remaining -= c;
+        open[bo].cuts.push(c);
+      } else {
+        const len = stockPool.splice(bs, 1)[0];
+        open.push({stockLen: len, remaining: len - c, cuts: [c]});
       }
     });
 
-    remaining.forEach(duzina => nedostaje.push({sifra, naziv, duzina}));
+    // otvorene šipke → koraci; ostaci preko praga se vraćaju na stanje
+    const noviStock = stockPool.slice();
+    open.forEach(b => {
+      const vracaSe = b.remaining >= prag;
+      koraci.push({sifra, naziv, stockLen: b.stockLen, cuts: b.cuts, ostatak: b.remaining, vracaSe, prag});
+      if(vracaSe) noviStock.push(b.remaining);
+    });
+    noviStock.sort((a, b) => b - a);
+    stanje[sifra] = noviStock;
+
+    unmet.forEach(duzina => nedostaje.push({sifra, naziv, duzina}));
   }
 
   return {koraci, nedostaje, novoStanje: stanje};
