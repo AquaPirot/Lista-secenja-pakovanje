@@ -338,7 +338,7 @@
     <div class="row">
       <div class="auto-box">
         <label><input type="checkbox" id="autoInterval" checked>
-          Auto-uklapanje intervala korniša (razmak 350–415mm)</label>
+          Auto-uklapanje intervala korniša (razmak 399–499mm)</label>
         <span class="auto-stat" id="autoStat">—</span>
       </div>
       <label><div class="lbl">Broj intervala korniša</div><div class="sub" id="intervalSub">auto-predlog</div>
@@ -438,9 +438,9 @@ function suggestIntervala(korisna){
   let best=1,bestScore=Infinity;
   for(let n=1;n<=40;n++){
     const r=korisna/n; let score;
-    if(r>=350&&r<=415) score=Math.abs(r-382);
-    else if(r>415) score=1e5+(r-415);
-    else score=1e5+(350-r)*2;
+    if(r>=399&&r<=499) score=Math.abs(r-449);
+    else if(r>499) score=1e5+(r-499);
+    else score=1e5+(399-r)*2;
     if(score<bestScore){bestScore=score;best=n;}
   }
   return best;
@@ -571,7 +571,7 @@ function compute(I){
   const predlogIntervala = suggestIntervala(korisnaZaKornize);
   const brIntervala = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
   const razmakKornisa = brIntervala?round(korisnaZaKornize/brIntervala,0):0;
-  const razmakOk = razmakKornisa>=350&&razmakKornisa<=415;
+  const razmakOk = razmakKornisa>=399&&razmakKornisa<=499;
   const kornisaUkupno = brIntervala+1;
   const debeli=2, tanki=Math.max(0,kornisaUkupno-2);
   const tankiSvetlo=ceil(tanki/2), tankiBez=tanki-tankiSvetlo;
@@ -1016,7 +1016,7 @@ function renderNalog(I, R, alu, okov){
         <div>Rezerva uz zid: <b>470 mm</b> (400 + 70)</div></div>
       <div class="${R.cerada.razmakOk?'note-ok':'note-warn'}">
         <b style="color:${R.cerada.razmakOk?'#3f7a4d':'#bd4a2a'}">${R.cerada.razmakOk?'✓':'⚠'} Razmak ${R.cerada.razmakKornisa} mm</b> —
-        ${R.cerada.razmakOk?'u opsegu 350–415mm.':'van opsega 350–415mm — promeni broj intervala.'}</div>
+        ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}</div>
       ${R.splice.spliceNeeded ? (() => {
         let inner;
         if(!R.splice.spliceOk){
@@ -1212,7 +1212,7 @@ function renderNalog(I, R, alu, okov){
     <h3 class="sec-t">Napomene za radnika</h3></div>
     <ol class="napomene">
       <li>Cerada: prvi keder na <b>100mm</b> od prednje ivice, rezerva uz zid <b>470mm</b>.</li>
-      <li>Razmak kedera mora biti <b>350–415mm</b> — program uklapa automatski.</li>
+      <li>Razmak kedera mora biti <b>399–499mm</b> — program uklapa automatski.</li>
       <li>Debeli korniši: prvi i poslednji, bez rupa. Tanki sa svetlom: naizmenično.</li>
       ${I.cev!=="nema"?`<li>Cev na zidu se prvo učvrsti na zid — na nju se montira pergola.</li>`:''}
       <li>Rupe za LED se buše <b>samo</b> na tankim kornišima sa ★.</li>
@@ -1435,7 +1435,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.8";
+const APP_VER = "v2026-06-11.9";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
