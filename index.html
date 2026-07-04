@@ -289,6 +289,8 @@
         <input type="number" id="zadnjaVisina" value="2650"></label>
       <label><div class="lbl">Prednja visina</div><div class="sub">pod do oluka</div>
         <input type="number" id="prednjaVisina" value="2150"></label>
+      <label><div class="lbl">Broj komada</div><div class="sub">istih pergola u nalogu</div>
+        <input type="number" id="brKomada" value="1" min="1"></label>
     </div>
     <div class="row" id="parapetSection" style="margin-top:8px">
       <div class="auto-box" style="grid-column:1/-1">
@@ -532,7 +534,7 @@ const KATALOG = [
   // FITILJI / GUMENE TRAKE — metri
   {grupa:"fitilj", img:"fit_PRG102", sifra:"PRG-102", naziv:"Fitilj / keder šine", fn:c=>round(c.raja*c.duzRaja/1000*2,1), opis:"raja × dužina raja × 2", cena:0.35, jed:"m"},
   {grupa:"fitilj", img:"fit_PRG104", sifra:"PRG-104", naziv:"Fitilj / keder oluka", fn:c=>round(c.duzOluka/1000,1), opis:"dužina oluka", cena:0.35, jed:"m"},
-  {grupa:"fitilj", img:"fit_PRG101", sifra:"PRG-101", naziv:"Fitilj / keder cerade — korniš", fn:c=>round(c.kornisaUkupno*c.duzKornisa/1000,1), opis:"sve korniše (tanki + debeli) × dužina korniša", cena:0.35, jed:"m"},
+  {grupa:"fitilj", img:"fit_PRG101", sifra:"PRG-101", naziv:"Fitilj / keder cerade — korniš", fn:c=>round(c.kornisaUkupno*c.sirinaCerade/1000,1), opis:"broj korniša × puna širina cerade", cena:0.35, jed:"m"},
   {grupa:"fitilj", img:"fit_PRG103", sifra:"PRG-103", naziv:"Fitilj kabla", fn:c=>round(2*c.korisnaCerade/1000,1), opis:"2 × korisna dužina cerade (od 1. do zadnjeg kedera)", cena:0.32, jed:"m"},
   {grupa:"fitilj", img:"fit_PRG105", sifra:"PRG-105", naziv:"T10×16 zupčasti kaiš", fn:c=>round(c.raja*(2*c.duzRaja+500)/1000,1), opis:"raja × (2 × dužina raja + 500mm)", cena:1.55, jed:"m"},
 
@@ -699,7 +701,7 @@ function applyOkov(R, I){
     kornisaUkupno:R.cerada.kornisaUkupno, debeli:R.cerada.debeli, tanki:R.cerada.tanki,
     tankiSvetlo:R.cerada.tankiSvetlo, svetla:R.led.svetalaUkupno, cevMotora:R.profili2.brCevMotora,
     duzRaja:R.raj.duzRaja, duzOluka:R.profili2.duzOluka, duzKornisa:R.kornis.duzKornisa,
-    sirina:R.in.D,
+    sirina:R.in.D, sirinaCerade:R.cerada.sirinaCerade,
     kornisSeceni: R.kornis.kornisTip === "sečeni",
     keder: R.kornis.keder,
     kederJednostrani: R.kornis.keder === "jednostrani",
@@ -709,11 +711,13 @@ function applyOkov(R, I){
   const txt  = {raj:"× broj raja ("+c.raja+")", stub:"× broj stubova ("+c.stubova+")",
                 kornis:"× ukupno korniša ("+c.kornisaUkupno+")", svetlo:"× LED svetala ("+c.svetla+")", fiksno:"fiksno"};
 
+  // Broj istih pergola u nalogu — sve količine se množe
+  const nKom = Math.max(1, Math.round(+I.brKomada) || 1);
   return KATALOG.map(it => {
     let kol, pravilo;
     if(it.fn) { kol = it.fn(c); pravilo = it.opis; }
     else { kol = (baze[it.pravilo] ?? 0) * (it.m ?? 1); pravilo = (it.m && it.m !== 1 ? it.m + " " : "") + txt[it.pravilo]; }
-    kol = round(kol, it.jed === "m" ? 1 : 0);
+    kol = round(kol * nKom, it.jed === "m" ? 1 : 0);
     return Object.assign({}, it, { kol, pravilo, ukupno: round(kol * it.cena, 2) });
   });
 }
@@ -742,8 +746,11 @@ function aluCalc(I, R){
     {key:"ksv",      prof:kProfTanki,             naziv:"★ "+kProfTanki.nazivSr+" — sa svetlom", mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
     {key:"kbez",     prof:kProfTanki,             naziv:"★ "+kProfTanki.nazivSr+" — bez svetla", mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
   ];
+  // Broj istih pergola u nalogu — sve količine se množe
+  const nKom = Math.max(1, Math.round(+I.brKomada) || 1);
   let totalKg = 0, totalEur = 0;
   items.forEach(it => {
+    it.kom = it.kom * nKom;
     it.metaraUk = round((it.mera/1000) * it.kom, 2);
     it.kg = round(it.metaraUk * it.prof.kgm, 2);
     it.cena = round(it.kg * ALU_PRICE_PER_KG, 2);
@@ -754,7 +761,9 @@ function aluCalc(I, R){
 
 /* ───────── OBRAČUN — ukupno ───────── */
 function obracunCalc(I, R, alu, okov){
-  const m2cerade = round(R.cerada.sirinaCerade * R.cerada.duzCerade / 1e6, 2);
+  // Broj istih pergola u nalogu (alu i okov su već pomnoženi u aluCalc/applyOkov)
+  const nKom = Math.max(1, Math.round(+I.brKomada) || 1);
+  const m2cerade = round(R.cerada.sirinaCerade * R.cerada.duzCerade / 1e6 * nKom, 2);
   const ceradaCena = round(m2cerade * CERADA_PER_M2, 2);
 
   // Razdvojimo okov po grupama za prikaz
@@ -765,20 +774,20 @@ function obracunCalc(I, R, alu, okov){
   const ledEur      = sumByGroup("led");
 
   // Cev na zidu — dužina = širina pergole, cena kao čelična cev (1100 RSD/m)
-  const cevNaZiduM   = I.cev==="nema" ? 0 : round(R.in.D / 1000, 2);
+  const cevNaZiduM   = I.cev==="nema" ? 0 : round(R.in.D / 1000 * nKom, 2);
   const cevNaZiduEur = round(cevNaZiduM * CELIK_CEV_PER_M_EUR, 2);
 
   // Trapezni lim 125×80 — broj komada × 1 m² po komadu (1,25 × 0,80 = 1 m²)
-  const trapezniLimKom = R.profili2.limKom;
+  const trapezniLimKom = R.profili2.limKom * nKom;
   const trapezniLimM2  = round(trapezniLimKom * 1.25 * 0.80, 2);
   const trapezniLimEur = round(trapezniLimM2 * TRAPEZ_LIM_PER_M2_EUR, 2);
 
   const elek = {
-    motor: MOTOR_PRICE,
-    daljinski: DALJINSKI_PRICE,
-    dimer: DIMER_PRICE,
-    trafo: R.led.trafoCena,
-    led: ledEur, // već iz katalog (LED + kabl)
+    motor: MOTOR_PRICE * nKom,
+    daljinski: DALJINSKI_PRICE * nKom,
+    dimer: DIMER_PRICE * nKom,
+    trafo: R.led.trafoCena * nKom,
+    led: ledEur, // već iz katalog (LED + kabl) — pomnoženo u applyOkov
   };
   const elekTotal = round(elek.motor + elek.daljinski + elek.dimer + elek.trafo + elek.led, 2);
 
@@ -787,23 +796,25 @@ function obracunCalc(I, R, alu, okov){
   if (I.celicnaOn) {
     const valid = steelRows.filter(r => (+r.kom>0) && (+r.duzina>0));
     valid.forEach(r => { celicnaM += (+r.kom * +r.duzina) / 1000; });
-    celicnaM   = round(celicnaM, 2);
+    celicnaM   = round(celicnaM * nKom, 2);
     celicnaEur = round(celicnaM * CELIK_CEV_PER_M_EUR, 2);
   }
 
+  const srafovi = round(SRAFOVI_PAUSAL * nKom, 2);
   const subtotal = round(
     alu.totalEur + ceradaCena + plastikaEur + metalEur + fitiljEur +
-    cevNaZiduEur + trapezniLimEur + elekTotal + SRAFOVI_PAUSAL + celicnaEur,
+    cevNaZiduEur + trapezniLimEur + elekTotal + srafovi + celicnaEur,
   2);
 
   return {
+    nKom,
     alu: alu.totalEur, aluKg: alu.totalKg,
     cerada: ceradaCena, m2cerade,
     plastika: plastikaEur, metal: metalEur, fitilj: fitiljEur,
     cevNaZiduM, cevNaZiduEur,
     trapezniLimKom, trapezniLimM2, trapezniLimEur,
     elek, elekTotal,
-    srafovi: SRAFOVI_PAUSAL,
+    srafovi,
     celicnaM, celicnaEur,
     subtotal,
   };
@@ -899,7 +910,7 @@ function profCell(prof){
 function render(){
   const I={
     sirina:$("sirina").value,dubina:$("dubina").value,zadnjaVisina:$("zadnjaVisina").value,
-    prednjaVisina:$("prednjaVisina").value,cev:$("cev").value,stub:$("stub").value,
+    prednjaVisina:$("prednjaVisina").value,brKomada:$("brKomada").value,cev:$("cev").value,stub:$("stub").value,
     kederTip:$("kederTip").value,kornisSklop:$("kornisSklop").value,sirinaRaja:$("sirinaRaja").value,
     cevMotora:$("cevMotora").value,bojaRal:$("bojaRal").value,bojaCerade:$("bojaCerade").value,
     autoInterval:$("autoInterval").checked,brIntervala:$("brIntervala").value,
@@ -946,6 +957,7 @@ function renderNalog(I, R, alu, okov){
   const cMap = ceradaMap(R);
   const autoOn = +I.autoInterval || $("autoInterval").checked;
   const bojaTxt = I.bojaRal ? ("RAL " + I.bojaRal) : "(po izboru)";
+  const nK = Math.max(1, Math.round(+I.brKomada) || 1);
 
   let html = "";
   html += `<div class="doc-head">
@@ -966,7 +978,7 @@ function renderNalog(I, R, alu, okov){
         Cev: <b>${esc(I.cev)}</b> · Stub: <b>${esc(I.stub)}</b> · Šina: <b>${esc(I.sirinaRaja)}×150 mm</b><br>
         Keder: <b>${R.kornis.kvObostrani ? 'Obostrani' : 'Jednostrani'}</b><br>
         <b>Boja (sve): ${esc(bojaTxt)}</b> · Cerada: <b>${esc(I.bojaCerade)}</b><br>
-        Sklop korniša: <b>${R.kornis.kvSeceni ? 'Sečeni' : 'Jednodelni'}</b></div></div></div>`;
+        Sklop korniša: <b>${R.kornis.kvSeceni ? 'Sečeni' : 'Jednodelni'}</b>${nK>1?`<br><b style="color:#bd4a2a">⚠ BROJ KOMADA: ${nK} — sve količine ×${nK}</b>`:''}</div></div></div>`;
 
   const dims=[["D · Širina",R.in.D],["B · Dubina",R.in.B],["A · Zadnja",R.in.A],["C · Prednja",R.in.C]];
   if(R.in.parapetVis>0) dims.push(["↕ Zidić",R.in.parapetVis]);
@@ -1007,7 +1019,7 @@ function renderNalog(I, R, alu, okov){
     <div class="cerada-wrap"><div>
       <div class="box-cut"><div class="box-cut-t">MERA ZA KROJENJE</div>
         <div class="box-cut-v">${R.cerada.sirinaCerade} × ${R.cerada.duzCerade}</div>
-        <div style="font-size:10px;color:#888">širina × dužina (mm) · 1 kom</div></div>
+        <div style="font-size:10px;color:#888">širina × dužina (mm) · ${nK} kom</div></div>
       <div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
         <div>Broj kedera: <b>${R.cerada.kornisaUkupno}</b></div>
         <div>Intervala: <b>${R.cerada.brIntervala}</b> ${autoOn?'(auto)':'(ručno)'}</div>
@@ -1288,7 +1300,7 @@ function renderObracun(I, R, alu, okov, obr){
     <h3 class="sec-t">Cerada (${CERADA_PER_M2.toFixed(2)} €/m²)</h3></div>
     <table><tbody>
     <tr>
-      <td><b>Cerada ${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} mm</b><div style="font-size:10px;color:#888">Boja: ${esc(I.bojaCerade)}</div></td>
+      <td><b>Cerada ${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} mm</b><div style="font-size:10px;color:#888">Boja: ${esc(I.bojaCerade)}${obr.nKom>1?` · × ${obr.nKom} kom`:''}</div></td>
       <td class="m" style="width:90px;text-align:right">${obr.m2cerade} m²</td>
       <td class="m euro" style="width:90px;text-align:right;font-weight:700">${eur(obr.cerada)}</td>
     </tr></tbody></table></div>`;
@@ -1331,21 +1343,21 @@ function renderObracun(I, R, alu, okov, obr){
     <h3 class="sec-t">Elektronika</h3></div>
     <table><tbody>
       <tr><td><b>Motor</b><div style="font-size:10px;color:#888">${esc((I.motor||"").trim()||"po izboru")}</div></td>
-        <td class="m" style="width:90px;text-align:right">1 kom</td>
+        <td class="m" style="width:90px;text-align:right">${obr.nKom} kom</td>
         <td class="m" style="width:64px;text-align:right">${eur(MOTOR_PRICE)}</td>
-        <td class="m euro" style="width:80px;text-align:right;font-weight:700">${eur(MOTOR_PRICE)}</td></tr>
+        <td class="m euro" style="width:80px;text-align:right;font-weight:700">${eur(obr.elek.motor)}</td></tr>
       <tr style="background:#ebe7db"><td><b>Daljinski upravljač</b></td>
-        <td class="m" style="text-align:right">1 kom</td>
+        <td class="m" style="text-align:right">${obr.nKom} kom</td>
         <td class="m" style="text-align:right">${eur(DALJINSKI_PRICE)}</td>
-        <td class="m euro" style="text-align:right;font-weight:700">${eur(DALJINSKI_PRICE)}</td></tr>
+        <td class="m euro" style="text-align:right;font-weight:700">${eur(obr.elek.daljinski)}</td></tr>
       <tr><td><b>Trafo ${R.led.trafo}</b><div style="font-size:10px;color:#888">${R.led.potrosnja}A potrošnja</div></td>
-        <td class="m" style="text-align:right">1 kom</td>
+        <td class="m" style="text-align:right">${obr.nKom} kom</td>
         <td class="m" style="text-align:right">${eur(R.led.trafoCena)}</td>
-        <td class="m euro" style="text-align:right;font-weight:700">${eur(R.led.trafoCena)}</td></tr>
+        <td class="m euro" style="text-align:right;font-weight:700">${eur(obr.elek.trafo)}</td></tr>
       <tr style="background:#ebe7db"><td><b>Dimer</b></td>
-        <td class="m" style="text-align:right">1 kom</td>
+        <td class="m" style="text-align:right">${obr.nKom} kom</td>
         <td class="m" style="text-align:right">${eur(DIMER_PRICE)}</td>
-        <td class="m euro" style="text-align:right;font-weight:700">${eur(DIMER_PRICE)}</td></tr>`;
+        <td class="m euro" style="text-align:right;font-weight:700">${eur(obr.elek.dimer)}</td></tr>`;
   ledItems.forEach((s,i)=>{
     html += `<tr style="background:${(i+4)%2?'#ebe7db':'transparent'}">
       <td><b>${esc(s.naziv)}</b><div style="font-size:10px;color:#888">${esc(s.pravilo)}</div></td>
@@ -1361,8 +1373,8 @@ function renderObracun(I, R, alu, okov, obr){
   html += `<div class="sec"><div class="sec-h"><span class="sec-n">07</span>
     <h3 class="sec-t">Vijci i pakovanje (paušal)</h3></div>
     <table><tbody>
-      <tr><td><b>Vijci, navrtke, podloške + pakovanje (folija, ćoškovi, traka)</b></td>
-        <td class="m euro" style="width:90px;text-align:right;font-weight:700">${eur(SRAFOVI_PAUSAL)}</td></tr>
+      <tr><td><b>Vijci, navrtke, podloške + pakovanje (folija, ćoškovi, traka)</b>${obr.nKom>1?`<div style="font-size:10px;color:#888">× ${obr.nKom} pergole</div>`:''}</td>
+        <td class="m euro" style="width:90px;text-align:right;font-weight:700">${eur(obr.srafovi)}</td></tr>
     </tbody></table></div>`;
 
   /* 08 — Bravarija: cev na zidu + trapezni lim */
@@ -1438,7 +1450,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.12";
+const APP_VER = "v2026-06-11.13";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -2057,7 +2069,7 @@ const API_URL = 'https://app.aggroup.rs/api';
 const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
 
 const ARCH_KEY = 'ag_arhiva';
-const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','cev','stub',
+const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada','cev','stub',
   'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade',
   'autoInterval','brIntervala','svetalaPoKornizu','motor','celicnaOn',
   'parapetOn','parapetVisina',
@@ -2208,6 +2220,8 @@ async function loadOrder(id){
     if(el.type==='checkbox') el.checked = !!fields[fid];
     else el.value = fields[fid]??'';
   });
+  // stari nalozi nemaju brKomada — podrazumevano 1
+  if(!fields.brKomada) $("brKomada").value = 1;
   if(fields._steelRows){ steelRows=JSON.parse(fields._steelRows); renderSteelInputs(); }
   render();
   closeArchive();
@@ -2246,6 +2260,7 @@ function trazeniProfili(){
   const I = {
     sirina:$("sirina").value, dubina:$("dubina").value,
     zadnjaVisina:$("zadnjaVisina").value, prednjaVisina:$("prednjaVisina").value,
+    brKomada:$("brKomada").value,
     cev:$("cev").value, stub:$("stub").value, sirinaRaja:$("sirinaRaja").value,
     kederTip:$("kederTip").value,kornisSklop:$("kornisSklop").value, cevMotora:$("cevMotora").value,
     autoInterval:$("autoInterval").checked, brIntervala:$("brIntervala").value,
