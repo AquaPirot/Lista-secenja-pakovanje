@@ -566,7 +566,7 @@ function compute(I){
   const dijagonala = round(Math.sqrt(kat1*kat1+kat2*kat2),0);
   const duzRaja = dijagonala-200;
 
-  const sirinaCerade=D-20, duzCerade=dijagonala+400;
+  const sirinaCerade=D-10, duzCerade=dijagonala+400;
   const korisnaZaKornize = dijagonala-100-70;
   const predlogIntervala = suggestIntervala(korisnaZaKornize);
   const brIntervala = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
@@ -964,9 +964,9 @@ function renderNalog(I, R, alu, okov){
     <div class="card"><div class="card-t">KONFIGURACIJA</div>
       <div class="mono" style="font-size:11px;margin-top:3px;line-height:1.65">
         Cev: <b>${esc(I.cev)}</b> · Stub: <b>${esc(I.stub)}</b> · Šina: <b>${esc(I.sirinaRaja)}×150 mm</b><br>
-        Korniš: <b>${esc(R.kornis.tipSklopa)}</b><br>
+        Keder: <b>${R.kornis.kvObostrani ? 'Obostrani' : 'Jednostrani'}</b><br>
         <b>Boja (sve): ${esc(bojaTxt)}</b> · Cerada: <b>${esc(I.bojaCerade)}</b><br>
-        Sklop korniša: <b>${esc(R.kornis.tipSklopa)}</b></div></div></div>`;
+        Sklop korniša: <b>${R.kornis.kvSeceni ? 'Sečeni' : 'Jednodelni'}</b></div></div></div>`;
 
   const dims=[["D · Širina",R.in.D],["B · Dubina",R.in.B],["A · Zadnja",R.in.A],["C · Prednja",R.in.C]];
   if(R.in.parapetVis>0) dims.push(["↕ Zidić",R.in.parapetVis]);
@@ -1438,7 +1438,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.11";
+const APP_VER = "v2026-06-11.12";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
