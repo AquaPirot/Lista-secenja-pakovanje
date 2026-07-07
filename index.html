@@ -99,7 +99,8 @@
   td.m{font-family:'Spline Sans Mono',monospace;font-weight:500;}
   .grp-t{font-family:'Fjalla One',sans-serif;font-size:12px;color:var(--bronzeD);letter-spacing:.04em;margin:10px 0 1px;}
   .chk{width:14px;height:14px;border:1.5px solid #9a927c;border-radius:3px;display:inline-block;}
-  .thumb{width:54px;height:32px;object-fit:contain;background:#fff;border:1px solid #d8d1bd;border-radius:3px;padding:1px;display:block;}
+  .thumb{width:68px;height:50px;object-fit:contain;background:#fff;border:1px solid #d8d1bd;border-radius:4px;padding:2px;display:block;cursor:zoom-in;}
+  @media(max-width:640px){.thumb{width:58px;height:44px;}}
 
   .box-cut{border:2px solid var(--ink);border-radius:6px;padding:10px 12px;}
   .box-cut-t{font-family:'Fjalla One',sans-serif;font-size:11px;letter-spacing:.05em;}
@@ -902,7 +903,32 @@ function switchView(v){
 
 function imgTag(key, alt){
   if(!key || !IMG[key]) return '';
-  return `<img class="thumb" src="${IMG[key]}" alt="${esc(alt||'')}">`;
+  return `<img class="thumb" src="${IMG[key]}" alt="${esc(alt||'')}" onclick="pokaziSliku(this)">`;
+}
+// Tap na sličicu → uvećan prikaz preko celog ekrana (za telefon u pogonu)
+function pokaziSliku(img){
+  $("imgZoomPic").src = img.src;
+  $("imgZoomCap").textContent = img.alt || '';
+  $("imgZoom").style.display = 'flex';
+}
+// RAL boje — naziv + uzorak za prikaz u nalogu
+const RAL_INFO = {
+  "7016":{naziv:"Antracit siva",  hex:"#293133"},
+  "9005":{naziv:"Crna",           hex:"#0A0A0A"},
+  "9006":{naziv:"Srebrna",        hex:"#A5A5A5"},
+  "8019":{naziv:"Sivo-braon",     hex:"#403A3A"},
+  "9010":{naziv:"Bela",           hex:"#F1F0EA"},
+  "7035":{naziv:"Svetlo siva",    hex:"#D7D7D7"},
+  "7021":{naziv:"Crno-siva",      hex:"#23282B"},
+  "8017":{naziv:"Čokoladno braon",hex:"#45322E"},
+  "9016":{naziv:"Saobraćajno bela",hex:"#F6F6F6"},
+};
+function bojaHtml(bojaRal){
+  const kod = (bojaRal||'').trim();
+  if(!kod) return "(po izboru)";
+  const info = RAL_INFO[kod];
+  const swatch = info ? `<span style="display:inline-block;width:12px;height:12px;background:${info.hex};border:1px solid #888;border-radius:2px;vertical-align:-1px;margin-right:4px"></span>` : '';
+  return swatch + 'RAL ' + esc(kod) + (info ? ' — ' + info.naziv : '');
 }
 // Vizuelna lenta rupa: dužina L (mm), pozicije (mm od leve ivice), boja markera
 function rupeBar(L, pozicije, boja){
@@ -983,7 +1009,6 @@ function render(){
 function renderNalog(I, R, alu, okov){
   const cMap = ceradaMap(R);
   const autoOn = +I.autoInterval || $("autoInterval").checked;
-  const bojaTxt = I.bojaRal ? ("RAL " + I.bojaRal) : "(po izboru)";
   const nK = Math.max(1, Math.round(+I.brKomada) || 1);
 
   let html = "";
@@ -1004,7 +1029,7 @@ function renderNalog(I, R, alu, okov){
       <div class="mono" style="font-size:11px;margin-top:3px;line-height:1.65">
         Cev: <b>${esc(I.cev)}</b> · Stub: <b>${esc(I.stub)}</b> · Šina: <b>${esc(I.sirinaRaja)}×150 mm</b><br>
         Keder: <b>${R.kornis.kvObostrani ? 'Obostrani' : 'Jednostrani'}</b><br>
-        <b>Boja (sve): ${esc(bojaTxt)}</b> · Cerada: <b>${esc(I.bojaCerade)}</b><br>
+        <b>Boja (sve): ${bojaHtml(I.bojaRal)}</b> · Cerada: <b>${esc(I.bojaCerade)}</b><br>
         Sklop korniša: <b>${R.kornis.kvSeceni ? 'Sečeni' : 'Jednodelni'}</b>${nK>1?`<br><b style="color:#bd4a2a">⚠ BROJ KOMADA: ${nK} — sve količine ×${nK}</b>`:''}</div></div></div>`;
 
   const dims=[["D · Širina",R.in.D],["B · Dubina",R.in.B],["A · Zadnja",R.in.A],["C · Prednja",R.in.C]];
@@ -1273,7 +1298,6 @@ function renderNalog(I, R, alu, okov){
 
 /* ───────── RENDER OBRAČUN ───────── */
 function renderObracun(I, R, alu, okov, obr){
-  const bojaTxt = I.bojaRal ? ("RAL " + I.bojaRal) : "(po izboru)";
   let html = "";
   html += `<div class="doc-head">
     <div><div class="doc-title">OBRAČUN MATERIJALA</div>
@@ -1291,7 +1315,7 @@ function renderObracun(I, R, alu, okov, obr){
       <div class="mono" style="font-size:11px;margin-top:3px;line-height:1.65">
         ${R.in.D} × ${R.in.B} mm · Visine ${R.in.A}/${R.in.C}<br>
         Šina <b>${esc(I.sirinaRaja)}×150</b> · Stub <b>${esc(I.stub)}</b><br>
-        Boja: <b>${esc(bojaTxt)}</b><br>
+        Boja: <b>${bojaHtml(I.bojaRal)}</b><br>
         ${R.auto.brRaja} raja · ${R.auto.brStubova} stubova · ${R.cerada.kornisaUkupno} korniša</div></div></div>`;
 
   html += `<div class="obr-warning">⚠ Ovo nije ponuda za kupca — samo trošak materijala. Marža, rad, montaža, profit i PDV se dodaju na ovo.</div>`;
@@ -1479,7 +1503,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.14";
+const APP_VER = "v2026-06-11.15";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -1512,6 +1536,13 @@ const APP_VER = "v2026-06-11.14";
     });
   }
   </script>
+
+<div class="no-print" id="imgZoom" onclick="this.style.display='none'"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.87);z-index:300;flex-direction:column;align-items:center;justify-content:center;cursor:zoom-out;gap:10px;">
+  <img id="imgZoomPic" style="max-width:92vw;max-height:76vh;background:#fff;border-radius:10px;padding:12px;" alt="">
+  <div id="imgZoomCap" style="color:#e8e4d8;font-size:14px;text-align:center;padding:0 20px;"></div>
+  <div style="color:#888;font-size:11px;">dodirni bilo gde za zatvaranje</div>
+</div>
 
 <div class="arch-overlay no-print" id="kalOverlay" style="align-items:center;justify-content:center;" onclick="if(event.target===this)kalZatvori()">
   <div class="kal-modal-card" id="kalModalBody"></div>
