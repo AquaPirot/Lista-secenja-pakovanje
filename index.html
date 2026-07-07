@@ -345,6 +345,8 @@
       </div>
       <label><div class="lbl">Broj intervala korniša</div><div class="sub" id="intervalSub">auto-predlog</div>
         <input type="number" id="brIntervala" value="7" disabled></label>
+      <label><div class="lbl">Zadati razmak — spojene pergole</div><div class="sub">0 = isključeno · razlika ide u polje uz kecelju</div>
+        <input type="number" id="fiksniRazmak" value="0" min="0"></label>
       <label><div class="lbl">Svetala po kornišu</div><div class="sub">obično 3–6</div>
         <input type="number" id="svetalaPoKornizu" value="6"></label>
       <label><div class="lbl">Motor (model)</div><div class="sub">prazno = piše samo „Motor"</div>
@@ -571,10 +573,33 @@ function compute(I){
   const sirinaCerade=D-10, duzCerade=dijagonala+400;
   const korisnaZaKornize = dijagonala-100-70;
   const predlogIntervala = suggestIntervala(korisnaZaKornize);
-  const brIntervala = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
-  const razmakKornisa = brIntervala?round(korisnaZaKornize/brIntervala,0):0;
+  // Spojene pergole: zadat razmak korniša (isti kao na susednoj pergoli) —
+  // razmaci idu od zida, a razlika se nadomešta u POSLEDNJEM polju uz kecelju
+  // (sme da bude manje od ostalih da bi korniši svih pergola bili u liniji).
+  const fiksniRazmak = Math.max(0, Math.round(+I.fiksniRazmak) || 0);
+  const fiksniOn = fiksniRazmak > 0;
+  let brIntervala, razmakKornisa, poljeKecelja;
+  if(fiksniOn){
+    brIntervala   = Math.max(1, Math.ceil(korisnaZaKornize / fiksniRazmak));
+    razmakKornisa = fiksniRazmak;
+    poljeKecelja  = round(korisnaZaKornize - (brIntervala-1)*fiksniRazmak, 0);
+  } else {
+    brIntervala   = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
+    razmakKornisa = brIntervala?round(korisnaZaKornize/brIntervala,0):0;
+    poljeKecelja  = razmakKornisa;
+  }
   const razmakOk = razmakKornisa>=399&&razmakKornisa<=499;
   const kornisaUkupno = brIntervala+1;
+  // Pozicije kedera od PREDNJE ivice cerade (K1 = front/kecelja, poslednji = uz zid)
+  const kederPozicije = [];
+  for(let i=1;i<=kornisaUkupno;i++){
+    let p;
+    if(i===1) p = 100;
+    else if(i===kornisaUkupno) p = Math.round(100 + korisnaZaKornize);
+    else if(fiksniOn) p = Math.round(100 + korisnaZaKornize - (kornisaUkupno-i)*fiksniRazmak);
+    else p = Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
+    kederPozicije.push(p);
+  }
   const debeli=2, tanki=Math.max(0,kornisaUkupno-2);
   const tankiSvetlo=ceil(tanki/2), tankiBez=tanki-tankiSvetlo;
 
@@ -609,9 +634,7 @@ function compute(I){
   // Pozicije kedera se mere od PREDNJE ivice (oluk = 0mm).
   // Sastav uvek pada na keder; idemo redom: od početka tekuće rolne
   // tražimo poslednji keder unutar 3000mm i tu sečemo. Ponavljamo do kraja.
-  const kederPos = i => i===1 ? 100
-    : i===kornisaUkupno ? duzCerade-470
-    : Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
+  const kederPos = i => kederPozicije[i-1];
   const spliceNeeded = duzCerade > 3000;
   let spliceList = [];   // [{kornis, pos}] — mesta sastava
   let spliceRolne = [];  // dužine rolni redom od fronta
@@ -671,7 +694,8 @@ function compute(I){
     auto:{brStubova,brRaja,brPolja,sirinaPolja,preko10m},
     raj:{kat1,kat2,pad,padOk,dijagonala,duzRaja},
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
-      razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez},
+      razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez,
+      fiksniOn,poljeKecelja,kederPozicije},
     kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvObostrani,kvSeceni,kornisKomPoPoz},
     splice:{spliceNeeded,spliceList,spliceRolne,spliceOk},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
@@ -682,12 +706,9 @@ function compute(I){
 
 function ceradaMap(R){
   const n=R.cerada.kornisaUkupno, out=[];
-  const K=R.cerada.korisnaZaKornize;
   for(let i=1;i<=n;i++){
     const debeli=i===1||i===n;
-    const pos = i===1 ? 100
-              : i===n ? R.cerada.duzCerade-470
-              : Math.round(100 + (i-1)*K/(n-1));
+    const pos = R.cerada.kederPozicije[i-1];
     const tip=debeli?"debeli":(i-1)%2===1?"svetlo":"tanki";
     out.push({i,pos,tip});
   }
@@ -705,7 +726,7 @@ function applyOkov(R, I){
     kornisSeceni: R.kornis.kornisTip === "sečeni",
     keder: R.kornis.keder,
     kederJednostrani: R.kornis.keder === "jednostrani",
-    korisnaCerade: R.cerada.brIntervala * R.cerada.razmakKornisa, // od 1. do zadnjeg kedera (mm)
+    korisnaCerade: R.cerada.korisnaZaKornize, // od 1. do zadnjeg kedera (mm) — tačno i kod zadatog razmaka
   };
   const baze = {raj:c.raja, stub:c.stubova, kornis:c.kornisaUkupno, svetlo:c.svetla, fiksno:1};
   const txt  = {raj:"× broj raja ("+c.raja+")", stub:"× broj stubova ("+c.stubova+")",
@@ -914,6 +935,7 @@ function render(){
     kederTip:$("kederTip").value,kornisSklop:$("kornisSklop").value,sirinaRaja:$("sirinaRaja").value,
     cevMotora:$("cevMotora").value,bojaRal:$("bojaRal").value,bojaCerade:$("bojaCerade").value,
     autoInterval:$("autoInterval").checked,brIntervala:$("brIntervala").value,
+    fiksniRazmak:$("fiksniRazmak").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value,motor:$("motor").value,
     celicnaOn:$("celicnaOn").checked,
     parapetOn:$("parapetOn").checked,parapetVisina:$("parapetVisina").value,
@@ -925,10 +947,13 @@ function render(){
   const okov = applyOkov(R, I);
   const obr = obracunCalc(I, R, alu, okov);
 
-  const autoOn=$("autoInterval").checked;
-  $("brIntervala").disabled=autoOn;
-  if(autoOn) $("brIntervala").value=R.cerada.predlogIntervala;
-  $("intervalSub").textContent = autoOn ? ("auto-predlog: "+R.cerada.predlogIntervala) : "ručni unos";
+  const fiksniOn = R.cerada.fiksniOn;
+  const autoOn=$("autoInterval").checked && !fiksniOn;
+  $("autoInterval").disabled = fiksniOn;
+  $("brIntervala").disabled = autoOn || fiksniOn;
+  if(fiksniOn) $("brIntervala").value = R.cerada.brIntervala;
+  else if(autoOn) $("brIntervala").value=R.cerada.predlogIntervala;
+  $("intervalSub").textContent = fiksniOn ? "iz zadatog razmaka" : autoOn ? ("auto-predlog: "+R.cerada.predlogIntervala) : "ručni unos";
 
   // Sečeni korniš: dostupan samo kad ≥ 3 raja; obavezan kad obostrani + ≥ 3 raja
   const mozeSeceni = R.auto.brRaja >= 3;
@@ -944,7 +969,9 @@ function render(){
   if(!mozeSeceni && selSklop.value==='seceni') selSklop.value='jednodelni';
   if(moraSeceni) selSklop.value='seceni';
   const as=$("autoStat");
-  as.textContent = R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
+  as.textContent = fiksniOn
+    ? "zadato "+R.cerada.razmakKornisa+"mm → "+R.cerada.brIntervala+" intervala · polje uz kecelju "+R.cerada.poljeKecelja+"mm "+(R.cerada.razmakOk?"✓":"⚠")
+    : R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
   as.style.color = R.cerada.razmakOk ? "#5fa86f" : "#d8754a";
 
   if(currentView === 'nalog') renderNalog(I, R, alu, okov);
@@ -1022,13 +1049,15 @@ function renderNalog(I, R, alu, okov){
         <div style="font-size:10px;color:#888">širina × dužina (mm) · ${nK} kom</div></div>
       <div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
         <div>Broj kedera: <b>${R.cerada.kornisaUkupno}</b></div>
-        <div>Intervala: <b>${R.cerada.brIntervala}</b> ${autoOn?'(auto)':'(ručno)'}</div>
+        <div>Intervala: <b>${R.cerada.brIntervala}</b> ${R.cerada.fiksniOn?'(zadati razmak — spojene pergole)':autoOn?'(auto)':'(ručno)'}</div>
         <div>Razmak (centar–centar): <b>${R.cerada.razmakKornisa} mm</b></div>
+        ${R.cerada.fiksniOn?`<div>Polje uz kecelju (K1–K2): <b>${R.cerada.poljeKecelja} mm</b> — nadomešta razliku</div>`:''}
         <div>Od prednje ivice do K1: <b>100 mm</b></div>
         <div>Rezerva uz zid: <b>470 mm</b> (400 + 70)</div></div>
       <div class="${R.cerada.razmakOk?'note-ok':'note-warn'}">
         <b style="color:${R.cerada.razmakOk?'#3f7a4d':'#bd4a2a'}">${R.cerada.razmakOk?'✓':'⚠'} Razmak ${R.cerada.razmakKornisa} mm</b> —
-        ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}</div>
+        ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}
+        ${R.cerada.fiksniOn?`<br><b style="color:#8a5d2e">↔ Spojene pergole:</b> razmaci idu od zida, korniši u liniji sa susednom pergolom; poslednje polje uz kecelju ${R.cerada.poljeKecelja} mm.`:''}</div>
       ${R.splice.spliceNeeded ? (() => {
         let inner;
         if(!R.splice.spliceOk){
@@ -1450,7 +1479,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.13";
+const APP_VER = "v2026-06-11.14";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -2071,7 +2100,7 @@ const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
 const ARCH_KEY = 'ag_arhiva';
 const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada','cev','stub',
   'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade',
-  'autoInterval','brIntervala','svetalaPoKornizu','motor','celicnaOn',
+  'autoInterval','brIntervala','fiksniRazmak','svetalaPoKornizu','motor','celicnaOn',
   'parapetOn','parapetVisina',
   'brNaloga','kupac','adresa','datum','rok','radnik'];
 
@@ -2220,8 +2249,9 @@ async function loadOrder(id){
     if(el.type==='checkbox') el.checked = !!fields[fid];
     else el.value = fields[fid]??'';
   });
-  // stari nalozi nemaju brKomada — podrazumevano 1
+  // stari nalozi nemaju brKomada / fiksniRazmak — podrazumevane vrednosti
   if(!fields.brKomada) $("brKomada").value = 1;
+  if(!fields.fiksniRazmak) $("fiksniRazmak").value = 0;
   if(fields._steelRows){ steelRows=JSON.parse(fields._steelRows); renderSteelInputs(); }
   render();
   closeArchive();
@@ -2264,6 +2294,7 @@ function trazeniProfili(){
     cev:$("cev").value, stub:$("stub").value, sirinaRaja:$("sirinaRaja").value,
     kederTip:$("kederTip").value,kornisSklop:$("kornisSklop").value, cevMotora:$("cevMotora").value,
     autoInterval:$("autoInterval").checked, brIntervala:$("brIntervala").value,
+    fiksniRazmak:$("fiksniRazmak").value,
     svetalaPoKornizu:$("svetalaPoKornizu").value, celicnaOn:$("celicnaOn").checked,
     parapetOn:$("parapetOn").checked, parapetVisina:$("parapetVisina").value,
   };
