@@ -346,7 +346,7 @@
       </div>
       <label><div class="lbl">Broj intervala korniša</div><div class="sub" id="intervalSub">auto-predlog</div>
         <input type="number" id="brIntervala" value="7" disabled></label>
-      <label><div class="lbl">Zadati razmak — spojene pergole</div><div class="sub">0 = isključeno · razlika ide u polje uz kecelju</div>
+      <label><div class="lbl">Zadati razmak — spojene pergole</div><div class="sub">0 = isključeno · razlika ide u poslednje polje (pre kecelje)</div>
         <input type="number" id="fiksniRazmak" value="0" min="0"></label>
       <label><div class="lbl">Svetala po kornišu</div><div class="sub">obično 3–6</div>
         <input type="number" id="svetalaPoKornizu" value="6"></label>
@@ -575,8 +575,9 @@ function compute(I){
   const korisnaZaKornize = dijagonala-100-70;
   const predlogIntervala = suggestIntervala(korisnaZaKornize);
   // Spojene pergole: zadat razmak korniša (isti kao na susednoj pergoli) —
-  // razmaci idu od zida, a razlika se nadomešta u POSLEDNJEM polju uz kecelju
-  // (sme da bude manje od ostalih da bi korniši svih pergola bili u liniji).
+  // razmaci idu od K1 (od fronta): K1→K2 = zadato, K2→K3 = zadato...
+  // a razlika se nadomešta u POSLEDNJEM polju (pre kecelje) koje sme
+  // da bude manje od ostalih, da bi korniši svih pergola bili u liniji.
   const fiksniRazmak = Math.max(0, Math.round(+I.fiksniRazmak) || 0);
   const fiksniOn = fiksniRazmak > 0;
   let brIntervala, razmakKornisa, poljeKecelja;
@@ -597,7 +598,7 @@ function compute(I){
     let p;
     if(i===1) p = 100;
     else if(i===kornisaUkupno) p = Math.round(100 + korisnaZaKornize);
-    else if(fiksniOn) p = Math.round(100 + korisnaZaKornize - (kornisaUkupno-i)*fiksniRazmak);
+    else if(fiksniOn) p = Math.round(100 + (i-1)*fiksniRazmak);
     else p = Math.round(100 + (i-1)*korisnaZaKornize/(kornisaUkupno-1));
     kederPozicije.push(p);
   }
@@ -996,7 +997,7 @@ function render(){
   if(moraSeceni) selSklop.value='seceni';
   const as=$("autoStat");
   as.textContent = fiksniOn
-    ? "zadato "+R.cerada.razmakKornisa+"mm → "+R.cerada.brIntervala+" intervala · polje uz kecelju "+R.cerada.poljeKecelja+"mm "+(R.cerada.razmakOk?"✓":"⚠")
+    ? "zadato "+R.cerada.razmakKornisa+"mm → "+R.cerada.brIntervala+" intervala · poslednje polje "+R.cerada.poljeKecelja+"mm "+(R.cerada.razmakOk?"✓":"⚠")
     : R.cerada.brIntervala+" intervala → razmak "+R.cerada.razmakKornisa+"mm "+(R.cerada.razmakOk?"✓":"⚠");
   as.style.color = R.cerada.razmakOk ? "#5fa86f" : "#d8754a";
 
@@ -1076,13 +1077,13 @@ function renderNalog(I, R, alu, okov){
         <div>Broj kedera: <b>${R.cerada.kornisaUkupno}</b></div>
         <div>Intervala: <b>${R.cerada.brIntervala}</b> ${R.cerada.fiksniOn?'(zadati razmak — spojene pergole)':autoOn?'(auto)':'(ručno)'}</div>
         <div>Razmak (centar–centar): <b>${R.cerada.razmakKornisa} mm</b></div>
-        ${R.cerada.fiksniOn?`<div>Polje uz kecelju (K1–K2): <b>${R.cerada.poljeKecelja} mm</b> — nadomešta razliku</div>`:''}
+        ${R.cerada.fiksniOn?`<div>Poslednje polje — pre kecelje (K${R.cerada.kornisaUkupno-1}–K${R.cerada.kornisaUkupno}): <b>${R.cerada.poljeKecelja} mm</b> — nadomešta razliku</div>`:''}
         <div>Od prednje ivice do K1: <b>100 mm</b></div>
         <div>Rezerva uz zid: <b>470 mm</b> (400 + 70)</div></div>
       <div class="${R.cerada.razmakOk?'note-ok':'note-warn'}">
         <b style="color:${R.cerada.razmakOk?'#3f7a4d':'#bd4a2a'}">${R.cerada.razmakOk?'✓':'⚠'} Razmak ${R.cerada.razmakKornisa} mm</b> —
         ${R.cerada.razmakOk?'u opsegu 399–499mm.':'van opsega 399–499mm — promeni broj intervala.'}
-        ${R.cerada.fiksniOn?`<br><b style="color:#8a5d2e">↔ Spojene pergole:</b> razmaci idu od zida, korniši u liniji sa susednom pergolom; poslednje polje uz kecelju ${R.cerada.poljeKecelja} mm.`:''}</div>
+        ${R.cerada.fiksniOn?`<br><b style="color:#8a5d2e">↔ Spojene pergole:</b> zadati razmak ide od K1 (od fronta), korniši u liniji sa susednom pergolom; poslednje polje pre kecelje ${R.cerada.poljeKecelja} mm.`:''}</div>
       ${R.splice.spliceNeeded ? (() => {
         let inner;
         if(!R.splice.spliceOk){
@@ -1503,7 +1504,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.15";
+const APP_VER = "v2026-06-11.16";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
