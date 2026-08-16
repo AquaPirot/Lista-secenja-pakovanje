@@ -26,7 +26,7 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.16` / cache `lista-secenja-v18`.
+Trenutna verzija: `v2026-06-11.17` / cache `lista-secenja-v19`.
 
 ## Arhitektura proračuna
 
@@ -54,11 +54,29 @@ render()  →  compute(I)  →  aluCalc(I,R)  →  applyOkov(R,I)  →  obracunC
 - `brRaja = brStubova`, `brPolja = brRaja − 1`
 - Dužina raja = dijagonala − 200; pad mora biti 8–10 %
 
-### Korniši — dužina zavisi od kedera i sklopa
-| | Jednodelni | Sečeni (konektor 50 mm) |
-|---|---|---|
-| **Jednostrani keder** | `D` (puna širina) | `(D − 50) / 2` |
-| **Obostrani keder** | `D − 100` | `(D − 150) / 2` |
+### Korniši — sklop mora da da punu širinu pergole
+Sečeni korniš ima **po jedan komad u svakom polju** → `n = brPolja` komada po poziciji.
+Svi umetci su po **50 mm** i ulaze u širinu:
+
+- **obostrani**: 2 ugaona (krajevi) + (n−1) srednjih konektora = **n+1** umetaka
+- **jednostrani**: samo (n−1) srednjih konektora — ugaoni ne skraćuju korniš
+
+```
+duzKornisa = (D − 50 × umetakaUDuzini) / n
+```
+
+Primer 9450 mm, obostrani, 4 raja → 3 polja:
+`50 + 3083 + 50 + 3083 + 50 + 3083 + 50 = 9450`
+
+Provera da formula pokriva sve slučajeve (n=1 je jednodelni):
+
+| | Jednodelni (n=1) | Sečeni, 3 raja (n=2) | Sečeni, 4 raja (n=3) |
+|---|---|---|---|
+| **Jednostrani** | `D` | `(D − 50) / 2` | `(D − 100) / 3` |
+| **Obostrani** | `D − 100` | `(D − 150) / 2` | `(D − 200) / 3` |
+
+Srednjih umetaka (konektora) ima `n − 1` **po svakoj poziciji korniša** —
+`ARV-20` i `ARV-22` množe se sa `srednjihUmetaka`, ne fiksno sa 1.
 
 - Sečeni je moguć **samo od 3 raja naviše**
 - Obostrani + ≥3 raja → sečeni je **obavezan** (jednodelni se disabluje)

@@ -506,11 +506,11 @@ const KATALOG = [
   {grupa:"plastika", img:null, sifra:"ARV-19", naziv:"Ugaoni umetak tankog korniša",
    fn:c=>c.tanki*2, opis:"× broj tankih korniša × 2 kraja", cena:0.17, jed:"kom"},
   {grupa:"plastika", img:null, sifra:"ARV-20", naziv:"Srednji umetak tankog korniša (konektor)",
-   fn:c=>c.kornisSeceni?c.tanki:0, opis:"samo kod sečenog korniša", cena:0.17, jed:"kom"},
+   fn:c=>c.kornisSeceni?c.tanki*c.srednjihUmetaka:0, opis:"× broj tankih korniša × spojeva po kornišu", cena:0.17, jed:"kom"},
   {grupa:"plastika", img:null, sifra:"ARV-21", naziv:"Ugaoni umetak debelog korniša",
    fn:c=>c.debeli*2, opis:"× broj debelih korniša × 2 kraja", cena:0.20, jed:"kom"},
   {grupa:"plastika", img:null, sifra:"ARV-22", naziv:"Srednji umetak debelog korniša (konektor)",
-   fn:c=>c.kornisSeceni?c.debeli:0, opis:"samo kod sečenog korniša", cena:0.20, jed:"kom"},
+   fn:c=>c.kornisSeceni?c.debeli*c.srednjihUmetaka:0, opis:"× broj debelih korniša × spojeva po kornišu", cena:0.20, jed:"kom"},
   // Tapa + tipla — samo kod jednostranog kedera
   {grupa:"plastika", img:null, sifra:"ARV-T",  naziv:"Tapa (poklopac rupe 20mm)",
    fn:c=>c.kederJednostrani?c.kornisaUkupno*c.raja:0, opis:"samo jednostrani keder: ukupno korniša × broj raja", cena:0.10, jed:"kom"},
@@ -611,13 +611,17 @@ function compute(I){
   const kornisTip  = kvSeceni    ? 'sečeni'    : 'jednodelni';
   const tipSklopa  = (kvObostrani ? 'Obostrani' : 'Jednostrani') + ', ' + (kvSeceni ? 'sečeni' : 'jednodelni');
   // Dužina jednog komada korniša
-  // Jednostrani keder: jednodelni = puna širina (bez umanjenja)
-  // Obostrani keder:   jednodelni = širina − 100
-  // Sečeni: jednostrani (širina−50)/2 · obostrani (širina−150)/2
-  const duzKornisa = kvSeceni
-    ? (kvObostrani ? round((D-150)/2,0) : round((D-50)/2,0))
-    : (kvObostrani ? D - 100 : D);
-  const kornisKomPoPoz = kvSeceni ? 2 : 1;
+  // Sečeni: po JEDAN komad u svakom polju → brPolja komada po poziciji.
+  // Umetci su svi po 50 mm i ulaze u širinu pergole:
+  //   obostrani  → 2 ugaona (krajevi) + (n−1) srednjih konektora = n+1 umetaka
+  //   jednostrani→ samo (n−1) srednjih konektora (krajevi ne skraćuju korniš)
+  // Sklop mora da da punu širinu: n × duzKornisa + 50 × umetaka = D
+  // Primer 9450, obostrani, 4 raja → 3 polja:
+  //   50 + 3083 + 50 + 3083 + 50 + 3083 + 50 = 9450
+  const kornisKomPoPoz = kvSeceni ? Math.max(2, brPolja) : 1;
+  const umetakaUDuzini = kvObostrani ? kornisKomPoPoz + 1 : kornisKomPoPoz - 1;
+  const duzKornisa = round((D - 50*umetakaUDuzini) / kornisKomPoPoz, 0);
+  const srednjihUmetaka = kornisKomPoPoz - 1;   // po jednoj poziciji korniša
 
   const duzOluka=D+150;
   const limKom=ceil(D/1250);
@@ -698,7 +702,8 @@ function compute(I){
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
       razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez,
       fiksniOn,poljeKecelja,kederPozicije},
-    kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvObostrani,kvSeceni,kornisKomPoPoz},
+    kornis:{tipSklopa,duzKornisa,kornisTip,keder,kvObostrani,kvSeceni,kornisKomPoPoz,
+      umetakaUDuzini,srednjihUmetaka},
     splice:{spliceNeeded,spliceList,spliceRolne,spliceOk},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
     led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,potrosnja,trafo,trafoCena},
@@ -726,6 +731,7 @@ function applyOkov(R, I){
     duzRaja:R.raj.duzRaja, duzOluka:R.profili2.duzOluka, duzKornisa:R.kornis.duzKornisa,
     sirina:R.in.D, sirinaCerade:R.cerada.sirinaCerade,
     kornisSeceni: R.kornis.kornisTip === "sečeni",
+    srednjihUmetaka: R.kornis.srednjihUmetaka,
     keder: R.kornis.keder,
     kederJednostrani: R.kornis.keder === "jednostrani",
     korisnaCerade: R.cerada.korisnaZaKornize, // od 1. do zadnjeg kedera (mm) — tačno i kod zadatog razmaka
@@ -1064,7 +1070,24 @@ function renderNalog(I, R, alu, okov){
       <td class="m" style="text-align:center;font-weight:700;font-size:14px">${p.kom}</td>
       <td style="text-align:center"><span class="chk"></span></td></tr>`;
   });
-  html += `</tbody></table></div>`;
+  html += `</tbody></table>`;
+
+  // Sečeni korniš — sklop po jednom redu: mora da da punu širinu pergole
+  if(R.kornis.kvSeceni){
+    const n = R.kornis.kornisKomPoPoz, L = R.kornis.duzKornisa;
+    const delovi = [];
+    if(R.kornis.kvObostrani) delovi.push('50');
+    for(let k=0;k<n;k++){ delovi.push('<b>'+L+'</b>'); if(k<n-1) delovi.push('50'); }
+    if(R.kornis.kvObostrani) delovi.push('50');
+    const zbir = n*L + 50*R.kornis.umetakaUDuzini;
+    html += `<div class="card mono" style="margin-top:8px;font-size:11px;line-height:1.7">
+      <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
+        SKLOP SEČENOG KORNIŠA — ${n} komada po redu (po jedan u svakom polju)</div>
+      <div>${delovi.join(' + ')} = <b>${zbir} mm</b>${zbir!==R.in.D?` <span style="color:#bd4a2a">(širina ${R.in.D} — razlika ${R.in.D-zbir} mm od zaokruživanja)</span>`:' ✓'}</div>
+      <div style="font-size:10px;color:#5a5446;margin-top:2px">Umetci po 50 mm: ${R.kornis.kvObostrani?`2 ugaona + ${R.kornis.srednjihUmetaka} srednja (konektori)`:`${R.kornis.srednjihUmetaka} srednja (konektori) · ugaoni ne skraćuju korniš`}</div>
+    </div>`;
+  }
+  html += `</div>`;
 
   /* 02 — CERADA + MAPA */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">02</span>
@@ -1504,7 +1527,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.16";
+const APP_VER = "v2026-06-11.17";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
