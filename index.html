@@ -162,6 +162,16 @@
   .arch-item-sub{font-size:11px;color:#a09880;margin-bottom:9px;}
   .arch-item-acts{display:flex;gap:6px;}
 
+  /* ───── QR blok u nalogu ───── */
+  .qr-blok{display:flex;gap:14px;align-items:center;margin-top:12px;padding:11px 13px;
+    border:1.5px solid var(--ink);border-radius:6px;background:#fff;page-break-inside:avoid;}
+  .qr-slika{flex-shrink:0;line-height:0;}
+  .qr-slika svg{display:block;}
+  .qr-tekst{font-size:11px;color:#4a4636;line-height:1.5;}
+  .qr-naslov{font-family:'Fjalla One',sans-serif;font-size:11.5px;letter-spacing:.05em;
+    color:#8a5d2e;margin-bottom:3px;}
+  .qr-sitno{font-family:'Spline Sans Mono',monospace;font-size:10px;color:#7a7361;margin-top:4px;}
+
   /* ───── Kalendar produkcije ───── */
   .kal-wrap{max-width:1100px;margin:18px auto;padding:0 14px 40px;}
   .kal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
@@ -1314,10 +1324,305 @@ function renderNalog(I, R, alu, okov){
   html += `<div class="potpisi">
     <div class="potpis">Pripremio / radionica<div class="potpis-l">Ime / potpis: ______________________</div></div>
     <div class="potpis">Montirao / montaža<div class="potpis-l">Ime / potpis: ______________________</div></div>
-  </div>
-  <div class="foot">AG GROUP · program za sečenje pergole · jezgro proračuna v8.1 + materijal i okov</div>`;
+  </div>`;
+
+  // QR — skeniranjem se nalog otvara na telefonu ili tabletu
+  const qrHtml = qrSvg(qrLink(), 132);
+  if(qrHtml){
+    html += `<div class="qr-blok">
+      <div class="qr-slika">${qrHtml}</div>
+      <div class="qr-tekst">
+        <div class="qr-naslov">📱 OTVORI NALOG NA TELEFONU</div>
+        <div>Skeniraj kamerom telefona ili tableta — nalog se otvara sa svim merama,
+        pa se odatle može odštampati ili sačuvati kao PDF.</div>
+        <div class="qr-sitno">${esc(I.brNaloga)||'bez broja'}${I.kupac?' · '+esc(I.kupac):''}
+        · ${R.in.D}×${R.in.B} mm${nK>1?' · '+nK+' kom':''}</div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="foot">AG GROUP · program za sečenje pergole · jezgro proračuna v8.1 + materijal i okov</div>`;
 
   $("doc").innerHTML = html;
+}
+
+/* ───────── QR generator (byte mode, EC nivo M) ─────────
+   Minimalan ugrađen generator — bez biblioteka, radi offline.
+   Vraća matricu true/false. */
+function qrMatrica(tekst){
+  // 1) tekst → UTF-8 bajtovi
+  const data = [];
+  for(const ch of unescape(encodeURIComponent(tekst))) data.push(ch.charCodeAt(0));
+
+  // kapacitet u bajtovima za EC nivo M, verzije 1..20
+  const KAP_M = [null,14,26,42,62,84,106,122,152,180,213,251,287,331,362,412,450,504,560,624,666];
+  // [broj EC kodnih reči po bloku, br. blokova grupe1, br. blokova grupe2]
+  const EC_M = [null,[10,1,0],[16,1,0],[26,1,0],[18,2,0],[24,2,0],[16,4,0],[18,4,0],[22,2,2],
+    [22,3,2],[26,4,1],[30,1,4],[22,6,2],[22,8,1],[24,4,5],[24,5,5],[28,7,3],[28,10,1],
+    [26,9,4],[26,3,11],[26,3,13]];
+
+  let ver = 0;
+  for(let v=1; v<=20; v++) if(data.length <= KAP_M[v]){ ver = v; break; }
+  if(!ver) throw new Error('QR: predugačak tekst');
+
+  const velicina = 17 + 4*ver;
+  const brBitovaDuzine = ver < 10 ? 8 : 16;
+
+  // 2) bitovi: mod 0100 + dužina + podaci
+  const bits = [];
+  const push = (val,n)=>{ for(let i=n-1;i>=0;i--) bits.push((val>>i)&1); };
+  push(4,4); push(data.length, brBitovaDuzine);
+  data.forEach(b=>push(b,8));
+
+  const [ecPoBloku, g1, g2] = EC_M[ver];
+  const ukupnoKodnih = (()=>{ // ukupan broj kodnih reči podataka
+    const BR_KODNIH = [null,26,44,70,100,134,172,196,242,292,346,404,466,532,581,655,733,815,901,991,1085];
+    return BR_KODNIH[ver] - ecPoBloku*(g1+g2);
+  })();
+
+  push(0, Math.min(4, ukupnoKodnih*8 - bits.length));   // terminator
+  while(bits.length % 8) bits.push(0);                   // dopuna do bajta
+  const kodne = [];
+  for(let i=0;i<bits.length;i+=8){
+    let b=0; for(let j=0;j<8;j++) b=(b<<1)|bits[i+j];
+    kodne.push(b);
+  }
+  const PAD=[0xEC,0x11];
+  for(let i=0; kodne.length<ukupnoKodnih; i++) kodne.push(PAD[i%2]);
+
+  // 3) Galoisova aritmetika GF(256)
+  const EXP=new Array(512), LOG=new Array(256);
+  for(let i=0,x=1;i<255;i++){ EXP[i]=x; LOG[x]=i; x<<=1; if(x&0x100) x^=0x11D; }
+  for(let i=255;i<512;i++) EXP[i]=EXP[i-255];
+  const mul=(a,b)=> (a===0||b===0)?0:EXP[LOG[a]+LOG[b]];
+
+  function generator(n){
+    let p=[1];
+    for(let i=0;i<n;i++){
+      const np=new Array(p.length+1).fill(0);
+      for(let j=0;j<p.length;j++){ np[j]^=p[j]; np[j+1]^=mul(p[j],EXP[i]); }
+      p=np;
+    }
+    return p;
+  }
+  function ecReci(blok,n){
+    const gen=generator(n);
+    const rez=blok.concat(new Array(n).fill(0));
+    for(let i=0;i<blok.length;i++){
+      const f=rez[i];
+      if(f===0) continue;
+      for(let j=0;j<gen.length;j++) rez[i+j]^=mul(gen[j],f);
+    }
+    return rez.slice(blok.length);
+  }
+
+  // 4) podela na blokove + preplitanje
+  const ukBlokova=g1+g2;
+  const kratki=Math.floor(ukupnoKodnih/ukBlokova);
+  const blokovi=[], ecBlokovi=[];
+  let p=0;
+  for(let i=0;i<ukBlokova;i++){
+    const duz = i < g1 ? kratki : kratki+1;
+    const blok = kodne.slice(p, p+duz); p+=duz;
+    blokovi.push(blok);
+    ecBlokovi.push(ecReci(blok, ecPoBloku));
+  }
+  const finalne=[];
+  const maxD=Math.max(...blokovi.map(b=>b.length));
+  for(let i=0;i<maxD;i++) for(const b of blokovi) if(i<b.length) finalne.push(b[i]);
+  for(let i=0;i<ecPoBloku;i++) for(const b of ecBlokovi) finalne.push(b[i]);
+
+  // 5) matrica
+  const M=[], REZ=[];
+  for(let i=0;i<velicina;i++){ M.push(new Array(velicina).fill(0)); REZ.push(new Array(velicina).fill(false)); }
+  const stavi=(r,c,v)=>{ M[r][c]=v?1:0; REZ[r][c]=true; };
+
+  function finder(r,c){
+    for(let i=-1;i<=7;i++) for(let j=-1;j<=7;j++){
+      const rr=r+i, cc=c+j;
+      if(rr<0||cc<0||rr>=velicina||cc>=velicina) continue;
+      const ivica = i===0||i===6||j===0||j===6;
+      const jezgro = i>=2&&i<=4&&j>=2&&j<=4;
+      stavi(rr,cc, (i>=0&&i<=6&&j>=0&&j<=6) && (ivica||jezgro));
+    }
+  }
+  finder(0,0); finder(0,velicina-7); finder(velicina-7,0);
+
+  // tajming
+  for(let i=8;i<velicina-8;i++){ stavi(6,i,i%2===0); stavi(i,6,i%2===0); }
+
+  // poravnavajući kvadratići
+  const ALIGN=[null,[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],
+    [6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],
+    [6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90]];
+  const poz=ALIGN[ver];
+  for(const r of poz) for(const c of poz){
+    if((r<=8&&c<=8)||(r<=8&&c>=velicina-9)||(r>=velicina-9&&c<=8)) continue;
+    for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++)
+      stavi(r+i,c+j, Math.max(Math.abs(i),Math.abs(j))!==1);
+  }
+
+  // rezervacija format-polja (+ tamni modul)
+  for(let i=0;i<9;i++){ if(!REZ[8][i]) stavi(8,i,false); if(!REZ[i][8]) stavi(i,8,false); }
+  for(let i=0;i<8;i++){ if(!REZ[8][velicina-1-i]) stavi(8,velicina-1-i,false);
+                        if(!REZ[velicina-1-i][8]) stavi(velicina-1-i,8,false); }
+  stavi(velicina-8,8,true);
+  // rezervacija verzije (v≥7)
+  if(ver>=7){
+    for(let i=0;i<6;i++) for(let j=0;j<3;j++){
+      stavi(i, velicina-11+j, false); stavi(velicina-11+j, i, false);
+    }
+  }
+
+  // 6) upis podataka cik-cak
+  let bi=0, gore=true;
+  const bitNa = i => (i>>3) < finalne.length ? (finalne[i>>3]>>(7-(i&7)))&1 : 0;
+  for(let c=velicina-1;c>0;c-=2){
+    if(c===6) c--;
+    for(let k=0;k<velicina;k++){
+      const r = gore ? velicina-1-k : k;
+      for(let s=0;s<2;s++){
+        const cc=c-s;
+        if(REZ[r][cc]) continue;
+        M[r][cc]=bitNa(bi++); REZ[r][cc]=true;
+      }
+    }
+    gore=!gore;
+  }
+
+  // 7) maske + kazneni bodovi
+  const MASKE=[
+    (r,c)=>(r+c)%2===0, (r,c)=>r%2===0, (r,c)=>c%3===0, (r,c)=>(r+c)%3===0,
+    (r,c)=>((r>>1)+Math.floor(c/3))%2===0, (r,c)=>((r*c)%2+(r*c)%3)===0,
+    (r,c)=>(((r*c)%2+(r*c)%3)%2)===0, (r,c)=>(((r+c)%2+(r*c)%3)%2)===0];
+
+  const funkcijsko=[];
+  for(let i=0;i<velicina;i++) funkcijsko.push(REZ[i].slice());
+  // ponovo označi SAMO funkcijske module (ne podatke)
+  const jeFunkcijsko=(r,c)=>{
+    if(r<9&&c<9) return true;
+    if(r<9&&c>=velicina-8) return true;
+    if(r>=velicina-8&&c<9) return true;
+    if(r===6||c===6) return true;
+    if(ver>=7 && ((r<6&&c>=velicina-11)||(c<6&&r>=velicina-11))) return true;
+    for(const ar of poz) for(const ac of poz){
+      if((ar<=8&&ac<=8)||(ar<=8&&ac>=velicina-9)||(ar>=velicina-9&&ac<=8)) continue;
+      if(Math.abs(r-ar)<=2 && Math.abs(c-ac)<=2) return true;
+    }
+    return false;
+  };
+
+  function formatBitovi(maska){
+    const podaci=(0b00<<3)|maska;              // EC nivo M = 00
+    let v=podaci<<10;
+    for(let i=4;i>=0;i--) if(v & (1<<(i+10))) v^=0b10100110111<<i;
+    return ((podaci<<10)|v) ^ 0b101010000010010;
+  }
+  function verzijaBitovi(){
+    let v=ver<<12;
+    for(let i=5;i>=0;i--) if(v & (1<<(i+12))) v^=0b1111100100101<<i;
+    return (ver<<12)|v;
+  }
+
+  function primeni(maska){
+    const T=M.map(r=>r.slice());
+    for(let r=0;r<velicina;r++) for(let c=0;c<velicina;c++)
+      if(!jeFunkcijsko(r,c) && MASKE[maska](r,c)) T[r][c]^=1;
+    // format info — bit 14 je prvi (kod (8,0)), bit 0 poslednji (kod (0,8))
+    const fb=formatBitovi(maska);
+    for(let i=0;i<15;i++){
+      const b=(fb>>(14-i))&1;
+      // kopija 1: red 8 nalevo, pa kolona 8 naviše
+      if(i<6) T[8][i]=b;
+      else if(i===6) T[8][7]=b;
+      else if(i===7) T[8][8]=b;
+      else if(i===8) T[7][8]=b;
+      else T[14-i][8]=b;
+      // kopija 2: kolona 8 odozdo (bitovi 14..8), pa red 8 nadesno (bitovi 7..0)
+      if(i<7) T[velicina-1-i][8]=b;
+      else T[8][velicina-15+i]=b;
+    }
+    T[velicina-8][8]=1;
+    if(ver>=7){
+      const vb=verzijaBitovi();
+      for(let i=0;i<18;i++){
+        const b=(vb>>i)&1, r=Math.floor(i/3), c=i%3;
+        T[r][velicina-11+c]=b; T[velicina-11+c][r]=b;
+      }
+    }
+    return T;
+  }
+
+  function kazna(T){
+    let p=0;
+    // 1: nizovi istih ≥5
+    for(let r=0;r<velicina;r++) for(const red of [T[r], T.map(x=>x[r])]){
+      let run=1;
+      for(let i=1;i<velicina;i++){
+        if(red[i]===red[i-1]) run++;
+        else { if(run>=5) p+=3+(run-5); run=1; }
+      }
+      if(run>=5) p+=3+(run-5);
+    }
+    // 2: blokovi 2×2
+    for(let r=0;r<velicina-1;r++) for(let c=0;c<velicina-1;c++)
+      if(T[r][c]===T[r][c+1] && T[r][c]===T[r+1][c] && T[r][c]===T[r+1][c+1]) p+=3;
+    // 3: šablon 1:1:3:1:1
+    const A=[1,0,1,1,1,0,1,0,0,0,0], B=[0,0,0,0,1,0,1,1,1,0,1];
+    const cmp=(arr,i,pat)=>pat.every((v,j)=>arr[i+j]===v);
+    for(let r=0;r<velicina;r++) for(const red of [T[r], T.map(x=>x[r])])
+      for(let i=0;i+11<=velicina;i++) if(cmp(red,i,A)||cmp(red,i,B)) p+=40;
+    // 4: odstupanje od 50% tamnih
+    let t=0; T.forEach(r=>r.forEach(v=>t+=v));
+    p += Math.floor(Math.abs(t*100/(velicina*velicina)-50)/5)*10;
+    return p;
+  }
+
+  let naj=null, najK=Infinity, najM=0;
+  for(let m=0;m<8;m++){ const T=primeni(m), k=kazna(T); if(k<najK){najK=k; naj=T; najM=m;} }
+  return {matrica: naj.map(r=>r.map(v=>!!v)), verzija: ver, maska: najM, velicina};
+}
+
+/* ───────── QR: nalog → link za telefon/tablet ───────── */
+// Polja koja se prenose kroz QR. Redosled je FIKSAN — ne menjati,
+// samo dodavati na kraj, da stariji odštampani QR kodovi i dalje rade.
+const QR_POLJA = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada','cev','stub',
+  'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade','autoInterval',
+  'brIntervala','fiksniRazmak','svetalaPoKornizu','motor','parapetOn','parapetVisina',
+  'brNaloga','kupac','adresa','datum','rok','radnik'];
+const qrEnc = s => encodeURIComponent(s==null?'':String(s)).replace(/~/g,'%7E');
+
+function qrLink(){
+  const v = QR_POLJA.map(id=>{
+    const el = $(id); if(!el) return '';
+    return qrEnc(el.type==='checkbox' ? (el.checked?1:0) : el.value);
+  });
+  return location.origin + location.pathname + '#n1~' + v.join('~');
+}
+
+// Učitavanje naloga iz QR linka pri otvaranju stranice
+function qrUcitajIzLinka(){
+  const h = location.hash || '';
+  if(h.indexOf('#n1~') !== 0) return false;
+  const v = h.slice(4).split('~');
+  QR_POLJA.forEach((id,i)=>{
+    const el = $(id); if(!el || v[i]===undefined) return;
+    const val = decodeURIComponent(v[i]);
+    if(el.type==='checkbox') el.checked = (val==='1');
+    else el.value = val;
+  });
+  return true;
+}
+
+function qrSvg(tekst, px){
+  let q;
+  try { q = qrMatrica(tekst); } catch(e){ return ''; }
+  const n = q.velicina, tih = 2, uk = n + tih*2;
+  let put = '';
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++)
+    if(q.matrica[r][c]) put += `M${c+tih} ${r+tih}h1v1h-1z`;
+  return `<svg width="${px}" height="${px}" viewBox="0 0 ${uk} ${uk}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">`
+       + `<rect width="${uk}" height="${uk}" fill="#fff"/><path d="${put}" fill="#000"/></svg>`;
 }
 
 /* ───────── RENDER OBRAČUN ───────── */
@@ -1527,7 +1832,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.18";
+const APP_VER = "v2026-06-11.19";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -1548,7 +1853,16 @@ const APP_VER = "v2026-06-11.18";
     el.addEventListener("change",render);
   });
   renderSteelInputs();
+  // Nalog otvoren preko QR koda — popuni polja iz linka
+  const izQr = qrUcitajIzLinka();
   render();
+  if(izQr){
+    const p=document.createElement('div');
+    p.className='no-print';
+    p.style.cssText='background:#2a3a28;color:#9fd8a8;padding:9px 14px;font-size:12px;text-align:center;';
+    p.textContent='📱 Nalog učitan iz QR koda — koristi ⎙ PDF da ga odštampaš ili sačuvaš.';
+    document.querySelector('.topbar').insertAdjacentElement('afterend', p);
+  }
 })();
 </script>
   <script>
