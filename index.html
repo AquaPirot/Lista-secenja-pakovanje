@@ -275,7 +275,7 @@
       <div class="brand-s">PROGRAM ZA SEČENJE PERGOLE + OBRAČUN</div>
     </div>
   </div>
-  <div class="topbar-actions">
+  <div class="topbar-actions" id="topbarAkcije">
     <button class="btn btn-secondary active" id="btnNalog" onclick="switchView('nalog')">Nalog</button>
     <button class="btn btn-secondary" id="btnObracun" onclick="switchView('obracun')">Obračun</button>
     <button class="btn btn-secondary" id="btnMagacin" onclick="switchView('magacin')">📦 Magacin</button>
@@ -1333,8 +1333,8 @@ function renderNalog(I, R, alu, okov){
       <div class="qr-slika">${qrHtml}</div>
       <div class="qr-tekst">
         <div class="qr-naslov">📱 OTVORI NALOG NA TELEFONU</div>
-        <div>Skeniraj kamerom telefona ili tableta — nalog se otvara sa svim merama,
-        pa se odatle može odštampati ili sačuvati kao PDF.</div>
+        <div>Skeniraj kamerom telefona ili tableta. Nalog se otvara <b>zaključan —
+        samo za pregled i štampu</b>, mere se ne mogu menjati.</div>
         <div class="qr-sitno">${esc(I.brNaloga)||'bez broja'}${I.kupac?' · '+esc(I.kupac):''}
         · ${R.in.D}×${R.in.B} mm${nK>1?' · '+nK+' kom':''}</div>
       </div>
@@ -1592,18 +1592,21 @@ const QR_POLJA = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada','c
   'brNaloga','kupac','adresa','datum','rok','radnik'];
 const qrEnc = s => encodeURIComponent(s==null?'':String(s)).replace(/~/g,'%7E');
 
+// Link iz QR-a otvara nalog ZAKLJUČAN (oznaka "z1") — radnik ga vidi i štampa,
+// ali ne može da menja mere, da čuva niti da skida sa stanja magacina.
 function qrLink(){
   const v = QR_POLJA.map(id=>{
     const el = $(id); if(!el) return '';
     return qrEnc(el.type==='checkbox' ? (el.checked?1:0) : el.value);
   });
-  return location.origin + location.pathname + '#n1~' + v.join('~');
+  return location.origin + location.pathname + '#z1~' + v.join('~');
 }
 
 // Učitavanje naloga iz QR linka pri otvaranju stranice
 function qrUcitajIzLinka(){
   const h = location.hash || '';
-  if(h.indexOf('#n1~') !== 0) return false;
+  const zakljucan = h.indexOf('#z1~') === 0;
+  if(!zakljucan && h.indexOf('#n1~') !== 0) return false;
   const v = h.slice(4).split('~');
   QR_POLJA.forEach((id,i)=>{
     const el = $(id); if(!el || v[i]===undefined) return;
@@ -1611,7 +1614,17 @@ function qrUcitajIzLinka(){
     if(el.type==='checkbox') el.checked = (val==='1');
     else el.value = val;
   });
-  return true;
+  return zakljucan ? 'zakljucan' : 'otvoren';
+}
+
+// Zaključan prikaz: samo nalog + dugme za PDF
+function qrZakljucaj(){
+  $("inputPanel").style.display = 'none';
+  const akcije = $("topbarAkcije");
+  if(akcije) akcije.querySelectorAll('button').forEach(b=>{
+    if(b.textContent.indexOf('PDF') === -1) b.style.display = 'none';
+  });
+  document.querySelectorAll('.panel input,.panel select').forEach(el=>{ el.disabled = true; });
 }
 
 function qrSvg(tekst, px){
@@ -1832,7 +1845,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.19";
+const APP_VER = "v2026-06-11.20";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -1857,10 +1870,13 @@ const APP_VER = "v2026-06-11.19";
   const izQr = qrUcitajIzLinka();
   render();
   if(izQr){
+    if(izQr === 'zakljucan') qrZakljucaj();
     const p=document.createElement('div');
     p.className='no-print';
     p.style.cssText='background:#2a3a28;color:#9fd8a8;padding:9px 14px;font-size:12px;text-align:center;';
-    p.textContent='📱 Nalog učitan iz QR koda — koristi ⎙ PDF da ga odštampaš ili sačuvaš.';
+    p.innerHTML = izQr === 'zakljucan'
+      ? '🔒 <b>Nalog iz QR koda — samo za pregled.</b> Mere se ne mogu menjati. Klikni <b>⎙ PDF</b> da odštampaš ili sačuvaš.'
+      : '📱 Nalog učitan iz QR koda — koristi ⎙ PDF da ga odštampaš ili sačuvaš.';
     document.querySelector('.topbar').insertAdjacentElement('afterend', p);
   }
 })();

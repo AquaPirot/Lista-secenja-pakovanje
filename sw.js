@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lista-secenja-v21';
+const CACHE_NAME = 'lista-secenja-v22';
 const STATIC_ASSETS = [
   './manifest.json',
   './icons/icon-192.png',
