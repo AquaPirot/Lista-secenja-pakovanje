@@ -708,7 +708,10 @@ function compute(I){
   for(let k=1; k<=nLed; k++) ledPozicije.push(Math.round(duzKornisa*(2*k-1)/(2*nLed)));
   const razmakRupa  = nLed ? Math.round(duzKornisa/nLed) : 0;
   const odIviceDoRupe = nLed ? ledPozicije[0] : 0;
-  const svetalaUkupno=svetalaPoKornizu*tankiSvetlo;
+  // Svetla se buše po KOMADU korniša, ne po redu — kod sečenog u jednom redu
+  // ima kornisKomPoPoz komada, pa svaki nosi svoj set svetala.
+  const kornisaSaSvetlom = tankiSvetlo * kornisKomPoPoz;   // stvarni broj komada
+  const svetalaUkupno = svetalaPoKornizu * kornisaSaSvetlom;
 
   // Rupe za kolica na kornišu — SAMO jednostrani keder
   // (kod dvostranog rupe postoje u umetcima, korniš se ne buši)
@@ -740,7 +743,7 @@ function compute(I){
       umetakaUDuzini,srednjihUmetaka},
     splice:{spliceNeeded,spliceList,spliceRolne,spliceOk},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
-    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,potrosnja,trafo,trafoCena},
+    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,kornisaSaSvetlom,potrosnja,trafo,trafoCena},
     kolica:{rupe:kolicaRupe},
   };
 }
@@ -1272,7 +1275,7 @@ function renderNalog(I, R, alu, okov){
     const poz = R.led.ledPozicije;
     html += `<div class="card mono" style="margin-top:9px;font-size:11px;line-height:1.8">
       <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
-        BUŠENJE RUPA ZA LED — korniši sa ★ (${R.cerada.tankiSvetlo} kom) · dužina korniša ${L} mm</div>
+        BUŠENJE RUPA ZA LED — korniši sa ★ (${R.led.kornisaSaSvetlom} kom${R.kornis.kvSeceni?` = ${R.cerada.tankiSvetlo} reda × ${R.kornis.kornisKomPoPoz}`:''}) · dužina korniša ${L} mm</div>
       <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b>
         &nbsp;·&nbsp; Od ivice do 1. rupe: <b>${R.led.odIviceDoRupe} mm</b>
         &nbsp;·&nbsp; Razmak (c–c): <b>${R.led.razmakRupa} mm</b></div>
@@ -1869,7 +1872,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.25";
+const APP_VER = "v2026-06-11.26";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
