@@ -142,8 +142,14 @@
     html,body{background:#fff;}
     .no-print{display:none!important;}
     .doc{box-shadow:none!important;margin:0!important;max-width:100%!important;padding:0!important;}
-    .sec{break-inside:avoid;}
+    /* Sekcije smeju da se prelome preko strana — inače cela lista skače
+       na sledeću stranu i prva ostane skoro prazna. Naslov ide uz tabelu,
+       red se ne cepa, a zaglavlje tabele se ponavlja na svakoj strani. */
+    .sec{break-inside:auto;}
+    .sec-h{break-after:avoid;} .grp-t{break-after:avoid;}
     table{break-inside:auto;} tr{break-inside:avoid;}
+    thead{display:table-header-group;}
+    .card,.box-cut,.note-ok,.note-warn,.potpisi{break-inside:avoid;}
     .splice-warn{background:#fff!important;border:2px solid #c07000!important;color:#000!important;}
     .splice-warn *{color:#000!important;background:transparent!important;}
   }
@@ -1872,7 +1878,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.26";
+const APP_VER = "v2026-06-11.27";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
