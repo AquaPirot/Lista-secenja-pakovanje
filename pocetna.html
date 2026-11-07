@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#191814" />
+<meta name="description" content="AG GROUP — izbor programa: pergole ili giljotine" />
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+<title>AG GROUP — Radni nalozi</title>
+<script>
+  // QR kodovi sa ranije odštampanih naloga za pergole vode na adresu foldera
+  // (…/app/#z1~…). Ako je naslovna postavljena kao početna strana foldera,
+  // takav link se prosleđuje pravo na program za pergole, sa istim podacima.
+  (function(){
+    var h = location.hash || '';
+    if (h.indexOf('#z1~') === 0 || h.indexOf('#n1~') === 0) location.replace('index.html' + h);
+  })();
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fjalla+One&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500&display=swap');
+  /* Isti izgled kao programi: tamna radna površina, bronzani akcenat */
+  :root{
+    --shell:#15171b; --shell2:#1e2127; --line:#33373f; --muted:#8b8f98;
+    --ink:#191814; --paper:#f6f4ee; --bronze:#a9743c; --bronzeD:#8a5d2e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;min-height:100%;background:var(--shell);color:#fff;font-family:'Hanken Grotesk',system-ui,sans-serif;}
+  body{display:flex;flex-direction:column;min-height:100vh;}
+  .top{background:var(--ink);padding:14px 18px;display:flex;align-items:center;gap:10px;}
+  .logo{padding:3px 8px;border:2px solid var(--bronze);border-radius:4px;font-family:'Fjalla One',sans-serif;color:var(--bronze);font-size:16px;}
+  .brand-t{font-family:'Fjalla One',sans-serif;font-size:16px;letter-spacing:.04em;line-height:1;}
+  .brand-s{font-size:9.5px;color:var(--muted);letter-spacing:.08em;margin-top:3px;}
+
+  main{flex:1;width:100%;max-width:860px;margin:0 auto;padding:40px 18px 30px;display:flex;flex-direction:column;gap:26px;}
+  h1{font-family:'Fjalla One',sans-serif;font-weight:400;font-size:30px;letter-spacing:.03em;margin:0;line-height:1.1;}
+  h1 small{display:block;font-family:'Hanken Grotesk',sans-serif;font-size:14px;letter-spacing:0;color:var(--muted);margin-top:8px;font-weight:500;}
+  .izbor{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:620px){.izbor{grid-template-columns:1fr;} h1{font-size:25px;}}
+
+  a.kartica{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--shell2);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .15s,transform .15s;}
+  a.kartica:hover{border-color:var(--bronze);transform:translateY(-2px);}
+  a.kartica:focus-visible{outline:2px solid var(--bronze);outline-offset:3px;}
+  .slika{background:var(--paper);aspect-ratio:16/9;display:grid;place-items:center;border-bottom:3px solid var(--bronze);}
+  .slika svg{width:78%;height:auto;display:block;}
+  .tekst{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .naziv{font-family:'Fjalla One',sans-serif;font-size:24px;letter-spacing:.04em;}
+  .opis{font-size:13px;color:#c9c4b6;line-height:1.5;}
+  .sadrzi{font-family:'Spline Sans Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;}
+  .ulaz{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;}
+  .ulaz span{font-family:'Fjalla One',sans-serif;font-size:14px;letter-spacing:.05em;background:var(--bronze);color:#fff;padding:9px 16px;border-radius:6px;}
+  a.kartica:hover .ulaz span{background:var(--bronzeD);}
+
+  footer{text-align:center;color:var(--muted);font-size:11px;padding:0 18px 22px;}
+  @media (prefers-reduced-motion: reduce){a.kartica{transition:none;} a.kartica:hover{transform:none;}}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="logo">AG</div>
+    <div><div class="brand-t">AG GROUP · RADNI NALOZI</div><div class="brand-s">PROGRAMI ZA SEČENJE I OBRAČUN</div></div>
+  </div>
+
+  <main>
+    <h1>Za šta pravimo nalog?<small>Izaberi proizvod. Svaki program ima svoj nalog, obračun i arhivu.</small></h1>
+
+    <div class="izbor">
+      <a class="kartica" href="index.html">
+        <div class="slika" aria-hidden="true">
+          <!-- pergola: stubovi, raje, korniši -->
+          <svg viewBox="0 0 320 180">
+            <line x1="20" y1="160" x2="300" y2="160" stroke="#c9c1ab" stroke-width="2"/>
+            <rect x="248" y="30" width="10" height="130" fill="#191814"/>
+            <rect x="60" y="62" width="10" height="98" fill="#191814"/>
+            <rect x="150" y="62" width="10" height="98" fill="#191814"/>
+            <polygon points="40,62 270,30 276,38 46,70" fill="#2b2a26"/>
+            <g stroke="#a9743c" stroke-width="4" stroke-linecap="round">
+              <line x1="62" y1="64" x2="250" y2="38"/>
+            </g>
+            <g stroke="#191814" stroke-width="2.5">
+              <line x1="70" y1="58" x2="85" y2="76"/><line x1="96" y1="55" x2="111" y2="73"/><line x1="122" y1="51" x2="137" y2="69"/>
+              <line x1="148" y1="47" x2="163" y2="65"/><line x1="174" y1="44" x2="189" y2="62"/><line x1="200" y1="40" x2="215" y2="58"/><line x1="226" y1="37" x2="241" y2="55"/>
+            </g>
+            <rect x="40" y="62" width="230" height="5" fill="#191814" transform="rotate(-8 40 62)"/>
+          </svg>
+        </div>
+        <div class="tekst">
+          <div class="naziv">PERGOLA</div>
+          <div class="opis">Bioklimatska pergola sa ceradom. Raje, korniši, cerada sa mapom kedera, LED i okov.</div>
+          <div class="sadrzi">nalog · obračun · magacin · istorija · kalendar</div>
+          <div class="ulaz"><span>Otvori pergole →</span></div>
+        </div>
+      </a>
+
+      <a class="kartica" href="giljotina.html">
+        <div class="slika" aria-hidden="true">
+          <!-- giljotina: kutija sa motorom, tri staklena polja -->
+          <svg viewBox="0 0 320 180">
+            <line x1="20" y1="166" x2="300" y2="166" stroke="#c9c1ab" stroke-width="2"/>
+            <rect x="70" y="18" width="180" height="146" fill="#ffffff" stroke="#191814" stroke-width="3"/>
+            <rect x="70" y="18" width="180" height="18" fill="#2b2a26"/>
+            <circle cx="160" cy="27" r="5" fill="none" stroke="#a9743c" stroke-width="2"/>
+            <g fill="#dfe9ef" stroke="#191814" stroke-width="2">
+              <rect x="80" y="42" width="160" height="36"/><rect x="80" y="82" width="160" height="36"/><rect x="80" y="122" width="160" height="36"/>
+            </g>
+            <g stroke="#ffffff" stroke-width="4" opacity=".9">
+              <line x1="92" y1="72" x2="130" y2="48"/><line x1="92" y1="112" x2="130" y2="88"/><line x1="92" y1="152" x2="130" y2="128"/>
+            </g>
+            <g stroke="#a9743c" stroke-width="2" fill="#a9743c">
+              <line x1="266" y1="62" x2="266" y2="138"/><polygon points="260,66 266,54 272,66"/><polygon points="260,134 266,146 272,134"/>
+            </g>
+          </svg>
+        </div>
+        <div class="tekst">
+          <div class="naziv">GILJOTINA</div>
+          <div class="opis">Staklena giljotina GIO NOR, fiksna ili brisiva. Profili, staklo, set okova i kartica troška.</div>
+          <div class="sadrzi">nalog · obračun · arhiva</div>
+          <div class="ulaz"><span>Otvori giljotine →</span></div>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer>AG GROUP · pergola.rs</footer>
+</body>
+</html>
