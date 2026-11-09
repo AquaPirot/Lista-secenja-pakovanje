@@ -804,26 +804,29 @@ function ceradaMap(R){
 
 /* ───────── OKOV — primena pravila ───────── */
 /* ───────── VIJČANA ROBA — šta ide uz koji deo (pravila vlasnika, 09.11.2026) ───────── */
+/* c = cena €/kom bez PDV-a. Bez oznake: ponuda dobavljača (M8×12 polu-imbus, kockasta i M8 matica,
+   3,9×16, M12×130, M12, M6×65, M6, M8×70). pr:1 = procena po evropskim cenama za isti standard
+   (novembar 2026) — zameniti kad stigne ponuda. */
 const VIJCI = {
-  ank8:   {n:"Anker M8 × 150",                         k:"anker M8×150",      img:"vij_ank8"},
-  h630:   {n:"Holšraf 6 × 30",                         k:"6×30",              img:"vij_h630"},
-  samo416:{n:"Samorezni holšraf 4 × 16",               k:"samorezni 4×16",    img:"vij_samo416"},
-  ob416:  {n:"Holšraf običan 4 × 16, konusna glava",   k:"običan 4×16",       img:"vij_ob416"},
-  mkock8: {n:"Matica kockasta M8",                     k:"kockasta M8",       img:"vij_mkock8"},
-  polu8:  {n:"Poluloptasti imbus šraf M8",             k:"polu-imbus M8",     img:"vij_polu8"},
-  s650:   {n:"Holšraf samourezujući 6 × 50, šestougaona glava", k:"6×50 šestoug.", img:"vij_s650"},
-  s627:   {n:"Holšraf samourezujući 6 × 27, šestougaona glava", k:"6×27 šestoug.", img:"vij_s627"},
-  m8x75:  {n:"Šraf M8 × 75",                           k:"M8×75",             img:"vij_m8x75"},
-  m8fl:   {n:"Matica M8 sa obodom",                    k:"matica M8",         img:"vij_m8fl"},
-  m12x140:{n:"Šraf M12 × 140",                         k:"M12×140",           img:"vij_m12x140"},
-  mat12:  {n:"Matica M12",                             k:"matica M12",        img:"vij_mat12"},
-  im6x60: {n:"Imbus šraf M6 × 60",                     k:"imbus M6×60",       img:"vij_im6x60"},
-  mat6:   {n:"Matica M6",                              k:"matica M6",         img:"vij_mat6"},
-  k450:   {n:"Holšraf 4 × 50, konusna glava",          k:"4×50 konusni",      img:"vij_k450"},
-  ob420:  {n:"Holšraf običan 4 × 20",                  k:"običan 4×20",       img:"vij_ob420"},
-  k4100:  {n:"Holšraf 4 × 100, konusna glava",         k:"4×100 konusni",     img:"vij_k4100"},
-  k5120:  {n:"Holšraf 5 × 120, konusna glava",         k:"5×120 konusni",     img:"vij_k5120"},
-  saj6:   {n:"Šajbna M6, Ø 20",                        k:"šajbna M6",         img:"vij_saj6"},
+  ank8:   {n:"Anker M8 × 150",                         k:"anker M8×150",      img:"vij_ank8", c:0.6, pr:1},
+  h630:   {n:"Holšraf 6 × 30",                         k:"6×30",              img:"vij_h630", c:0.04, pr:1},
+  samo416:{n:"Samorezni holšraf 4 × 16",               k:"samorezni 4×16",    img:"vij_samo416", c:0.02, pr:1},
+  ob416:  {n:"Holšraf običan 4 × 16, konusna glava",   k:"običan 4×16",       img:"vij_ob416", c:0.02},
+  mkock8: {n:"Matica kockasta M8",                     k:"kockasta M8",       img:"vij_mkock8", c:0.06},
+  polu8:  {n:"Poluloptasti imbus šraf M8",             k:"polu-imbus M8",     img:"vij_polu8", c:0.07},
+  s650:   {n:"Holšraf samourezujući 6 × 50, šestougaona glava", k:"6×50 šestoug.", img:"vij_s650", c:0.12, pr:1},
+  s627:   {n:"Holšraf samourezujući 6 × 27, šestougaona glava", k:"6×27 šestoug.", img:"vij_s627", c:0.06, pr:1},
+  m8x75:  {n:"Šraf M8 × 75",                           k:"M8×75",             img:"vij_m8x75", c:0.25},
+  m8fl:   {n:"Matica M8 sa obodom",                    k:"matica M8",         img:"vij_m8fl", c:0.06},
+  m12x140:{n:"Šraf M12 × 140",                         k:"M12×140",           img:"vij_m12x140", c:0.57},
+  mat12:  {n:"Matica M12",                             k:"matica M12",        img:"vij_mat12", c:0.15},
+  im6x60: {n:"Imbus šraf M6 × 60",                     k:"imbus M6×60",       img:"vij_im6x60", c:0.2},
+  mat6:   {n:"Matica M6",                              k:"matica M6",         img:"vij_mat6", c:0.06},
+  k450:   {n:"Holšraf 4 × 50, konusna glava",          k:"4×50 konusni",      img:"vij_k450", c:0.02, pr:1},
+  ob420:  {n:"Holšraf običan 4 × 20",                  k:"običan 4×20",       img:"vij_ob420", c:0.02, pr:1},
+  k4100:  {n:"Holšraf 4 × 100, konusna glava",         k:"4×100 konusni",     img:"vij_k4100", c:0.05, pr:1},
+  k5120:  {n:"Holšraf 5 × 120, konusna glava",         k:"5×120 konusni",     img:"vij_k5120", c:0.08, pr:1},
+  saj6:   {n:"Šajbna M6, Ø 20",                        k:"šajbna M6",         img:"vij_saj6", c:0.04, pr:1},
 };
 /* Mesta ugradnje = kese za montažu. s: [šifra šrafa, kom po jednom mestu, opis za kolonu „gde ide"]
    po:true — posebna kesa za svaki komad (stub, raj se montiraju jedan po jedan); ostalo jedna zbirna kesa. */
@@ -966,7 +969,12 @@ function obracunCalc(I, R, alu, okov){
     celicnaEur = round(celicnaM * CELIK_CEV_PER_M_EUR, 2);
   }
 
-  const srafovi = round(SRAFOVI_PAUSAL * nKom, 2);
+  // Vijčana roba po stvarnim komadima i cenama + paušal za pakovanje
+  const VRo = vijcanaRoba(R, nKom);
+  const vijci = VRo.lista.map(u=>({...u, cena:VIJCI[u.id].c||0, iznos:round(u.kol*(VIJCI[u.id].c||0),2)}));
+  const vijciEur = round(vijci.reduce((a,v)=>a+v.iznos,0), 2);
+  const pakovanje = round(SRAFOVI_PAUSAL * nKom, 2);
+  const srafovi = round(vijciEur + pakovanje, 2);
   const subtotal = round(
     alu.totalEur + ceradaCena + plastikaEur + metalEur + fitiljEur +
     cevNaZiduEur + trapezniLimEur + elekTotal + srafovi + celicnaEur,
@@ -980,7 +988,7 @@ function obracunCalc(I, R, alu, okov){
     cevNaZiduM, cevNaZiduEur,
     trapezniLimKom, trapezniLimM2, trapezniLimEur,
     elek, elekTotal,
-    srafovi,
+    srafovi, vijci, vijciEur, pakovanje,
     celicnaM, celicnaEur,
     subtotal,
   };
@@ -1917,13 +1925,21 @@ function renderObracun(I, R, alu, okov, obr){
     <td class="m euro" style="text-align:right">${eur(obr.elekTotal)}</td></tr>`;
   html += `</tbody></table></div>`;
 
-  /* 07 — Paušal */
+  /* 07 — Vijčana roba + pakovanje */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n">07</span>
-    <h3 class="sec-t">Vijci i pakovanje (paušal)</h3></div>
-    <table><tbody>
-      <tr><td><b>Vijci, navrtke, podloške + pakovanje (folija, ćoškovi, traka)</b>${obr.nKom>1?`<div style="font-size:10px;color:#888">× ${obr.nKom} pergole</div>`:''}</td>
-        <td class="m euro" style="width:90px;text-align:right;font-weight:700">${eur(obr.srafovi)}</td></tr>
-    </tbody></table></div>`;
+    <h3 class="sec-t">Vijčana roba i pakovanje</h3></div>
+    <table><thead><tr><th>Šraf</th><th style="width:70px;text-align:right">Kom</th><th style="width:70px;text-align:right">€/kom</th><th style="width:80px;text-align:right">Iznos</th></tr></thead><tbody>`;
+  obr.vijci.forEach((v,i)=>{
+    html += `<tr style="background:${i%2?'#ebe7db':'transparent'}"><td>${esc(VIJCI[v.id].n)}</td>
+      <td class="m" style="text-align:right">${v.kol}</td>
+      <td class="m" style="text-align:right">${v.cena.toFixed(2)}${VIJCI[v.id].pr?'<span title="procena" style="color:#bd4a2a"> *</span>':''}</td>
+      <td class="m euro" style="text-align:right">${eur(v.iznos)}</td></tr>`;
+  });
+  html += `<tr><td><b>Pakovanje (folija, ćoškovi, traka)</b> — paušal${obr.nKom>1?` × ${obr.nKom}`:''}</td><td></td><td></td>
+      <td class="m euro" style="text-align:right">${eur(obr.pakovanje)}</td></tr>
+    <tr class="obr-sum"><td colspan="3">UKUPNO VIJČANA ROBA I PAKOVANJE</td><td class="m euro" style="text-align:right">${eur(obr.srafovi)}</td></tr>
+    </tbody></table>
+    <div style="font-size:10px;color:#888;margin-top:4px">* procena po evropskim cenama za isti standard — ostale cene su sa ponude dobavljača.</div></div>`;
 
   /* 08 — Bravarija: cev na zidu + trapezni lim */
   html += `<div class="sec"><div class="sec-h"><span class="sec-n">08</span>
@@ -1981,7 +1997,7 @@ function renderObracun(I, R, alu, okov, obr){
     <tr><td><b>Elektronika</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.elekTotal)}</td></tr>
     ${I.cev!=="nema"?`<tr><td><b>Cev na zidu ${esc(I.cev)} (${obr.cevNaZiduM} m)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.cevNaZiduEur)}</td></tr>`:''}
     <tr><td><b>Trapezni lim 125×80 (${obr.trapezniLimKom} kom · ${obr.trapezniLimM2} m²)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.trapezniLimEur)}</td></tr>
-    <tr><td><b>Vijci + pakovanje (paušal)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.srafovi)}</td></tr>
+    <tr><td><b>Vijčana roba + pakovanje</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.srafovi)}</td></tr>
     ${I.celicnaOn && obr.celicnaEur>0 ? `<tr><td><b>Čelična konstrukcija (${obr.celicnaM} m)</b></td><td class="m euro" style="text-align:right;font-size:13px;font-weight:700">${eur(obr.celicnaEur)}</td></tr>` : ''}
     <tr class="obr-total"><td>UKUPNO TROŠAK MATERIJALA</td><td class="amt" style="text-align:right">${eur(obr.subtotal)}</td></tr>
   </tbody></table></div>`;
@@ -1992,13 +2008,13 @@ function renderObracun(I, R, alu, okov, obr){
   html += `<div class="card mono" style="margin-top:14px;font-size:12px">
     Površina projekta: <b>${projektM2} m²</b> · Trošak po m² (samo materijal): <b>${eur(trosakM2)}/m²</b></div>`;
 
-  html += `<div class="foot">AG GROUP · obračun materijala · cene: aluminijum ${ALU_PRICE_PER_KG.toFixed(2)} €/kg · cerada ${CERADA_PER_M2.toFixed(2)} €/m² · trapezni lim 900 RSD/m² · čelik 1100 RSD/m (kurs ${RSD_PER_EUR} din/€) · motor ${MOTOR_PRICE}€ · daljinski ${DALJINSKI_PRICE}€ · dimer ${DIMER_PRICE}€ · vijci paušal ${SRAFOVI_PAUSAL}€</div>`;
+  html += `<div class="foot">AG GROUP · obračun materijala · cene: aluminijum ${ALU_PRICE_PER_KG.toFixed(2)} €/kg · cerada ${CERADA_PER_M2.toFixed(2)} €/m² · trapezni lim 900 RSD/m² · čelik 1100 RSD/m (kurs ${RSD_PER_EUR} din/€) · motor ${MOTOR_PRICE}€ · daljinski ${DALJINSKI_PRICE}€ · dimer ${DIMER_PRICE}€ · vijci po komadu · pakovanje paušal ${SRAFOVI_PAUSAL}€</div>`;
 
   $("doc").innerHTML = html;
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.31";
+const APP_VER = "v2026-06-11.32";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
