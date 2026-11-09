@@ -26,7 +26,7 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.37` / cache `lista-secenja-v40`.
+Trenutna verzija: `v2026-06-11.38` / cache `lista-secenja-v41`.
 
 ## Arhitektura proračuna
 
@@ -50,7 +50,8 @@ render()  →  compute(I)  →  aluCalc(I,R)  →  applyOkov(R,I)  →  obracunC
 ## Poslovna pravila (ovo je suština — ne menjati napamet)
 
 ### Raje i stubovi
-- Max razmak između raja **4000 mm**: `brStubova = max(2, ceil((D + 4000) / (4000 + sirinaRaja)))`
+- Max razmak između raja **4000 mm**, meri se sa rajevima (D / brPolja ≤ 4000), isto za sve širine raja:
+  `brStubova = max(2, ceil(D / 4000) + 1)` → do 4000 = 2 raja, do 8000 = 3, do 12000 = 4
 - Širine raja: 70 (10412, max dužina 5000 mm — nije za velike izbačaje), 75, 90 (podrazumevano, 10501), 110 (10475)
 - Oluk: standardni 10468 (podrazumevano) ili sa duplim dnom 10477 — isti poklopci, odvod, keder i šrafovi; spojka sa rajem je ARV.10.079 umesto ARV-M6
 - `brRaja = brStubova`, `brPolja = brRaja − 1`
