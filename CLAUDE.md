@@ -26,7 +26,24 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.40` / cache `lista-secenja-v43`.
+Trenutna verzija: `v2026-06-11.41` / cache `lista-secenja-v44`.
+
+## Izgled ekrana i radni nalog (od v2026-06-11.41)
+
+- **Gornja traka**: NALOG | OBRAČUN | IZVEŠTAJ + Sačuvaj, ✓ Pregled i izdavanje, PDF;
+  drugi red: Arhiva, Proizvodnja, Kalendar, Magacin (Stanje, Istorija), ← Početna.
+- **Forma** u karticama: 1 Nalog i kupac (+ `napomena`), 2 Mere, 3 Konstrukcija, 4 Krov,
+  5 Pogon i rasveta, 6 Čelik. `select[data-pills]` se prikazuje kao dugmad (`initPills`/`syncPills`),
+  sam select ostaje skriven i nosi vrednost — ID-jevi polja su nepromenjeni.
+- **Tabla „Proračun uživo"** (`renderDash`): raja, polja, razmak korniša, dužina raja, pad, korniša,
+  kontrola (`kontrole()`), cena koštanja — samo na ekranu, ne štampa se.
+- **Ručni broj raja**: `rajMod` (auto/rucno) + `brRajaRucno`; sme samo VIŠE od auto
+  (`R.auto.autoRaja`), `R.auto.rajRucno` = zadato ručno.
+- **Pregled pre izdavanja** (`otvoriPregled`, `pregledStavke()`): svaka stavka se štiklira,
+  „Izdaj nalog" čuva nalog sa `_izdato` i štampa. **Izveštaj o pergoli** (`renderIzvestaj`) je
+  siže bez cena, dostupan na IZVEŠTAJ i iz Arhive.
+- **Radni nalog po listovima**: zbirni list + A sečenje aluminijuma, B cerada (za ceradare: rolne,
+  mapa kedera, PRG-101), C okov i pakovanje, D elektronika, E bravarija — svaki list na novoj strani.
 
 ## Arhitektura proračuna
 
