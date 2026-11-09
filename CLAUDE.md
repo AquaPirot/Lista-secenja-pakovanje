@@ -26,7 +26,7 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.39` / cache `lista-secenja-v42`.
+Trenutna verzija: `v2026-06-11.40` / cache `lista-secenja-v43`.
 
 ## Arhitektura proračuna
 
@@ -99,6 +99,8 @@ Srednjih umetaka (konektora) ima `n − 1` **po svakoj poziciji korniša** —
 - **Spojene pergole** (`fiksniRazmak > 0`): razmak se zadaje ručno da bi korniši
   susednih pergola bili u liniji. Razmaci idu **od K1 (od fronta)**, a razlika se
   uklapa u **poslednje polje pre kecelje** (sme da bude manje od ostalih).
+  Ako bi ostatak bio **ispod 200 mm**, ne dodaje se keder — poslednje polje se proširi
+  (ostatak + zadati razmak), jer to polje nema opterećenje.
 
 ### Bušenje
 - **LED**: korniš se deli na `n` jednakih segmenata, svetlo u centru svakog →

@@ -679,6 +679,13 @@ function compute(I){
     brIntervala   = Math.max(1, Math.ceil(korisnaZaKornize / fiksniRazmak));
     razmakKornisa = fiksniRazmak;
     poljeKecelja  = round(korisnaZaKornize - (brIntervala-1)*fiksniRazmak, 0);
+    // Mali ostatak (ispod 200 mm) NE dobija još jedan keder — poslednje polje
+    // pre kecelje se proširi (ono nema opterećenje).
+    const MIN_OSTATAK = 200;
+    if(poljeKecelja < MIN_OSTATAK && brIntervala > 1){
+      brIntervala  -= 1;
+      poljeKecelja += fiksniRazmak;
+    }
   } else {
     brIntervala   = I.autoInterval?predlogIntervala:Math.max(1,+I.brIntervala||1);
     razmakKornisa = brIntervala?round(korisnaZaKornize/brIntervala,0):0;
@@ -2044,7 +2051,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.39";
+const APP_VER = "v2026-06-11.40";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
