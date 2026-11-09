@@ -520,7 +520,7 @@ const ALU_PRICE_PER_KG = 6.00;
 const MOTOR_PRICE = 70;
 const DALJINSKI_PRICE = 15;
 const DIMER_PRICE = 25;
-const SRAFOVI_PAUSAL = 35;
+const SRAFOVI_PAUSAL = 20;   // samo pakovanje (folija, ćoškovi, traka) — šrafovi se računaju po komadu
 const CERADA_PER_M2 = 5;
 // Kurs RSD → EUR za stavke u dinarima
 const RSD_PER_EUR = 117;
@@ -2014,7 +2014,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.32";
+const APP_VER = "v2026-06-11.33";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
