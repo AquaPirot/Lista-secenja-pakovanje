@@ -26,7 +26,7 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.17` / cache `lista-secenja-v19`.
+Trenutna verzija: `v2026-06-11.37` / cache `lista-secenja-v39`.
 
 ## Arhitektura proračuna
 
