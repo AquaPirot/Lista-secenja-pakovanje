@@ -26,7 +26,7 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.38` / cache `lista-secenja-v41`.
+Trenutna verzija: `v2026-06-11.39` / cache `lista-secenja-v42`.
 
 ## Arhitektura proračuna
 
@@ -94,7 +94,7 @@ Srednjih umetaka (konektora) ima `n − 1` **po svakoj poziciji korniša** —
 
 ### Razmak korniša (kedera)
 - Ciljni opseg **399–499 mm**, auto-uklapanje gađa 449 mm
-- Korisna dužina = dijagonala − 100 − 70; K1 na 100 mm od prednje ivice,
+- Korisna dužina = dijagonala − 50 − 70; K1 na **50 mm** od prednje ivice (ranije 100),
   rezerva uz zid 470 mm
 - **Spojene pergole** (`fiksniRazmak > 0`): razmak se zadaje ručno da bi korniši
   susednih pergola bili u liniji. Razmaci idu **od K1 (od fronta)**, a razlika se
