@@ -218,7 +218,9 @@ const SEKCIJE = [
     stavke:[
       {sifra:"10501",  naziv:"Šina (raj) 90×150"},
       {sifra:"10475",  naziv:"Šina (raj) 110×150"},
+      {sifra:"10412",  naziv:"Šina (raj) 70×150"},
       {sifra:"10468",  naziv:"Oluk"},
+      {sifra:"10477",  naziv:"Oluk sa duplim dnom"},
       {sifra:"10419",  naziv:"Stub 145×110"},
       {sifra:"10414",  naziv:"Stub 100×100"},
       {sifra:"10471",  naziv:"Korniš — tanki"},
@@ -266,6 +268,7 @@ const SEKCIJE = [
       {sifra:"ARV-M4",  naziv:"Fiksator motora na šinu"},
       {sifra:"ARV-M5",  naziv:"Podloška fiksatora motora"},
       {sifra:"ARV-M6",  naziv:"Spoj šina–oluk"},
+      {sifra:"ARV.10.079", naziv:"Spoj šina–oluk sa duplim dnom"},
       {sifra:"ARV-M7",  naziv:"Spoj stub–oluk"},
       {sifra:"ARV-M8",  naziv:"Spoj rasponke i raja"},
       {sifra:"ARV-M10", naziv:"Prednji zatezač automat"},
@@ -321,6 +324,7 @@ const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
 
 const OTPAD_PRAG_DEFAULT = 2000;
 const OTPAD_PRAG_MAP = {
+  "10412": 1500,  // Šina (raj) 70×150
   "10501": 1500,  // Šina (raj) 90×150
   "10475": 1500,  // Šina (raj) 110×150
   "10419": 1500,  // Stub 110×144

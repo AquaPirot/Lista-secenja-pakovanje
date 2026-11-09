@@ -50,7 +50,9 @@ render()  →  compute(I)  →  aluCalc(I,R)  →  applyOkov(R,I)  →  obracunC
 ## Poslovna pravila (ovo je suština — ne menjati napamet)
 
 ### Raje i stubovi
-- Max razmak između raja **4150 mm**: `brStubova = max(2, ceil((D + 4150) / (4150 + sirinaRaja)))`
+- Max razmak između raja **4000 mm**: `brStubova = max(2, ceil((D + 4000) / (4000 + sirinaRaja)))`
+- Širine raja: 70 (10412, max dužina 5000 mm — nije za velike izbačaje), 75, 90 (podrazumevano, 10501), 110 (10475)
+- Oluk: standardni 10468 (podrazumevano) ili sa duplim dnom 10477 — isti poklopci, odvod, keder i šrafovi; spojka sa rajem je ARV.10.079 umesto ARV-M6
 - `brRaja = brStubova`, `brPolja = brRaja − 1`
 - Dužina raja = dijagonala − 200; pad mora biti 8–10 %
 
