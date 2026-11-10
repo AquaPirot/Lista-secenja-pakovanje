@@ -27,6 +27,8 @@ for (const D of [2500, 3500, 4000, 4001, 4100, 6000, 8000, 8001, 9450, 12000, 12
       for (const kornisSklop of ['jednodelni', 'seceni'])
         for (const sirinaRaja of [70, 75, 90, 110])
           mreza.push({ ...osnova, sirina: D, dubina: B, kederTip, kornisSklop, sirinaRaja });
+for (const st of [0, 2, 4, 5]) for (const D of [3500, 6000, 9450])
+  mreza.push({ ...osnova, sirina: D, dubina: 4000, stubMod: 'rucno', brStubovaRucno: st, kornisSklop: 'seceni' });
 for (const fr of [400, 425, 430, 450, 480]) for (const B of [3000, 4000, 5000])
   mreza.push({ ...osnova, sirina: 6000, dubina: B, fiksniRazmak: fr, kornisSklop: 'seceni' });
 
@@ -43,6 +45,8 @@ const kontrolne = {
   'raj 75': { ...osnova, sirina: 3800, dubina: 4000, sirinaRaja: 75 },
   'raj 110 stub 100': { ...osnova, sirina: 8000, dubina: 6000, sirinaRaja: 110, stub: '100x100', kornisSklop: 'seceni' },
   'spojene 425': { ...osnova, sirina: 6000, dubina: 4000, zadnjaVisina: 2700, prednjaVisina: 2480, fiksniRazmak: 425, kornisSklop: 'seceni' },
+  'ručno 2 stuba na 3 raja': { ...osnova, sirina: 6000, dubina: 4000, kornisSklop: 'seceni', stubMod: 'rucno', brStubovaRucno: 2 },
+  'ručno 4 stuba na 3 raja': { ...osnova, sirina: 6000, dubina: 4000, kornisSklop: 'seceni', stubMod: 'rucno', brStubovaRucno: 4 },
   'zidić 500 bez cevi': { ...osnova, sirina: 4000, dubina: 3000, parapetOn: true, parapetVisina: 500, cev: 'nema' },
 };
 
@@ -68,7 +72,8 @@ const kontrolne = {
       R = compute(I);
       const a = aluCalc(I, R), o = applyOkov(R, I), ob = obracunCalc(I, R, a, o);
       const D = R.in.D, c = R.cerada, k = R.kornis;
-      jeste(R.auto.brRaja === R.auto.brStubova && R.auto.brPolja === R.auto.brRaja - 1, I, 'raja/stubova/polja se ne slažu');
+      jeste((I.stubMod === 'rucno' || R.auto.brRaja === R.auto.brStubova) && R.auto.brPolja === R.auto.brRaja - 1, I, 'raja/stubova/polja se ne slažu');
+      if (I.stubMod === 'rucno') jeste(R.auto.brStubova === +I.brStubovaRucno && a.items.find(x => x.key === 'stub').kom === +I.brStubovaRucno * Math.max(1, +I.brKomada || 1), I, 'ručni broj stubova nije primenjen');
       jeste(D / R.auto.brPolja <= 4000, I, `polje ${Math.round(D / R.auto.brPolja)} > 4000`);
       jeste(R.auto.brRaja === Math.max(2, Math.ceil(D / 4000) + 1), I, `broj raja ${R.auto.brRaja}`);
       jeste(R.raj.duzRaja === R.raj.dijagonala - 200, I, 'dužina raja ≠ dijagonala − 200');

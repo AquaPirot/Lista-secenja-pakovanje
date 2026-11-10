@@ -32,7 +32,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.43` / cache `lista-secenja-v46`.
+Trenutna verzija: `v2026-06-11.44` / cache `lista-secenja-v47`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -60,6 +60,10 @@ Trenutna verzija: `v2026-06-11.43` / cache `lista-secenja-v46`.
   pretraživača — sprečava slučajan pristup, nije prava serverska zaštita.
 - **Isti nalog = isti broj naloga + kupac** (`nalogKljuc`): Sačuvaj i Izdaj tada AŽURIRAJU isti zapis;
   promena broja ili kupca čuva nov nalog. „＋ Novi nalog" vraća formu na početne vrednosti.
+- **Broj naloga** se dodeljuje sam pri čuvanju/izdavanju ako je polje prazno: `GGGG-NNN`, najveći
+  sačuvani broj u tekućoj godini + 1 (`sledeciBrojNaloga`). Bez interneta polje ostaje prazno.
+- **Strana motora** (`motorStrana`: levo/desno, gledano čeono) — ispisuje se na zbirnom listu i
+  listovima A, C, D zbog poklopaca. Boje cerade: Krem 3D (podrazumevano), Krem mat, Antracit, Crna, Miš boja.
 - Korisnik koristi **Nalog, Obračun, Izveštaj i Arhivu**; Proizvodnja, Kalendar i Magacin postoje,
   ali se u praksi ne koriste — ne ulagati u njih bez pitanja.
 
@@ -89,7 +93,9 @@ render()  →  compute(I)  →  aluCalc(I,R)  →  applyOkov(R,I)  →  obracunC
   `brStubova = max(2, ceil(D / 4000) + 1)` → do 4000 = 2 raja, do 8000 = 3, do 12000 = 4
 - Širine raja: 70 (10412, max dužina 5000 mm — nije za velike izbačaje), 75 (GÇ-2631, 75×155, 5,390 kg/m), 90 (podrazumevano, 10501), 110 (10475)
 - Oluk: standardni 10468 (podrazumevano) ili sa duplim dnom 10477 — isti poklopci, odvod, keder i šrafovi; spojka sa rajem je ARV.10.079 umesto ARV-M6
-- `brRaja = brStubova`, `brPolja = brRaja − 1`
+- `brPolja = brRaja − 1`. **Broj stubova**: auto = broj raja; ručno (`stubMod`/`brStubovaRucno`) može više
+  ILI manje, i 0 (`R.auto.stubRucno`). Menja samo ono što ide po stubu (stub, stopa, spoj stub–oluk,
+  odvod, vijci stuba). Spoj šina–oluk (ARV-M6 / ARV.10.079) ide **po raju** (× 2).
 - Dužina raja = dijagonala − 200; pad mora biti 8–10 %
 
 ### Korniši — sklop mora da da punu širinu pergole

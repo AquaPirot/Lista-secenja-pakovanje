@@ -199,6 +199,8 @@
   .st-t small{display:block;font-size:9.5px;color:#7a7364;line-height:1.3;margin-top:1px;}
   .st-q{font-family:'Spline Sans Mono',monospace;font-weight:700;font-size:14px;white-space:nowrap;text-align:right;}
   .kese-blok{break-inside:avoid;}
+  .motor-str{margin-top:8px;padding:6px 11px;border:1.5px solid var(--ink);border-radius:6px;background:#fff;font-family:'Spline Sans Mono',monospace;font-size:11.5px;}
+  .motor-str b{font-size:14px;color:var(--warn);}
   .lfoot{display:flex;justify-content:space-between;margin-top:14px;border-top:1px solid #d8d1bd;padding-top:5px;font-family:'Spline Sans Mono',monospace;font-size:9px;color:#8a8270;}
   .potpisi3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:18px;}
   .zb-dno{margin-top:12px;break-inside:avoid;}
@@ -561,7 +563,7 @@
   <div class="kar">
     <div class="kh"><span class="kn">1</span><span class="kt">NALOG I KUPAC</span><span class="kd">ko, gde, do kada</span></div>
     <div class="kb c3">
-      <label><div class="lbl">Broj naloga</div><input type="text" id="brNaloga" placeholder="2026-014"></label>
+      <label><div class="lbl">Broj naloga</div><input type="text" id="brNaloga" placeholder="auto — pri čuvanju"></label>
       <label><div class="lbl">Datum</div><input type="text" id="datum"></label>
       <label><div class="lbl">Rok isporuke</div><input type="date" id="rok"></label>
       <label><div class="lbl">Kupac / firma</div><input type="text" id="kupac" placeholder="ime / firma"></label>
@@ -616,11 +618,20 @@
       <div class="hint-box full" id="rajHint" style="display:none"></div>
       <label><div class="lbl">Stub</div><div class="sub">&nbsp;</div>
         <select id="stub" data-pills><option value="110x144" selected>110×144</option><option value="100x100">100×100</option></select></label>
+      <div class="f"><div class="lbl">Broj stubova</div><div class="sub" id="stubBrSub">auto: isto kao raja</div>
+        <div class="raj-line">
+          <select id="stubMod" data-pills><option value="auto" selected>Auto</option><option value="rucno">Ručno</option></select>
+          <div class="step" id="stubStep">
+            <button type="button" class="step-b" onclick="stubKorak(-1)">−</button>
+            <input type="number" id="brStubovaRucno" value="2" min="0">
+            <button type="button" class="step-b" onclick="stubKorak(1)">+</button>
+          </div>
+        </div></div>
       <label><div class="lbl">Oluk</div><div class="sub">model profila</div>
         <select id="olukTip" data-pills><option value="10468" selected>Standardni 10468</option><option value="10477">Dupli dno 10477</option></select></label>
       <label><div class="lbl">Cev na zidu</div><div class="sub">nosač pergole</div>
         <select id="cev" data-pills><option value="nema">Nema</option><option value="80x40" selected>80×40</option><option value="100x100">100×100</option></select></label>
-      <label><div class="lbl">Boja (RAL)</div><div class="sub">važi za sve — profili + okov</div>
+      <label class="full"><div class="lbl">Boja (RAL)</div><div class="sub">važi za sve — profili + okov</div>
         <select id="bojaRal">
           <option value="7016">RAL 7016 — Antracit</option>
           <option value="9005">RAL 9005 — Crna</option>
@@ -649,18 +660,20 @@
       <label><div class="lbl">Spojene pergole — zadati razmak</div><div class="sub">0 = isključeno · ostatak ide u poslednje polje</div>
         <input type="number" id="fiksniRazmak" value="0" min="0"></label>
       <label class="full"><div class="lbl">Boja cerade</div>
-        <select id="bojaCerade"><option selected>Antracit</option><option>Krem</option><option>Crna</option><option>Miš boja</option></select></label>
+        <select id="bojaCerade"><option selected>Krem 3D</option><option>Krem mat</option><option>Antracit</option><option>Crna</option><option>Miš boja</option></select></label>
     </div>
   </div>
 
   <!-- 5. POGON I RASVETA -->
   <div class="kar">
     <div class="kh"><span class="kn">5</span><span class="kt">POGON I RASVETA</span><span class="kd">motor, cev motora, LED</span></div>
-    <div class="kb c3">
+    <div class="kb c2">
       <label><div class="lbl">Motor (model)</div><div class="sub">prazno = piše samo „Motor"</div>
         <input type="text" id="motor" placeholder="npr. Somfy RTS 120Nm"></label>
       <label><div class="lbl">Cev motora</div><div class="sub">&nbsp;</div>
         <select id="cevMotora" data-pills><option value="jednodelna" selected>Jednodelna</option><option value="po poljima">Po poljima</option></select></label>
+      <label><div class="lbl">Strana motora</div><div class="sub">gledano čeono — zbog poklopaca</div>
+        <select id="motorStrana" data-pills><option value="" selected>Nije zadato</option><option value="levo">Levo</option><option value="desno">Desno</option></select></label>
       <label><div class="lbl">Svetala po kornišu</div><div class="sub">obično 3–6</div>
         <input type="number" id="svetalaPoKornizu" value="6"></label>
     </div>
@@ -799,8 +812,8 @@ const KATALOG = [
   {grupa:"metal", img:"metal_ARVM2b",  sifra:"ARV-M2b", naziv:"Zadnji spoj šine — bez rupe", pravilo:"fiksno", m:1, cena:2.27, jed:"kom"},
   {grupa:"metal", img:"metal_rayMotorSabit",    sifra:"ARV-M4",  naziv:"Fiksator motora na šinu", pravilo:"fiksno", m:1, cena:0.80, jed:"kom"},
   {grupa:"metal", img:"metal_rayMotorPul",      sifra:"ARV-M5",  naziv:"Podloška fiksatora motora", pravilo:"fiksno", m:1, cena:0.40, jed:"kom"},
-  {grupa:"metal", img:"metal_rayOlukBaglanti10079", sifra:"ARV.10.079", naziv:"Spoj šina–oluk sa duplim dnom", uslov:c=>c.oluk2, fn:c=>c.stubova*2, opis:"× broj stubova × 2 (oluk 10477)", cena:0.59, jed:"kom"},
-  {grupa:"metal", img:"metal_rayOlukBaglanti",  sifra:"ARV-M6",  naziv:"Spoj šina–veliki oluk", uslov:c=>!c.oluk2, fn:c=>c.stubova*2, opis:"× broj stubova × 2", cena:0.59, jed:"kom"},
+  {grupa:"metal", img:"metal_rayOlukBaglanti10079", sifra:"ARV.10.079", naziv:"Spoj šina–oluk sa duplim dnom", uslov:c=>c.oluk2, fn:c=>c.raja*2, opis:"× broj raja × 2 (oluk 10477)", cena:0.59, jed:"kom"},
+  {grupa:"metal", img:"metal_rayOlukBaglanti",  sifra:"ARV-M6",  naziv:"Spoj šina–veliki oluk", uslov:c=>!c.oluk2, fn:c=>c.raja*2, opis:"× broj raja × 2", cena:0.59, jed:"kom"},
   {grupa:"metal", img:"metal_direkOlukBaglanti",sifra:"ARV-M7",  naziv:"Spoj stub–oluk", pravilo:"stub", m:1, cena:1.51, jed:"kom"},
   {grupa:"metal", img:"metal_trapezBaglanti",   sifra:"ARV-M8",  naziv:"Spoj rasponke i raja", fn:c=>c.polja*2, opis:"× polja × 2 (između rajeva)", cena:1.00, jed:"kom"},
   {grupa:"metal", img:"metal_onGergiOtomat",    sifra:"ARV-M10", naziv:"Prednji zatezač automat", pravilo:"raj", m:1, cena:0.75, jed:"kom"},
@@ -844,9 +857,14 @@ function compute(I){
   // Ručno zadat broj raja (npr. usklađivanje sa susednim objektom): sme samo
   // VIŠE od auto — manje bi dalo polje preko 4000 mm.
   const rajRucnoZadato = I.rajMod === 'rucno' ? (Math.round(+I.brRajaRucno) || 0) : 0;
-  const brStubova = Math.max(autoStubova, rajRucnoZadato);
-  const rajRucno = I.rajMod === 'rucno' && brStubova > autoStubova;
-  const brRaja=brStubova, brPolja=Math.max(0,brRaja-1);
+  const brRaja = Math.max(autoStubova, rajRucnoZadato);
+  const rajRucno = I.rajMod === 'rucno' && brRaja > autoStubova;
+  const brPolja = Math.max(0,brRaja-1);
+  // Broj stubova: auto = koliko i raja. Ručno može više ILI manje (npr. 3 raja na 2 ili 4 stuba) —
+  // menja samo stubove i ono što ide po stubu (stopa, spoj stub–oluk, odvod, vijci stuba).
+  const stubZadato = I.stubMod === 'rucno' ? Math.max(0, Math.round(+I.brStubovaRucno) || 0) : null;
+  const brStubova = stubZadato === null ? brRaja : stubZadato;
+  const stubRucno = stubZadato !== null && brStubova !== brRaja;
   const sirinaPolja = brPolja?round((D-brRaja*sirinaRaja)/brPolja,0):0;
   const preko10m = D>10000;
 
@@ -997,7 +1015,7 @@ function compute(I){
 
   return {
     in:{A,B,C:Cc,D,cev,sirinaRaja,parapetVis},
-    auto:{brStubova,brRaja,brPolja,sirinaPolja,preko10m,autoRaja:autoStubova,rajRucno},
+    auto:{brStubova,brRaja,brPolja,sirinaPolja,preko10m,autoRaja:autoStubova,rajRucno,stubRucno},
     raj:{kat1,kat2,pad,padOk,dijagonala,duzRaja,raj70Predug,RAJ70_MAX},
     cerada:{sirinaCerade,duzCerade,korisnaZaKornize,brIntervala,predlogIntervala,
       razmakKornisa,razmakOk,kornisaUkupno,debeli,tanki,tankiSvetlo,tankiBez,
@@ -1291,7 +1309,7 @@ function pokaziSliku(img){
 }
 // RAL boje — naziv + uzorak za prikaz u nalogu
 const RAL_INFO = {
-  "7016":{naziv:"Antracit siva",  hex:"#293133"},
+  "7016":{naziv:"Antracit",       hex:"#293133"},
   "9005":{naziv:"Crna",           hex:"#0A0A0A"},
   "9006":{naziv:"Srebrna",        hex:"#A5A5A5"},
   "8019":{naziv:"Sivo-braon",     hex:"#403A3A"},
@@ -1301,6 +1319,13 @@ const RAL_INFO = {
   "8017":{naziv:"Čokoladno braon",hex:"#45322E"},
   "9016":{naziv:"Saobraćajno bela",hex:"#F6F6F6"},
 };
+// Kratko: „RAL 7016 Antracit"
+function ralTxt(bojaRal){
+  const kod = (bojaRal||'').trim();
+  if(!kod) return 'po izboru';
+  return 'RAL ' + esc(kod) + (RAL_INFO[kod] ? ' ' + RAL_INFO[kod].naziv : '');
+}
+const motorStranaTxt = I => I.motorStrana === 'levo' ? 'LEVO' : I.motorStrana === 'desno' ? 'DESNO' : '';
 function bojaHtml(bojaRal){
   const kod = (bojaRal||'').trim();
   if(!kod) return "(po izboru)";
@@ -1346,6 +1371,7 @@ function citajI(){
     brNaloga:$("brNaloga").value,kupac:$("kupac").value,adresa:$("adresa").value,
     datum:$("datum").value,rok:$("rok").value,radnik:$("radnik").value,
     rajMod:$("rajMod").value,brRajaRucno:$("brRajaRucno").value,napomena:$("napomena").value,
+    stubMod:$("stubMod").value,brStubovaRucno:$("brStubovaRucno").value,motorStrana:$("motorStrana").value,
   };
 }
 function trenutniProracun(){ const I=citajI(); return {I, R:compute(I)}; }
@@ -1406,6 +1432,27 @@ let aktivniNalog = {id:null, br:'', izdato:null};
 // postojeći zapis; čim se promeni broj ili kupac, čuva se kao nov nalog.
 const nalogKljuc = f => ((f.brNaloga||'').trim() + '|' + (f.kupac||'').trim());
 const istiNalog  = f => !!aktivniNalog.id && nalogKljuc(f) !== '|' && aktivniNalog.br === nalogKljuc(f);
+// Sledeći broj naloga: GGGG-NNN, najveći sačuvani u ovoj godini + 1.
+// Broje se samo SAČUVANI nalozi — broj se dodeljuje tek pri čuvanju/izdavanju.
+async function sledeciBrojNaloga(){
+  const god = new Date().getFullYear(); let max = 0;
+  const uzmi = t => { const m = /^(\d{4})-(\d{1,4})(?!\d)/.exec((t||'').trim()); if(m && +m[1] === god) max = Math.max(max, +m[2]); };
+  try {
+    for(const qs of ['', '&status=proizvodnja']){
+      const res = await fetch(API_URL+'/nalozi.php?action=list'+qs, {headers:{'X-Api-Key': API_KEY}});
+      const j = await res.json();
+      if(!j.ok) return null;
+      j.data.forEach(o => uzmi(o.klijent));
+    }
+  } catch(e){ return null; }   // bez interneta se ne zna koji je sledeći — polje ostaje prazno
+  try { JSON.parse(localStorage.getItem(ARCH_KEY)||'[]').forEach(o => uzmi(o.fields && o.fields.brNaloga)); } catch(e){}
+  return god + '-' + String(max+1).padStart(3,'0');
+}
+async function dodeliBrojNaloga(){
+  if(($("brNaloga").value||'').trim()) return;
+  const br = await sledeciBrojNaloga();
+  if(br){ $("brNaloga").value = br; render(); }
+}
 function noviNalog(){
   if(!confirm('Početi nov nalog? Polja se vraćaju na početne vrednosti (sačuvani nalozi ostaju u arhivi).')) return;
   location.href = location.pathname;
@@ -1447,6 +1494,13 @@ function syncPills(){
 }
 
 // −/+ za broj raja: pritisak prebacuje na „Ručno"
+function stubKorak(d){
+  if(qrZakljucano) return;
+  const mod = $("stubMod"), inp = $("brStubovaRucno");
+  if(mod.value !== 'rucno') mod.value = 'rucno';
+  inp.value = Math.max(0, (+inp.value || 0) + d);
+  render();
+}
 function rajKorak(d){
   if(qrZakljucano) return;
   const mod = $("rajMod"), inp = $("brRajaRucno");
@@ -1472,11 +1526,12 @@ function kontrole(I, R, zaIzdavanje){
   else k.push({w:false, t:'Cerada iz jednog komada (do 3000 mm)'});
   if(R.cerada.fiksniOn) k.push({w:false, t:`Spojene pergole: poslednje polje ${R.cerada.poljeKecelja} mm`});
   if(R.auto.rajRucno) k.push({w:true, t:`Broj raja zadat ručno: ${R.auto.brRaja} (auto bi bio ${R.auto.autoRaja})`});
+  if(R.auto.stubRucno) k.push({w:true, t:`Broj stubova zadat ručno: ${R.auto.brStubova} (raja ima ${R.auto.brRaja})`});
   if(R.raj.raj70Predug) k.push({w:true, t:`Raj 70 predug: ${R.raj.duzRaja} mm (max ${R.raj.RAJ70_MAX}) — izaberi raj 90`});
   if(R.auto.preko10m) k.push({w:true, t:'Širina preko 10 m'});
   if(I.celicnaOn && !steelRows.some(r=>(+r.kom>0)&&(+r.duzina>0))) k.push({w:true, t:'Čelična konstrukcija uključena, a nije unesena nijedna cev'});
   if(zaIzdavanje){
-    if(!(I.brNaloga||'').trim()) k.push({w:true, t:'Broj naloga nije upisan'});
+    if(!I.motorStrana) k.push({w:true, t:'Strana motora nije zadata (levo / desno)'});
     if(!(I.kupac||'').trim()) k.push({w:true, t:'Kupac nije upisan'});
     if(!(I.adresa||'').trim()) k.push({w:true, t:'Adresa montaže nije upisana'});
     if(!(I.rok||'').trim()) k.push({w:true, t:'Rok isporuke nije upisan (nalog neće biti u kalendaru)'});
@@ -1491,7 +1546,7 @@ function pregledStavke(I, R){
   const prazno = v => (v||'').trim() ? esc(v.trim()) : '— nije upisano';
   const g = [];
   g.push({t:'NALOG I KUPAC', s:[
-    {k:'Broj naloga', v:prazno(I.brNaloga), w:!(I.brNaloga||'').trim()},
+    {k:'Broj naloga', v:(I.brNaloga||'').trim()?esc(I.brNaloga.trim()):'auto — pri izdavanju'},
     {k:'Kupac', v:prazno(I.kupac), w:!(I.kupac||'').trim()},
     {k:'Adresa montaže', v:prazno(I.adresa), w:!(I.adresa||'').trim()},
     {k:'Rok isporuke', v:rok?esc(rok):'— nije upisano', w:!rok},
@@ -1507,14 +1562,15 @@ function pregledStavke(I, R){
     {k:'Raj', v:`${rajDim(I.sirinaRaja)} · ${R.auto.brRaja} kom · ${R.raj.duzRaja} mm`, w:R.raj.raj70Predug},
     {k:'Broj raja', v:R.auto.rajRucno ? `${R.auto.brRaja} — RUČNO (auto ${R.auto.autoRaja})` : `${R.auto.brRaja} — auto`, w:R.auto.rajRucno},
     {k:'Polje', v:`${R.auto.brPolja} × ${R.auto.sirinaPolja} mm`},
-    {k:'Stub', v:`${esc(I.stub)} · ${R.auto.brStubova} kom`},
+    {k:'Stub', v:`${esc(I.stub)} · ${R.auto.brStubova} kom${R.auto.stubRucno?' — RUČNO':''}`, w:R.auto.stubRucno},
     {k:'Oluk', v:I.olukTip==='10477'?'Dupli dno 10477':'Standardni 10468'},
     {k:'Cev na zidu', v:I.cev==='nema'?'nema':esc(I.cev)},
     {k:'Pad / dijagonala', v:`${R.raj.pad} % / ${R.raj.dijagonala}`, w:!R.raj.padOk},
-    {k:'Boja profila', v:I.bojaRal?'RAL '+esc(I.bojaRal):'po izboru'},
+    {k:'Boja profila', v:ralTxt(I.bojaRal)},
   ]});
   g.push({t:'POGON I RASVETA', s:[
     {k:'Motor', v:(I.motor||'').trim()?esc(I.motor.trim()):'po izboru'},
+    {k:'Strana motora', v:motorStranaTxt(I) || '— nije zadato', w:!I.motorStrana},
     {k:'Cev motora', v:esc(I.cevMotora)},
     {k:'LED', v:`${R.led.svetalaPoKornizu} × ${R.led.kornisaSaSvetlom} = ${R.led.svetalaUkupno} · trafo ${R.led.trafo}`},
   ]});
@@ -1553,7 +1609,7 @@ function renderDash(I, R, obr){
   d.innerHTML = `
     <div class="tab-d"><h4>PRORAČUN UŽIVO <em>osvežava se dok kucaš</em></h4>
       <div class="kpi">
-        <div class="kpi-k"><span>Raja / stubova</span><b>${R.auto.brRaja}</b> <em>/ ${R.auto.brStubova}</em>${R.auto.rajRucno?'<i class="tag">RUČNO</i>':''}</div>
+        <div class="kpi-k"><span>Raja / stubova</span><b>${R.auto.brRaja}</b> <em>/ ${R.auto.brStubova}</em>${(R.auto.rajRucno||R.auto.stubRucno)?'<i class="tag">RUČNO</i>':''}</div>
         <div class="kpi-k"><span>Polja</span><b>${R.auto.brPolja}</b> <em>× ${R.auto.sirinaPolja} mm</em></div>
         <div class="kpi-k hl"><span>Razmak korniša</span><b style="color:${R.cerada.razmakOk?'#fff':'#f0b49a'}">${R.cerada.razmakKornisa}</b> <em>mm ${R.cerada.razmakOk?'✓':'⚠'} · ${R.cerada.brIntervala} int.</em>${opsegTraka(R.cerada.razmakKornisa,399,499,349,549)}</div>
         <div class="kpi-k"><span>Dužina raja</span><b style="color:${R.raj.raj70Predug?'#f0b49a':'#fff'}">${R.raj.duzRaja}</b> <em>mm</em></div>
@@ -1587,6 +1643,12 @@ function syncRaj(R){
   const minus = $("rajStep").querySelector('.step-b');
   if(minus) minus.disabled = qrZakljucano || (rucno && +inp.value <= R.auto.autoRaja);
   $("rajBrSub").textContent = rucno ? `ručno · najmanje ${R.auto.autoRaja} (polje do 4000 mm)` : `auto: ${R.auto.autoRaja} raja (polje do 4000 mm)`;
+  // broj stubova: auto prati raje, ručno je slobodan (0 i više)
+  const sRucno = $("stubMod").value === 'rucno', sInp = $("brStubovaRucno");
+  if(!sRucno) sInp.value = R.auto.brRaja;
+  sInp.disabled = !sRucno || qrZakljucano;
+  $("stubStep").classList.toggle('on', sRucno);
+  $("stubBrSub").textContent = sRucno ? `ručno · raja ima ${R.auto.brRaja}` : `auto: ${R.auto.brRaja} (isto kao raja)`;
   const h = $("rajHint");
   if(R.auto.rajRucno){
     h.style.display = '';
@@ -1649,6 +1711,7 @@ function prSve(){
 async function izdajNalog(){
   const btn = $("prIzdaj"); if(btn){ btn.disabled = true; btn.textContent = '⏳ Izdajem...'; }
   const izdato = new Date().toLocaleString('sr-RS');
+  await dodeliBrojNaloga();
   const fields = {};
   ARCH_FIELDS.forEach(id => { const el = $(id); if(el) fields[id] = el.type==='checkbox' ? el.checked : el.value; });
   fields._steelRows = JSON.stringify(steelRows);
@@ -1726,7 +1789,7 @@ function renderNalog(I, R, alu, okov){
       <div><span>Mere D × B</span><b>${R.in.D} × ${R.in.B}</b></div>
       <div><span>Visine A / C</span><b>${R.in.A} / ${R.in.C}</b></div>
       <div><span>Komada</span><b>${nK}${nK>1?' ⚠':''}</b></div>
-      <div><span>Boja</span><b>${I.bojaRal?'RAL '+esc(I.bojaRal):'po izboru'}</b></div></div>`;
+      <div><span>Boja</span><b>${ralTxt(I.bojaRal)}</b></div></div>`;
   const listHead = (slovo, naslov, podnaslov, badge, cls, istaStrana) => `
     <div class="list-sep${istaStrana?' ista':''}"><span>✂ ${slovo ? 'LIST '+slovo : ''}</span></div>
     <div class="list${istaStrana?' ista':''}">
@@ -1745,6 +1808,8 @@ function renderNalog(I, R, alu, okov){
       <div class="st-t"><b>${esc(x.naziv)}</b>${x.opis?`<small>${x.opis}</small>`:''}</div>
       <div class="st-q">${x.kol}${x.jed?' '+x.jed:''}</div>${chk}</div>`).join('')+`</div>`;
 
+  const motorTraka = motorStranaTxt(I) ? `<div class="motor-str">⚙ MOTOR: <b>${motorStranaTxt(I)}</b> · gledano čeono — poklopci prema toj strani</div>` : '';
+
   let html = "";
 
   /* ═════════ ZBIRNI LIST ═════════ */
@@ -1762,7 +1827,7 @@ function renderNalog(I, R, alu, okov){
 
   html+=`<div class="calc-line">
     ${R.in.parapetVis>0?`<span>Zidić: <b>${R.in.parapetVis} mm</b></span>`:''}
-    <span>Stubova: <b>${R.auto.brStubova}</b></span>
+    <span>Stubova: <b>${R.auto.brStubova}</b>${R.auto.stubRucno?' <b style="color:#bd4a2a">(ručno)</b>':''}</span>
     <span>Raja: <b>${R.auto.brRaja}</b>${R.auto.rajRucno?' <b style="color:#bd4a2a">(ručno)</b>':''}</span>
     <span>Polja: <b>${R.auto.brPolja}</b> (${R.auto.sirinaPolja} mm)</span>
     <span>Razmak korniša: <b>${R.cerada.razmakKornisa} mm</b></span>
@@ -1782,14 +1847,15 @@ function renderNalog(I, R, alu, okov){
       ${cfgRed('Sklop korniša', R.kornis.kvSeceni?`Sečeni · ${R.kornis.kornisKomPoPoz} kom/poz.`:'Jednodelni')}
       ${cfgRed('Polje', `${R.auto.brPolja} × ${R.auto.sirinaPolja} mm`)}
       ${cfgRed('Korniša', `${R.cerada.kornisaUkupno} · razmak ${R.cerada.razmakKornisa} mm`, !R.cerada.razmakOk)}
-      ${cfgRed('Stub', `${esc(I.stub)} · ${R.auto.brStubova} kom`)}
+      ${cfgRed('Stub', `${esc(I.stub)} · ${R.auto.brStubova} kom${R.auto.stubRucno?' (ručno)':''}`, R.auto.stubRucno)}
       ${cfgRed('Cerada', `${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} · ${esc(I.bojaCerade)}`)}
       ${cfgRed('Oluk', I.olukTip==='10477'?'Dupli dno 10477':'Standardni 10468')}
-      ${cfgRed('Motor', esc((I.motor||'').trim())||'po izboru')}
+      ${cfgRed('Motor', (esc((I.motor||'').trim())||'po izboru') + (motorStranaTxt(I)?' · '+motorStranaTxt(I):''))}
       ${cfgRed('Cev na zidu', I.cev==='nema'?'nema':esc(I.cev))}
       ${cfgRed('LED', `${R.led.svetalaUkupno} svetala · trafo ${R.led.trafo}`)}
       ${cfgRed('Pad', `${R.raj.pad} % ${R.raj.padOk?'✓':'⚠'}`, !R.raj.padOk)}
       ${cfgRed('Čelična konstr.', I.celicnaOn?'DA':'ne')}
+      ${cfgRed('Strana motora', motorStranaTxt(I) ? motorStranaTxt(I)+' (gledano čeono)' : '— nije zadato', !I.motorStrana)}
     </div></div>`;
 
   // Listovi naloga — ko šta radi
@@ -1797,7 +1863,7 @@ function renderNalog(I, R, alu, okov){
     ['A','Sečenje aluminijuma', `${alu.items.length} pozicija · bušenje LED${R.kolica.rupe.length?' i kolica':''}`],
     ['B','Cerada', `krojenje ${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} · ${R.cerada.kornisaUkupno} kedera${R.splice.spliceNeeded?` · ${R.splice.spliceRolne.length} rolne`:''}`],
     ['C','Okov i pakovanje', 'plastika, metal, fitilji, vijčana roba i kese'],
-    ['D','Elektronika', `motor, trafo ${R.led.trafo}, dimer, ${R.led.svetalaUkupno} LED, kutija za struju`],
+    ['D','Elektronika', `vezivanje kablova, svetla i struje na kornišima · motor${motorStranaTxt(I)?' '+motorStranaTxt(I).toLowerCase():''}, trafo ${R.led.trafo}, dimer, ${R.led.svetalaUkupno} LED, kutija za struju`],
     ['E','Bravarija', [I.cev!=='nema'?'cev na zidu '+esc(I.cev):'', 'trapezni lim', I.celicnaOn?'čelična konstrukcija':''].filter(Boolean).join(', ')],
   ];
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">→</span><h3 class="sec-t">Listovi naloga — ko šta radi</h3></div>
@@ -1812,6 +1878,8 @@ function renderNalog(I, R, alu, okov){
   if((I.napomena||'').trim()) html += `<div class="napom">${esc(I.napomena.trim())}</div>`;
   html += `<ol class="napomene" style="margin-top:8px">
       ${R.auto.rajRucno?`<li><b>Broj raja zadat ručno: ${R.auto.brRaja}</b> (auto bi bio ${R.auto.autoRaja}).</li>`:''}
+      ${R.auto.stubRucno?`<li><b>Broj stubova zadat ručno: ${R.auto.brStubova}</b> (raja ima ${R.auto.brRaja}).</li>`:''}
+      ${motorStranaTxt(I)?`<li><b>Motor ide ${motorStranaTxt(I)}</b>, gledano čeono — poklopci se stavljaju prema toj strani.</li>`:''}
       <li>Cerada: prvi keder na <b>50mm</b> od prednje ivice, rezerva uz zid <b>470mm</b>.</li>
       <li>Razmak kedera mora biti <b>399–499mm</b> — program uklapa automatski.</li>
       <li>Debeli korniši: prvi i poslednji, bez rupa. Tanki sa svetlom: naizmenično.</li>
@@ -1838,7 +1906,7 @@ function renderNalog(I, R, alu, okov){
   html += `<div class="lfoot"><span>AG GROUP · nalog ${brN} · ${kupacTxt}</span><span>Zbirni list</span></div>`;
 
   /* ═════════ LIST A — SEČENJE ALUMINIJUMA ═════════ */
-  html += listHead('A','SEČENJE ALUMINIJUMA','PROFILI · MERE · BUŠENJE','ZA SEČENJE','al');
+  html += listHead('A','SEČENJE ALUMINIJUMA','PROFILI · MERE · BUŠENJE','ZA SEČENJE','al') + motorTraka;
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">A1</span>
     <h3 class="sec-t">Aluminijum — za sečenje</h3></div>
     <table><thead><tr>
@@ -1847,7 +1915,7 @@ function renderNalog(I, R, alu, okov){
       <th style="width:42px;text-align:center">Kom</th>
       <th style="width:32px;text-align:center">✓</th>
     </tr></thead><tbody>`;
-  alu.items.forEach((p,i)=>{
+  alu.items.filter(p=>p.kom>0).forEach((p,i)=>{
     html += `<tr style="background:${i%2?'#ebe7db':'transparent'}">
       <td style="vertical-align:middle">${profCell(p.prof)}</td>
       <td><b>${esc(p.naziv)}</b><div style="font-size:10px;color:#5a5446">${esc(p.nap)}</div></td>
@@ -1982,7 +2050,7 @@ function renderNalog(I, R, alu, okov){
   html += listFoot('List B · Cerada');
 
   /* ═════════ LIST C — OKOV I PAKOVANJE ═════════ */
-  html += listHead('C','OKOV I PAKOVANJE','PLASTIKA · METAL · FITILJI · VIJČANA ROBA','ZA PAKOVANJE','ok');
+  html += listHead('C','OKOV I PAKOVANJE','PLASTIKA · METAL · FITILJI · VIJČANA ROBA','ZA PAKOVANJE','ok') + motorTraka;
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">C1</span><h3 class="sec-t">Okov</h3></div>`;
   OKOV_PODSEKCIJE.forEach(g=>{
     const items = okov.filter(x=>x.grupa===g.id && x.kol>0);  // stavke sa 0 kom se ne prikazuju
@@ -2007,7 +2075,8 @@ function renderNalog(I, R, alu, okov){
   html += listFoot('List C · Okov i pakovanje');
 
   /* ═════════ LIST D — ELEKTRONIKA ═════════ */
-  html += listHead('D','ELEKTRONIKA','MOTOR · TRAFO · DIMER · LED','ZA ELEKTRIČARA','el');
+  html += listHead('D','ELEKTRONIKA','MOTOR · TRAFO · DIMER · LED','ZA ELEKTRIČARA','el') + motorTraka
+    + `<div class="napom" style="margin-top:8px"><b>Posao:</b> vezivanje kablova, svetla i struje na kornišima.</div>`;
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">D1</span><h3 class="sec-t">Elektronika</h3></div>
     <div style="font-size:10.5px;color:#5a5446;margin-bottom:4px">
       Motor, trafo, dimer i kutija za struju idu uz svaku pergolu; daljinski je jedan po nalogu.</div>`;
@@ -2314,7 +2383,7 @@ function qrMatrica(tekst){
 const QR_POLJA = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada','cev','stub',
   'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade','autoInterval',
   'brIntervala','fiksniRazmak','svetalaPoKornizu','motor','parapetOn','parapetVisina',
-  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno'];
+  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','stubMod','brStubovaRucno','motorStrana'];
 const qrEnc = s => encodeURIComponent(s==null?'':String(s)).replace(/~/g,'%7E');
 
 // Link iz QR-a otvara nalog ZAKLJUČAN (oznaka "z1") — radnik ga vidi i štampa,
@@ -2384,7 +2453,7 @@ function renderObracun(I, R, alu, okov, obr){
       <div><span>Mere D × B</span><b>${R.in.D} × ${R.in.B}</b></div>
       <div><span>Visine A / C</span><b>${R.in.A} / ${R.in.C}</b></div>
       <div><span>Komada</span><b>${nKo}</b></div>
-      <div><span>Boja</span><b>${I.bojaRal?'RAL '+esc(I.bojaRal):'po izboru'}</b></div></div>
+      <div><span>Boja</span><b>${ralTxt(I.bojaRal)}</b></div></div>
     <div class="mono" style="font-size:10.5px;margin-top:5px;color:#5a5446">
       Šina <b>${rajDim(I.sirinaRaja)}</b> · Stub <b>${esc(I.stub)}</b>${I.olukTip==="10477"?' · Oluk <b>10477</b>':''} ·
       ${R.auto.brRaja} raja · ${R.auto.brStubova} stubova · ${R.cerada.kornisaUkupno} korniša · keder ${R.kornis.kvObostrani?'obostrani':'jednostrani'}</div>`;
@@ -2608,7 +2677,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.43";
+const APP_VER = "v2026-06-11.44";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -3275,7 +3344,7 @@ const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada'
   'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade',
   'autoInterval','brIntervala','fiksniRazmak','svetalaPoKornizu','motor','celicnaOn',
   'parapetOn','parapetVisina',
-  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','napomena'];
+  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','napomena','stubMod','brStubovaRucno','motorStrana'];
 
 function apiHeaders(){
   return {'Content-Type':'application/json','X-Api-Key': API_KEY};
@@ -3286,6 +3355,7 @@ async function saveOrder(){
   const orig = btn.textContent;
   btn.textContent = '⏳ Čuvam...';
   btn.disabled = true;
+  await dodeliBrojNaloga();
 
   const fields = {};
   ARCH_FIELDS.forEach(id => {
@@ -3421,6 +3491,9 @@ async function loadOrder(id){
     fields.kederTip    = o ? 'obostrani' : 'jednostrani';
     fields.kornisSklop = s ? 'seceni'    : 'jednodelni';
   }
+  // stari nalozi mogu imati boju cerade koje više nema u listi (npr. „Krem") — sačuvaj je kao opciju
+  const bc = $("bojaCerade");
+  if(fields.bojaCerade && !Array.from(bc.options).some(o=>o.value===fields.bojaCerade)) bc.add(new Option(fields.bojaCerade, fields.bojaCerade));
   ARCH_FIELDS.forEach(fid=>{
     const el = document.getElementById(fid);
     if(!el) return;
@@ -3432,6 +3505,9 @@ async function loadOrder(id){
   if(!fields.fiksniRazmak) $("fiksniRazmak").value = 0;
   if(!fields.olukTip) $("olukTip").value = '10468';
   if(!fields.rajMod) $("rajMod").value = 'auto';
+  if(!fields.stubMod) $("stubMod").value = 'auto';
+  if(!fields.brStubovaRucno) $("brStubovaRucno").value = 2;
+  if(!fields.motorStrana) $("motorStrana").value = '';
   if(!fields.brRajaRucno) $("brRajaRucno").value = 2;
   aktivniNalog = {id: izServera ? id : null, br: nalogKljuc(fields), izdato: fields._izdato || null};
   if(fields._steelRows){ steelRows=JSON.parse(fields._steelRows); renderSteelInputs(); }
@@ -3480,6 +3556,7 @@ function trazeniProfili(){
     svetalaPoKornizu:$("svetalaPoKornizu").value, celicnaOn:$("celicnaOn").checked,
     parapetOn:$("parapetOn").checked, parapetVisina:$("parapetVisina").value,
     rajMod:$("rajMod").value, brRajaRucno:$("brRajaRucno").value,
+    stubMod:$("stubMod").value, brStubovaRucno:$("brStubovaRucno").value,
   };
   const R = compute(I);
   const alu = aluCalc(I, R);
