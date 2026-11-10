@@ -1,4 +1,9 @@
-const CACHE_NAME = 'lista-secenja-v45';
+const CACHE_NAME = 'lista-secenja-v46';
+// Sličice (slike.js, ~700 KB) imaju svoj keš koji se NE briše pri svakoj novoj verziji —
+// telefon ih skine jednom. Kad se slike menjaju: povećati broj ovde i ?v= u index.html.
+const SLIKE_VER = 1;
+const SLIKE_CACHE = 'ag-slike-v' + SLIKE_VER;
+const SLIKE_URL = './slike.js?v=' + SLIKE_VER;
 const STATIC_ASSETS = [
   './manifest.json',
   './icons/icon-192.png',
@@ -8,6 +13,8 @@ const STATIC_ASSETS = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+      // slike se dovlače unapred, ali greška ovde ne sme da spreči instalaciju
+      .then(() => caches.open(SLIKE_CACHE).then(c => c.match(SLIKE_URL).then(m => m || c.add(SLIKE_URL))).catch(() => {}))
   );
   self.skipWaiting();
 });
@@ -15,7 +22,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE_NAME && k !== SLIKE_CACHE).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
@@ -29,6 +36,19 @@ self.addEventListener('fetch', event => {
     return; // browser sam obrađuje, bez keša
   }
 
+  // Sličice — cache-first iz posebnog keša
+  if (url.pathname.endsWith('/slike.js')) {
+    event.respondWith(
+      caches.open(SLIKE_CACHE).then(cache =>
+        cache.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+          if (response && response.status === 200) cache.put(event.request, response.clone());
+          return response;
+        }))
+      )
+    );
+    return;
+  }
+
   // Network-first za HTML — uvek uzima novu verziju kad je online
   if (event.request.mode === 'navigate') {
     event.respondWith(
@@ -38,7 +58,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match(event.request).then(m => m || caches.match('./index.html')))
     );
     return;
   }

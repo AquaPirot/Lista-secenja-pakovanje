@@ -177,6 +177,43 @@ html,body{background:var(--shell);color:var(--text);font-family:'Segoe UI',syste
 </style>
 </head>
 <body>
+<!-- PIN: pamti se na uređaju 30 dana. Nalog otvoren preko QR koda (zaključan) ne traži PIN. -->
+<style>
+  html.ag-zak body > *:not(#agPin){display:none !important;}
+  #agPin{position:fixed;inset:0;z-index:9999;background:#15171b;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk',system-ui,sans-serif;}
+  #agPin .pk{width:min(320px,88vw);background:#1e2127;border:1px solid #33373f;border-radius:14px;padding:26px 22px;text-align:center;color:#fff;}
+  #agPin .pl{display:inline-block;padding:3px 9px;border:2px solid #a9743c;border-radius:4px;color:#a9743c;font-family:'Fjalla One',sans-serif;font-size:18px;}
+  #agPin h2{font-family:'Fjalla One',sans-serif;font-weight:400;letter-spacing:.05em;font-size:20px;margin:14px 0 4px;}
+  #agPin p{font-size:12px;color:#8b8f98;margin:0 0 16px;}
+  #agPin input{width:100%;text-align:center;font-size:30px;letter-spacing:.45em;padding:12px 0 12px .45em;background:#101216;border:1px solid #33373f;border-radius:8px;color:#fff;font-family:'Spline Sans Mono',monospace;margin:0;}
+  #agPin input.ne{border-color:#d8754a;animation:agTr .3s;}
+  #agPin .pg{height:18px;font-size:12px;color:#f0b49a;margin-top:8px;}
+  @keyframes agTr{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  @media print{#agPin{display:none!important;}}
+</style>
+<script>
+(function(){
+  var K='ag_pin_do', H=2088368152, DANA=30;
+  function h(s){var x=5381;for(var i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))>>>0;return x;}
+  try{ if(+localStorage.getItem(K) > Date.now()) return; }catch(e){}
+  if((location.hash||'').indexOf('#z1~')===0) return;
+  document.documentElement.classList.add('ag-zak');
+  var d=document.createElement('div'); d.id='agPin';
+  d.innerHTML='<div class="pk"><span class="pl">AG</span><h2>AG GROUP · RADNI NALOZI</h2><p>Unesi PIN — pamti se na ovom uređaju '+DANA+' dana</p>'
+    +'<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" id="agPinIn" aria-label="PIN"><div class="pg" id="agPinG"></div></div>';
+  document.body.insertBefore(d, document.body.firstChild);
+  var inp=document.getElementById('agPinIn'), g=document.getElementById('agPinG');
+  inp.addEventListener('input',function(){
+    inp.classList.remove('ne'); g.textContent='';
+    if(inp.value.length<4) return;
+    if(h(inp.value)===H){
+      try{ localStorage.setItem(K, String(Date.now()+DANA*864e5)); }catch(e){}
+      document.documentElement.classList.remove('ag-zak'); d.remove();
+    } else { inp.value=''; inp.classList.add('ne'); g.textContent='Pogrešan PIN'; }
+  });
+  setTimeout(function(){inp.focus();},50);
+})();
+</script>
 
 <div class="hdr">
   <div class="hdr-top">
@@ -219,6 +256,7 @@ const SEKCIJE = [
       {sifra:"10501",  naziv:"Šina (raj) 90×150"},
       {sifra:"10475",  naziv:"Šina (raj) 110×150"},
       {sifra:"10412",  naziv:"Šina (raj) 70×150"},
+      {sifra:"GÇ-2631", naziv:"Šina (raj) 75×155"},
       {sifra:"10468",  naziv:"Oluk"},
       {sifra:"10477",  naziv:"Oluk sa duplim dnom"},
       {sifra:"10419",  naziv:"Stub 145×110"},
@@ -324,6 +362,7 @@ const API_KEY = 'ag2025app'; // mora biti isti kao u api/config.php
 
 const OTPAD_PRAG_DEFAULT = 2000;
 const OTPAD_PRAG_MAP = {
+  "GÇ-2631": 1500, // Šina (raj) 75×155
   "10412": 1500,  // Šina (raj) 70×150
   "10501": 1500,  // Šina (raj) 90×150
   "10475": 1500,  // Šina (raj) 110×150

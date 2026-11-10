@@ -7,7 +7,11 @@ obračun materijala, magacin sa optimizacijom sečenja i kalendar produkcije.
 
 | Fajl | Šta radi |
 |---|---|
-| `index.html` | Cela aplikacija — HTML, CSS, JS, base64 slike profila i okova. ~340 KB. |
+| `index.html` | Cela aplikacija za pergole — HTML, CSS, JS. ~225 KB. |
+| `slike.js` | Sve sličice (base64) kao `window.IMG`. ~700 KB, kešira se posebno (`SLIKE_VER` u `sw.js` + `?v=` u `index.html`). |
+| `giljotina.html` | Zaseban program za giljotine; arhiva na serveru (status `gio` u istoj tabeli). |
+| `pocetna.html` | Naslovna — izbor pergola / giljotina. |
+| `tests/provera.cjs` | Automatska provera proračuna (pravila + referenca). **Pokrenuti posle svake izmene.** |
 | `sw.js` | Service worker. Network-first za HTML, cache-first za ikone, `/api/` se nikad ne kešira. |
 | `popis.html` | Zaseban mobile-first ekran za popis magacina na telefonu. |
 | `api/*.php` | Backend na hostingu: `nalozi.php`, `magacin.php`, `artikli.php`, `db.php`, `config.php`. |
@@ -24,9 +28,11 @@ u Document Root poddomena `app.aggroup.rs` (nađe se u cPanel → Domains).
 Uz svaku izmenu:
 1. `APP_VER` u `index.html` (prikazuje se u futeru — tako se proverava da je upload prošao)
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
-3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
+3. Uploaduje se **i `index.html` i `sw.js`** (i `slike.js` kad se slike menjaju); `api/*.php` samo kad je backend menjan
+4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
+   u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.42` / cache `lista-secenja-v45`.
+Trenutna verzija: `v2026-06-11.43` / cache `lista-secenja-v46`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -46,6 +52,16 @@ Trenutna verzija: `v2026-06-11.42` / cache `lista-secenja-v45`.
   mapa kedera, PRG-101), C okov i pakovanje, D elektronika, E bravarija. Svaki list počinje na novoj
   strani, osim E koji ide ispod D (kratak je). **Nema polja za potpise** — u praksi se ne potpisuje.
   Stavke okova, vijaka i elektronike su u dve kolone (`stavke()`), štampa je A4 (`@page{size:A4}`).
+
+## Pristup i čuvanje
+
+- **PIN** (4 cifre) na svim stranama, pamti se 30 dana na uređaju (`ag_pin_do` u localStorage).
+  U kodu je samo heš. Nalog otvoren preko QR koda (`#z1~`) ne traži PIN. Zaštita je na strani
+  pretraživača — sprečava slučajan pristup, nije prava serverska zaštita.
+- **Isti nalog = isti broj naloga + kupac** (`nalogKljuc`): Sačuvaj i Izdaj tada AŽURIRAJU isti zapis;
+  promena broja ili kupca čuva nov nalog. „＋ Novi nalog" vraća formu na početne vrednosti.
+- Korisnik koristi **Nalog, Obračun, Izveštaj i Arhivu**; Proizvodnja, Kalendar i Magacin postoje,
+  ali se u praksi ne koriste — ne ulagati u njih bez pitanja.
 
 ## Arhitektura proračuna
 
@@ -71,7 +87,7 @@ render()  →  compute(I)  →  aluCalc(I,R)  →  applyOkov(R,I)  →  obracunC
 ### Raje i stubovi
 - Max razmak između raja **4000 mm**, meri se sa rajevima (D / brPolja ≤ 4000), isto za sve širine raja:
   `brStubova = max(2, ceil(D / 4000) + 1)` → do 4000 = 2 raja, do 8000 = 3, do 12000 = 4
-- Širine raja: 70 (10412, max dužina 5000 mm — nije za velike izbačaje), 75, 90 (podrazumevano, 10501), 110 (10475)
+- Širine raja: 70 (10412, max dužina 5000 mm — nije za velike izbačaje), 75 (GÇ-2631, 75×155, 5,390 kg/m), 90 (podrazumevano, 10501), 110 (10475)
 - Oluk: standardni 10468 (podrazumevano) ili sa duplim dnom 10477 — isti poklopci, odvod, keder i šrafovi; spojka sa rajem je ARV.10.079 umesto ARV-M6
 - `brRaja = brStubova`, `brPolja = brRaja − 1`
 - Dužina raja = dijagonala − 200; pad mora biti 8–10 %
