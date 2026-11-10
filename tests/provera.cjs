@@ -27,6 +27,8 @@ for (const D of [2500, 3500, 4000, 4001, 4100, 6000, 8000, 8001, 9450, 12000, 12
       for (const kornisSklop of ['jednodelni', 'seceni'])
         for (const sirinaRaja of [70, 75, 90, 110])
           mreza.push({ ...osnova, sirina: D, dubina: B, kederTip, kornisSklop, sirinaRaja });
+for (const kederTip of ['obostrani', 'jednostrani']) for (const D of [3500, 6000, 9450])
+  mreza.push({ ...osnova, sirina: D, dubina: 4000, kederTip, kornisLed: 'lajsna' });
 for (const st of [0, 2, 4, 5]) for (const D of [3500, 6000, 9450])
   mreza.push({ ...osnova, sirina: D, dubina: 4000, stubMod: 'rucno', brStubovaRucno: st, kornisSklop: 'seceni' });
 for (const fr of [400, 425, 430, 450, 480]) for (const B of [3000, 4000, 5000])
@@ -47,6 +49,7 @@ const kontrolne = {
   'spojene 425': { ...osnova, sirina: 6000, dubina: 4000, zadnjaVisina: 2700, prednjaVisina: 2480, fiksniRazmak: 425, kornisSklop: 'seceni' },
   'ručno 2 stuba na 3 raja': { ...osnova, sirina: 6000, dubina: 4000, kornisSklop: 'seceni', stubMod: 'rucno', brStubovaRucno: 2 },
   'ručno 4 stuba na 3 raja': { ...osnova, sirina: 6000, dubina: 4000, kornisSklop: 'seceni', stubMod: 'rucno', brStubovaRucno: 4 },
+  'LED lajsna EK-29935': { ...osnova, sirina: 6000, dubina: 4000, kornisSklop: 'seceni', kornisLed: 'lajsna' },
   'zidić 500 bez cevi': { ...osnova, sirina: 4000, dubina: 3000, parapetOn: true, parapetVisina: 500, cev: 'nema' },
 };
 
@@ -95,6 +98,10 @@ const kontrolne = {
       jeste(a.items.every(x => x.mera > 0 && x.kom >= 0 && x.prof && x.prof.kgm > 0), I, 'alu stavka bez mere ili težine');
       jeste(o.every(x => isFinite(x.kol) && x.kol >= 0), I, 'okov: neispravna količina');
       jeste(isFinite(ob.subtotal) && ob.subtotal > 0, I, 'obračun: neispravan zbir');
+      // LED lajsna: samo obostrani keder, samo korniši sa svetlom; ostali tanki ostaju 10418
+      const ksv = a.items.find(x => x.key === 'ksv'), kbez = a.items.find(x => x.key === 'kbez');
+      if (I.kornisLed === 'lajsna' && I.kederTip === 'obostrani') jeste(ksv.prof.sifra === 'EK-29935' && kbez.prof.sifra === '10418' && R.led.ledLajsna, I, 'LED lajsna nije primenjena');
+      else jeste(ksv.prof.sifra !== 'EK-29935' && !R.led.ledLajsna, I, 'LED lajsna uz jednostrani keder');
       const ledN = R.led.ledPozicije.length;
       jeste(ledN === R.led.svetalaPoKornizu && R.led.ledPozicije.every(x => x > 0 && x < k.duzKornisa), I, 'LED rupe van korniša');
     }

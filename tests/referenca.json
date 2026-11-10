@@ -233,6 +233,24 @@
   "aluKg": 164.41,
   "ukupnoEur": 1630.49
  },
+ "LED lajsna EK-29935": {
+  "raja": 3,
+  "polje": 2865,
+  "dijagonala": 3991,
+  "duzRaja": 3791,
+  "pad": 12.6,
+  "cerada": "5990×4391",
+  "kederi": "50,480,910,1340,1770,2201,2631,3061,3491,3921",
+  "rolne": "2631+1760",
+  "kornis": "2925 ×2",
+  "led": "293,878,1463,2048,2633",
+  "kolica": "",
+  "alu": "10501:3791×3 10468:6150×1 10419:2450×3 10417:6100×1 10420:2965×2 10416:2925×4 EK-29935:2925×8 10418:2925×8",
+  "okov": "ARV-01:3 ARV-02:3 ARV-03:3 ARV-04:3 ARV-05:3 ARV-07:3 ARV-08:3 ARV-09:24 ARV-06:3 ARV-19:16 ARV-20:8 ARV-21:4 ARV-22:2 AK-5510:1 AK-5511:1 PRG-18:1 PRG-117:6 PRG-119:6 ARV-M1:3 ARV-M2a:5 ARV-M2b:1 ARV-M4:1 ARV-M5:1 ARV-M6:6 ARV-M7:3 ARV-M8:4 ARV-M10:3 ARV-M11:3 ARV-M12:3 ARV-M13:2 AK-5518:3 AK-5509:1 PRG-102:22.7 PRG-104:6.2 PRG-101:59.9 PRG-103:7.7 PRG-105:24.2 PRG-108:40 PRG-116:65",
+  "vijci": "ank8:12 h630:12 samo416:122 ob416:18 mkock8:78 polu8:78 s650:30 s627:8 m8x75:11 m8fl:43 m12x140:6 mat12:6 im6x60:6 mat6:6 k450:15 ob420:40 k5120:20 saj6:20",
+  "aluKg": 165.07,
+  "ukupnoEur": 1623.76
+ },
  "zidić 500 bez cevi": {
   "raja": 2,
   "polje": 3820,

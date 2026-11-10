@@ -1,7 +1,7 @@
-const CACHE_NAME = 'lista-secenja-v47';
+const CACHE_NAME = 'lista-secenja-v48';
 // Sličice (slike.js, ~700 KB) imaju svoj keš koji se NE briše pri svakoj novoj verziji —
 // telefon ih skine jednom. Kad se slike menjaju: povećati broj ovde i ?v= u index.html.
-const SLIKE_VER = 1;
+const SLIKE_VER = 2;
 const SLIKE_CACHE = 'ag-slike-v' + SLIKE_VER;
 const SLIKE_URL = './slike.js?v=' + SLIKE_VER;
 const STATIC_ASSETS = [

@@ -676,6 +676,8 @@
         <select id="motorStrana" data-pills><option value="" selected>Nije zadato</option><option value="levo">Levo</option><option value="desno">Desno</option></select></label>
       <label><div class="lbl">Svetala po kornišu</div><div class="sub">obično 3–6</div>
         <input type="number" id="svetalaPoKornizu" value="6"></label>
+      <label class="full"><div class="lbl">Tanki korniš sa svetlom</div><div class="sub" id="kornisLedSub">LED lajsna ide samo uz obostrani keder</div>
+        <select id="kornisLed" data-pills><option value="std" selected>Standardni (buše se rupe)</option><option value="lajsna">Sa LED lajsnom EK-29935 (ne buši se)</option></select></label>
     </div>
   </div>
 
@@ -698,7 +700,7 @@
 </div>
 
 <div class="doc" id="doc"></div>
-<script src="slike.js?v=1"></script>
+<script src="slike.js?v=2"></script>
 <script>
 // Ako slike.js nije stigao (loša veza), program radi bez sličica
 if(!window.IMG) window.IMG = {};
@@ -753,6 +755,9 @@ const PROFILI = {
   kornisTanki:  {sifra:"10471", nazivSr:"Tanki korniš",        img:"prof_10471", kgm:0.809},
   kornisDebeli: {sifra:"10472", nazivSr:"Debeli korniš",       img:"prof_10472", kgm:1.491},
   kornisD418:   {sifra:"10418", nazivSr:"Tanki korniš obostrani", img:"prof_10418", kgm:0.737},
+  // Tanki korniš sa LED lajsnom (Küçük Armut) — samo obostrani keder, samo za korniše SA svetlom.
+  // Ista svetla i isti poklopci kao 10418; NE buši se — tačke samo pokazuju gde ide svetlo.
+  kornisLed:    {sifra:"EK-29935", nazivSr:"Tanki korniš sa LED lajsnom", img:"prof_29935", kgm:1.072},
   kornisD416:   {sifra:"10416", nazivSr:"Debeli korniš obostrani",img:"prof_10416", kgm:1.288},
   kornisTanjiKedera:{sifra:"10470", nazivSr:"Tanki stringcourse", nazivTr:"Thin Stringcourse", img:"prof_10470", kgm:0.59},
   stub110: {sifra:"10419", nazivSr:"Stub 110×144",   nazivTr:"144 mm Counterfort Profile",img:"prof_10419", kgm:2.927},
@@ -992,6 +997,7 @@ function compute(I){
   // Svetla se buše po KOMADU korniša, ne po redu — kod sečenog u jednom redu
   // ima kornisKomPoPoz komada, pa svaki nosi svoj set svetala.
   const kornisaSaSvetlom = tankiSvetlo * kornisKomPoPoz;   // stvarni broj komada
+  const ledLajsna = kvObostrani && I.kornisLed === 'lajsna';  // korniš EK-29935 — ne buši se
   const svetalaUkupno = svetalaPoKornizu * kornisaSaSvetlom;
 
   // Rupe za kolica na kornišu — SAMO jednostrani keder
@@ -1024,7 +1030,7 @@ function compute(I){
       umetakaUDuzini,srednjihUmetaka},
     splice:{spliceNeeded,spliceList,spliceRolne,spliceOk},
     profili2:{duzOluka,limKom,cevMotoraTip,duzCevMotora,brCevMotora,brPanela,duzPanela,duzStuba},
-    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,kornisaSaSvetlom,potrosnja,trafo,trafoCena},
+    led:{svetalaPoKornizu,razmakRupa,odIviceDoRupe,ledPozicije,svetalaUkupno,kornisaSaSvetlom,potrosnja,trafo,trafoCena,ledLajsna},
     kolica:{rupe:kolicaRupe},
   };
 }
@@ -1140,6 +1146,7 @@ function aluCalc(I, R){
   const isDvo       = R.kornis.kvObostrani;
   const kProfDebeli = isDvo ? PROFILI.kornisD416 : PROFILI.kornisDebeli; // 10416 ili 10472
   const kProfTanki  = isDvo ? PROFILI.kornisD418 : PROFILI.kornisTanki;  // 10418 ili 10471
+  const kProfSvetlo = R.led.ledLajsna ? PROFILI.kornisLed : kProfTanki;   // EK-29935 samo za korniše sa svetlom
   const kPoPoz = R.kornis.kornisKomPoPoz; // 1 ili 2 (sečeni)
   // 2. Stub
   const stubKljuc = I.stub === "110x144" ? "stub110" : "stub100";
@@ -1152,7 +1159,7 @@ function aluCalc(I, R){
     {key:"cevm",     prof:PROFILI.cevMotora,      naziv:"Cev motora",                      mera:R.profili2.duzCevMotora, kom:R.profili2.brCevMotora, nap: R.profili2.cevMotoraTip==="jednodelna" ? "Jednodelna · širina pergole + 100mm" : `Po poljima · ${R.profili2.brCevMotora} cevi (zbir = širina pergole + 50mm)`},
     {key:"panel",    prof:PROFILI.panel,          naziv:"Panel (između rajeva)",           mera:R.profili2.duzPanela, kom:R.profili2.brPanela, nap:"→ Širina polja + 100"},
     {key:"kdeb",     prof:kProfDebeli,             naziv:"★ "+kProfDebeli.nazivSr+" (ivični)",   mera:R.kornis.duzKornisa,  kom:R.cerada.debeli*kPoPoz, nap:"Uz zid + uz oluk, BEZ rupa"+(kPoPoz>1?" · sečeni ("+kPoPoz+" kom/poz)":"")},
-    {key:"ksv",      prof:kProfTanki,             naziv:"★ "+kProfTanki.nazivSr+" — sa svetlom", mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:"★ Izbušene rupe za LED"+(kPoPoz>1?" · sečeni":"")},
+    {key:"ksv",      prof:kProfSvetlo,            naziv:"★ "+kProfSvetlo.nazivSr+(R.led.ledLajsna?"":" — sa svetlom"), mera:R.kornis.duzKornisa,  kom:R.cerada.tankiSvetlo*kPoPoz, nap:(R.led.ledLajsna?"★ NE BUŠI SE — svetla idu na označene tačke":"★ Izbušene rupe za LED")+(kPoPoz>1?" · sečeni":"")},
     {key:"kbez",     prof:kProfTanki,             naziv:"★ "+kProfTanki.nazivSr+" — bez svetla", mera:R.kornis.duzKornisa,  kom:R.cerada.tankiBez*kPoPoz, nap:"Bez rupa"+(kPoPoz>1?" · sečeni":"")},
   ];
   // Broj istih pergola u nalogu — sve količine se množe
@@ -1372,6 +1379,7 @@ function citajI(){
     datum:$("datum").value,rok:$("rok").value,radnik:$("radnik").value,
     rajMod:$("rajMod").value,brRajaRucno:$("brRajaRucno").value,napomena:$("napomena").value,
     stubMod:$("stubMod").value,brStubovaRucno:$("brStubovaRucno").value,motorStrana:$("motorStrana").value,
+    kornisLed:$("kornisLed").value,
   };
 }
 function trenutniProracun(){ const I=citajI(); return {I, R:compute(I)}; }
@@ -1402,6 +1410,11 @@ function render(){
     secOpt.text = mozeSeceni ? 'Sečeni' : 'Sečeni ⛔ (min. 3 raja)';
   }
   if(jedOpt) jedOpt.disabled = moraSeceni;
+  const selLed = $("kornisLed"), ledOpt = Array.from(selLed.options).find(o=>o.value==='lajsna');
+  const jednostr = $("kederTip").value !== 'obostrani';
+  if(ledOpt) ledOpt.disabled = jednostr;
+  if(jednostr && selLed.value === 'lajsna'){ selLed.value = 'std'; return render(); }
+  $("kornisLedSub").textContent = jednostr ? 'LED lajsna nije moguća — keder je jednostrani' : 'LED lajsna ide samo uz obostrani keder';
   const sklopPre = selSklop.value;
   if(!mozeSeceni && selSklop.value==='seceni') selSklop.value='jednodelni';
   if(moraSeceni) selSklop.value='seceni';
@@ -1578,6 +1591,7 @@ function pregledStavke(I, R){
     {k:'Keder', v:R.kornis.kvObostrani?'Obostrani':'Jednostrani'},
     {k:'Sklop korniša', v:R.kornis.kvSeceni?`Sečeni · ${R.kornis.kornisKomPoPoz} kom/poz.`:'Jednodelni'},
     {k:'Korniša ukupno', v:`${R.cerada.kornisaUkupno} (${R.cerada.debeli} deb. + ${R.cerada.tanki} tan.)`},
+    {k:'Korniš sa svetlom', v:R.led.ledLajsna ? 'EK-29935 LED lajsna — ne buši se' : 'standardni — buše se rupe', w:R.led.ledLajsna},
     {k:'Razmak korniša', v:`${R.cerada.razmakKornisa} mm · ${R.cerada.fiksniOn?'zadat':($("autoInterval").checked?'auto':'ručno')}`, w:!R.cerada.razmakOk},
     {k:'Spojene pergole', v:R.cerada.fiksniOn?`da — poslednje polje ${R.cerada.poljeKecelja} mm`:'ne'},
     {k:'Cerada', v:`${R.cerada.sirinaCerade} × ${R.cerada.duzCerade}`},
@@ -1860,7 +1874,7 @@ function renderNalog(I, R, alu, okov){
 
   // Listovi naloga — ko šta radi
   const listovi = [
-    ['A','Sečenje aluminijuma', `${alu.items.length} pozicija · bušenje LED${R.kolica.rupe.length?' i kolica':''}`],
+    ['A','Sečenje aluminijuma', `${alu.items.filter(x=>x.kom>0).length} pozicija · ${R.led.ledLajsna?'LED lajsna (bez bušenja)':'bušenje LED'}${R.kolica.rupe.length?' i kolica':''}`],
     ['B','Cerada', `krojenje ${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} · ${R.cerada.kornisaUkupno} kedera${R.splice.spliceNeeded?` · ${R.splice.spliceRolne.length} rolne`:''}`],
     ['C','Okov i pakovanje', 'plastika, metal, fitilji, vijčana roba i kese'],
     ['D','Elektronika', `vezivanje kablova, svetla i struje na kornišima · motor${motorStranaTxt(I)?' '+motorStranaTxt(I).toLowerCase():''}, trafo ${R.led.trafo}, dimer, ${R.led.svetalaUkupno} LED, kutija za struju`],
@@ -1884,7 +1898,9 @@ function renderNalog(I, R, alu, okov){
       <li>Razmak kedera mora biti <b>399–499mm</b> — program uklapa automatski.</li>
       <li>Debeli korniši: prvi i poslednji, bez rupa. Tanki sa svetlom: naizmenično.</li>
       ${I.cev!=="nema"?`<li>Cev na zidu se prvo učvrsti na zid — na nju se montira pergola.</li>`:''}
-      <li>Rupe za LED se buše <b>samo</b> na tankim kornišima sa ★.</li>
+      ${R.led.ledLajsna
+        ? `<li>Korniši sa ★ su <b>EK-29935 sa LED lajsnom — NE BUŠE SE</b>. Tačke na listu A pokazuju gde ide svetlo.</li>`
+        : `<li>Rupe za LED se buše <b>samo</b> na tankim kornišima sa ★.</li>`}
     </ol></div>`;
 
   // QR — skeniranjem se nalog otvara na telefonu ili tabletu
@@ -1941,16 +1957,17 @@ function renderNalog(I, R, alu, okov){
   }
   html += `</div>`;
   // Bušenje — LED i kolica
-  html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">A2</span><h3 class="sec-t">Bušenje korniša</h3></div>`;
+  html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">A2</span><h3 class="sec-t">${R.led.ledLajsna?'Pozicije svetala i bušenje':'Bušenje korniša'}</h3></div>`;
   if(R.led.svetalaPoKornizu > 0){
     const L = R.kornis.duzKornisa;
     html += `<div class="card mono" style="font-size:11px;line-height:1.8">
       <div style="font-family:'Fjalla One',sans-serif;font-size:11px;color:#8a5d2e;margin-bottom:3px">
-        RUPE ZA LED — korniši sa ★ (${R.led.kornisaSaSvetlom} kom${R.kornis.kvSeceni?` = ${R.cerada.tankiSvetlo} reda × ${R.kornis.kornisKomPoPoz}`:''}) · dužina korniša ${L} mm</div>
+        ${R.led.ledLajsna?'POZICIJE SVETALA — NE BUŠI SE (korniš EK-29935 sa LED lajsnom) — korniši sa ★ (':'RUPE ZA LED — korniši sa ★ ('}${R.led.kornisaSaSvetlom} kom${R.kornis.kvSeceni?` = ${R.cerada.tankiSvetlo} reda × ${R.kornis.kornisKomPoPoz}`:''}) · dužina korniša ${L} mm</div>
       <div>Svetala po kornišu: <b>${R.led.svetalaPoKornizu}</b>
-        &nbsp;·&nbsp; Od ivice do 1. rupe: <b>${R.led.odIviceDoRupe} mm</b>
+        &nbsp;·&nbsp; Od ivice do ${R.led.ledLajsna?'1. svetla':'1. rupe'}: <b>${R.led.odIviceDoRupe} mm</b>
         &nbsp;·&nbsp; Razmak (c–c): <b>${R.led.razmakRupa} mm</b></div>
       ${rupeBar(L, R.led.ledPozicije, '#a9743c')}
+      ${R.led.ledLajsna?`<div style="color:#bd4a2a;font-weight:700">Tačke su samo oznaka gde ide svetlo — korniš se ne buši.</div>`:''}
     </div>`;
   }
   if(R.kolica.rupe.length){
@@ -2043,7 +2060,7 @@ function renderNalog(I, R, alu, okov){
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">B3</span><h3 class="sec-t">Keder i materijal za ceradu</h3></div>
     <table><thead><tr><th style="width:64px">Slika</th><th>Stavka</th><th>Kako se računa</th><th style="width:100px;text-align:right">Količina</th><th style="width:32px;text-align:center">✓</th></tr></thead><tbody>
     ${prg101?`<tr><td>${imgTag(prg101.img, prg101.naziv)}</td><td><b>Keder cerade PRG-101</b></td><td style="font-size:11px">${R.cerada.kornisaUkupno} kedera × ${R.cerada.sirinaCerade} mm${nK>1?` × ${nK}`:''}</td><td class="m" style="text-align:right;font-weight:700;font-size:14px">${prg101.kol} m</td><td style="text-align:center">${chk}</td></tr>`:''}
-    <tr style="background:#ebe7db"><td></td><td><b>Tip kedera</b></td><td style="font-size:11px">${R.kornis.kvObostrani?'obostrani — korniši 10416 + 10418':'jednostrani — korniši 10472 + 10471'}</td><td class="m" style="text-align:right">${R.cerada.kornisaUkupno} poz.</td><td style="text-align:center">${chk}</td></tr>
+    <tr style="background:#ebe7db"><td></td><td><b>Tip kedera</b></td><td style="font-size:11px">${R.kornis.kvObostrani?'obostrani — korniši 10416 + 10418'+(R.led.ledLajsna?' + EK-29935 (sa svetlom)':''):'jednostrani — korniši 10472 + 10471'}</td><td class="m" style="text-align:right">${R.cerada.kornisaUkupno} poz.</td><td style="text-align:center">${chk}</td></tr>
     <tr><td></td><td><b>Sastav rolni</b></td><td style="font-size:11px">${sastava?'na kederu: '+R.splice.spliceList.map(s=>'K'+s.kornis).join(', '):'nema — cerada iz jednog komada'}</td><td class="m" style="text-align:right">${sastava} kom</td><td style="text-align:center">${chk}</td></tr>
     </tbody></table></div>`;
   html += `<div class="napom" style="margin-top:12px"><b>Kontrola pre pakovanja:</b> izmeriti gotovu ceradu (${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} mm) · K1 tačno na 50 mm od prednje ivice${sastava?` · sastav pada na ${R.splice.spliceList.map(s=>'K'+s.kornis).join(', ')}`:''} · cerada se označava brojem naloga.</div>`;
@@ -2383,7 +2400,7 @@ function qrMatrica(tekst){
 const QR_POLJA = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada','cev','stub',
   'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade','autoInterval',
   'brIntervala','fiksniRazmak','svetalaPoKornizu','motor','parapetOn','parapetVisina',
-  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','stubMod','brStubovaRucno','motorStrana'];
+  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','stubMod','brStubovaRucno','motorStrana','kornisLed'];
 const qrEnc = s => encodeURIComponent(s==null?'':String(s)).replace(/~/g,'%7E');
 
 // Link iz QR-a otvara nalog ZAKLJUČAN (oznaka "z1") — radnik ga vidi i štampa,
@@ -2677,7 +2694,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.44";
+const APP_VER = "v2026-06-11.45";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -2785,6 +2802,7 @@ const MAG_PROFILI = [
   {sifra:"10414",  naziv:"Stub 100×100",           tip:"profil", kg_m:null},
   {sifra:"10471",  naziv:"Korniš — tanki",              tip:"profil", kg_m:0.809},
   {sifra:"10418",  naziv:"Tanki korniš obostrani",      tip:"profil", kg_m:0.737},
+  {sifra:"EK-29935",naziv:"Tanki korniš sa LED lajsnom", tip:"profil", kg_m:1.072},
   {sifra:"10470",  naziv:"Konektor tankog kornisa 10471",tip:"profil", kg_m:0.590},
   {sifra:"10472",  naziv:"Korniš — debeli",             tip:"profil", kg_m:1.491},
   {sifra:"10416",  naziv:"Debeli korniš obostrani",     tip:"profil", kg_m:1.288},
@@ -3344,7 +3362,7 @@ const ARCH_FIELDS = ['sirina','dubina','zadnjaVisina','prednjaVisina','brKomada'
   'sirinaRaja','kederTip','kornisSklop','cevMotora','bojaRal','bojaCerade',
   'autoInterval','brIntervala','fiksniRazmak','svetalaPoKornizu','motor','celicnaOn',
   'parapetOn','parapetVisina',
-  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','napomena','stubMod','brStubovaRucno','motorStrana'];
+  'brNaloga','kupac','adresa','datum','rok','radnik','olukTip','rajMod','brRajaRucno','napomena','stubMod','brStubovaRucno','motorStrana','kornisLed'];
 
 function apiHeaders(){
   return {'Content-Type':'application/json','X-Api-Key': API_KEY};
@@ -3508,6 +3526,7 @@ async function loadOrder(id){
   if(!fields.stubMod) $("stubMod").value = 'auto';
   if(!fields.brStubovaRucno) $("brStubovaRucno").value = 2;
   if(!fields.motorStrana) $("motorStrana").value = '';
+  if(!fields.kornisLed) $("kornisLed").value = 'std';
   if(!fields.brRajaRucno) $("brRajaRucno").value = 2;
   aktivniNalog = {id: izServera ? id : null, br: nalogKljuc(fields), izdato: fields._izdato || null};
   if(fields._steelRows){ steelRows=JSON.parse(fields._steelRows); renderSteelInputs(); }
@@ -3556,7 +3575,7 @@ function trazeniProfili(){
     svetalaPoKornizu:$("svetalaPoKornizu").value, celicnaOn:$("celicnaOn").checked,
     parapetOn:$("parapetOn").checked, parapetVisina:$("parapetVisina").value,
     rajMod:$("rajMod").value, brRajaRucno:$("brRajaRucno").value,
-    stubMod:$("stubMod").value, brStubovaRucno:$("brStubovaRucno").value,
+    stubMod:$("stubMod").value, brStubovaRucno:$("brStubovaRucno").value, kornisLed:$("kornisLed").value,
   };
   const R = compute(I);
   const alu = aluCalc(I, R);

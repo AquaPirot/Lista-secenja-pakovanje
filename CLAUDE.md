@@ -32,7 +32,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.44` / cache `lista-secenja-v47`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v48` / slike v2.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -126,6 +126,9 @@ Srednjih umetaka (konektora) ima `n − 1` **po svakoj poziciji korniša** —
 - Obostrani + ≥3 raja → sečeni je **obavezan** (jednodelni se disabluje)
 - Profili po kederu: jednostrani → **10472** (debeli) + **10471** (tanki);
   obostrani → **10416** + **10418**
+- **Tanki korniš sa LED lajsnom EK-29935** (41×56,9, 1,072 kg/m; `kornisLed`='lajsna', `R.led.ledLajsna`):
+  samo uz **obostrani** keder i samo umesto tankih korniša **sa svetlom** (bez svetla ostaju 10418).
+  Ista svetla, isti poklopci i umetci. **Ne buši se** — tačke na listu A samo pokazuju gde ide svetlo.
 
 ### Cerada
 - Širina = **D − 10 mm** (zategne se na punu širinu pergole)
