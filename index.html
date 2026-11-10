@@ -183,9 +183,17 @@
   @media(max-width:560px){.big3{grid-template-columns:1fr;}}
   .ce-grid{display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:start;}
   @media(max-width:620px){.ce-grid{grid-template-columns:1fr;}}
+  .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+  @media(max-width:620px){.st-grid{grid-template-columns:1fr;}}
+  .st{display:grid;grid-template-columns:58px minmax(0,1fr) auto 16px;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--paper2);break-inside:avoid;}
+  .st .thumb{width:54px;height:40px;}
+  .st-t b{font-size:12px;display:block;line-height:1.25;}
+  .st-t small{display:block;font-size:9.5px;color:#7a7364;line-height:1.3;margin-top:1px;}
+  .st-q{font-family:'Spline Sans Mono',monospace;font-weight:700;font-size:14px;white-space:nowrap;text-align:right;}
+  .kese-blok{break-inside:avoid;}
   .lfoot{display:flex;justify-content:space-between;margin-top:14px;border-top:1px solid #d8d1bd;padding-top:5px;font-family:'Spline Sans Mono',monospace;font-size:9px;color:#8a8270;}
   .potpisi3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:18px;}
-  .zb-dno{display:grid;grid-template-columns:1fr 230px;gap:16px;margin-top:12px;align-items:stretch;break-inside:avoid;}
+  .zb-dno{margin-top:12px;break-inside:avoid;}
   .zb-potpisi{display:flex;flex-direction:column;gap:10px;justify-content:space-between;}
   .zb-potpisi .potpis-l{margin-top:8px;}
   @media(max-width:620px){.zb-dno{grid-template-columns:1fr;}}
@@ -305,7 +313,7 @@
   .obr-warning{background:#fbe9b6;border:1px solid #c2933a;color:#5e4413;padding:8px 12px;border-radius:5px;font-size:11.5px;margin:10px 0;}
 
   @media print{
-    @page{margin:10mm;}
+    @page{size:A4;margin:10mm;}
     html,body{background:#fff;}
     .no-print{display:none!important;}
     .doc{box-shadow:none!important;margin:0!important;max-width:100%!important;padding:0!important;}
@@ -313,6 +321,9 @@
        na sledeću stranu i prva ostane skoro prazna. Naslov ide uz tabelu,
        red se ne cepa, a zaglavlje tabele se ponavlja na svakoj strani. */
     .list{break-before:page;margin-top:0;}
+    .list.ista{break-before:auto;break-inside:avoid;margin-top:6px;}
+    .list-sep.ista{display:block;margin:22px 0 0;}
+    .st{padding:3px 0;} .st .thumb{width:48px;height:34px;}
     .thumb{width:52px;height:36px;}
     td{padding:3px 6px;}
     .sec{margin-top:12px;}
@@ -1708,10 +1719,6 @@ function renderIzvestaj(I, R){
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">✓</span><h3 class="sec-t">Kontrola proračuna</h3></div>
     <ul style="margin:0;padding-left:18px;font-size:11.5px;line-height:1.7">${kon.map(x=>`<li style="${x.w?'color:#bd4a2a;font-weight:700':''}">${x.w?'⚠ ':'✓ '}${x.t}</li>`).join('')}</ul></div>`;
   if((I.napomena||'').trim()) html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">!!</span><h3 class="sec-t">Napomena</h3></div><div class="napom">${esc(I.napomena.trim())}</div></div>`;
-  html += `<div class="potpisi3">
-    <div class="potpis">Proverio i izdao<div class="potpis-l">______________________</div></div>
-    <div class="potpis">Primio<div class="potpis-l">______________________</div></div>
-    <div class="potpis">Datum<div class="potpis-l">______________________</div></div></div>`;
   html += `<div class="foot">AG GROUP · izveštaj o pergoli · ${esc(I.brNaloga)||'bez broja'}${I.kupac?' · '+esc(I.kupac):''}${nK>1?' · '+nK+' kom':''} · bez cena</div>`;
   $("doc").innerHTML = html;
 }
@@ -1734,9 +1741,9 @@ function renderNalog(I, R, alu, okov){
       <div><span>Visine A / C</span><b>${R.in.A} / ${R.in.C}</b></div>
       <div><span>Komada</span><b>${nK}${nK>1?' ⚠':''}</b></div>
       <div><span>Boja</span><b>${I.bojaRal?'RAL '+esc(I.bojaRal):'po izboru'}</b></div></div>`;
-  const listHead = (slovo, naslov, podnaslov, badge, cls) => `
-    <div class="list-sep"><span>✂ ${slovo ? 'LIST '+slovo : ''}</span></div>
-    <div class="list">
+  const listHead = (slovo, naslov, podnaslov, badge, cls, istaStrana) => `
+    <div class="list-sep${istaStrana?' ista':''}"><span>✂ ${slovo ? 'LIST '+slovo : ''}</span></div>
+    <div class="list${istaStrana?' ista':''}">
     <div class="lh"><div><div class="lh-t">${slovo?'LIST '+slovo+' · ':''}${naslov}</div><div class="lh-s">${podnaslov}</div></div>
       <div class="lh-m"><span class="badge ${cls||''}">${badge}</span><br>Br. naloga: <b>${brN}</b><br>Kupac: <b>${kupacTxt}</b> · Rok: <b>${rokTxt}</b></div></div>
     ${strip()}`;
@@ -1745,6 +1752,12 @@ function renderNalog(I, R, alu, okov){
     <div class="potpis">${a}<div class="potpis-l">______________________</div></div>
     <div class="potpis">${b}<div class="potpis-l">______________________</div></div>
     <div class="potpis">${c}<div class="potpis-l">______________________</div></div></div>`;
+
+  // Stavke za pripremu u dve kolone — upola kraći list
+  const stavke = items => `<div class="st-grid">`+items.map(x=>`<div class="st">
+      <div>${x.img?imgTag(x.img,x.naziv):''}</div>
+      <div class="st-t"><b>${esc(x.naziv)}</b>${x.opis?`<small>${x.opis}</small>`:''}</div>
+      <div class="st-q">${x.kol}${x.jed?' '+x.jed:''}</div>${chk}</div>`).join('')+`</div>`;
 
   let html = "";
 
@@ -1802,9 +1815,9 @@ function renderNalog(I, R, alu, okov){
     ['E','Bravarija', [I.cev!=='nema'?'cev na zidu '+esc(I.cev):'', 'trapezni lim', I.celicnaOn?'čelična konstrukcija':''].filter(Boolean).join(', ')],
   ];
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">→</span><h3 class="sec-t">Listovi naloga — ko šta radi</h3></div>
-    <table class="lst-tab"><thead><tr><th style="width:32px;text-align:center">✓</th><th>List · odeljenje</th><th style="width:140px">Odgovoran</th><th style="width:120px">Gotovo (datum)</th></tr></thead><tbody>`+
+    <table class="lst-tab"><thead><tr><th style="width:32px;text-align:center">✓</th><th style="width:210px">List · odeljenje</th><th>Šta sadrži</th></tr></thead><tbody>`+
     listovi.map((l,i)=>`<tr style="background:${i%2?'#ebe7db':'transparent'}"><td style="text-align:center">${chk}</td>
-      <td><b>${l[0]} · ${l[1]}</b><div style="font-size:10px;color:#5a5446">${l[2]}</div></td><td></td><td></td></tr>`).join('')+
+      <td><b>${l[0]} · ${l[1]}</b></td><td style="font-size:10.5px;color:#5a5446">${l[2]}</td></tr>`).join('')+
     `</tbody></table>
     <div style="font-size:10px;color:#7a7364;margin-top:4px">Svaki list ima isto zaglavlje — može da se odvoji i preda odeljenju.</div></div>`;
 
@@ -1835,10 +1848,7 @@ function renderNalog(I, R, alu, okov){
       </div>
     </div>`;
   }
-  html += `<div class="zb-potpisi">
-    <div class="potpis">Izdao (kancelarija)<div class="potpis-l">__________________</div></div>
-    <div class="potpis">Primio (šef proizvodnje)<div class="potpis-l">__________________</div></div>
-    <div class="potpis">Kontrola pre isporuke<div class="potpis-l">__________________</div></div></div></div>`;
+  html += `</div>`;
   html += `<div class="lfoot"><span>AG GROUP · nalog ${brN} · ${kupacTxt}</span><span>Zbirni list</span></div>`;
 
   /* ═════════ LIST A — SEČENJE ALUMINIJUMA ═════════ */
@@ -1905,7 +1915,6 @@ function renderNalog(I, R, alu, okov){
       Rupe za kolica se NE buše — dvostrani keder, kolica idu kroz rupe u umetcima.</div>`;
   }
   html += `</div>`;
-  html += potpisi('Sekao','Bušio','Kontrola mera');
   html += listFoot('List A · Sečenje aluminijuma');
 
   /* ═════════ LIST B — CERADA ═════════ */
@@ -1984,7 +1993,6 @@ function renderNalog(I, R, alu, okov){
     <tr><td></td><td><b>Sastav rolni</b></td><td style="font-size:11px">${sastava?'na kederu: '+R.splice.spliceList.map(s=>'K'+s.kornis).join(', '):'nema — cerada iz jednog komada'}</td><td class="m" style="text-align:right">${sastava} kom</td><td style="text-align:center">${chk}</td></tr>
     </tbody></table></div>`;
   html += `<div class="napom" style="margin-top:12px"><b>Kontrola pre pakovanja:</b> izmeriti gotovu ceradu (${R.cerada.sirinaCerade} × ${R.cerada.duzCerade} mm) · K1 tačno na 50 mm od prednje ivice${sastava?` · sastav pada na ${R.splice.spliceList.map(s=>'K'+s.kornis).join(', ')}`:''} · cerada se označava brojem naloga.</div>`;
-  html += potpisi('Krojio','Sastav / keder','Kontrola mera');
   html += listFoot('List B · Cerada');
 
   /* ═════════ LIST C — OKOV I PAKOVANJE ═════════ */
@@ -1993,32 +2001,15 @@ function renderNalog(I, R, alu, okov){
   OKOV_PODSEKCIJE.forEach(g=>{
     const items = okov.filter(x=>x.grupa===g.id && x.kol>0);  // stavke sa 0 kom se ne prikazuju
     if(!items.length) return;
-    html += `<div class="grp-t">${g.t.toUpperCase()}</div><table><tbody>`;
-    items.forEach((s,i)=>{
-      html += `<tr style="background:${i%2?'#ebe7db':'transparent'}">
-        <td style="width:64px">${imgTag(s.img, s.naziv)}</td>
-        <td><b>${esc(s.naziv)}</b><div style="font-size:10px;color:#888">${esc(s.pravilo)}</div></td>
-        <td class="m" style="width:128px;text-align:right;font-weight:700;font-size:14px">${s.kol} ${s.jed}</td>
-        <td style="text-align:center;width:32px">${chk}</td></tr>`;
-    });
-    html += `</tbody></table>`;
+    html += `<div class="grp-t">${g.t.toUpperCase()}</div>` + stavke(items.map(s=>({img:s.img, naziv:s.naziv, opis:esc(s.pravilo), kol:s.kol, jed:s.jed})));
   });
   html += `</div>`;
   const VR = vijcanaRoba(R, nK);
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">C2</span>
     <h3 class="sec-t">Vijčana roba</h3><span style="margin-left:auto;font-family:'Spline Sans Mono',monospace;font-size:11px;color:#5a5446">${VR.kom} kom</span></div>
-    <div class="grp-t">ZBIRNO PO VRSTI — ZA PRIPREMU IZ MAGACINA</div>
-    <table><thead><tr><th style="width:64px">Slika</th><th>Šraf</th><th style="width:70px;text-align:right">Ukupno</th><th>Gde ide</th><th style="width:32px;text-align:center">✓</th></tr></thead><tbody>`;
-  VR.lista.forEach((u,i)=>{
-    const v=VIJCI[u.id];
-    html += `<tr style="background:${i%2?'#ebe7db':'transparent'}">
-      <td>${imgTag(v.img, v.n)}</td><td><b>${esc(v.n)}</b></td>
-      <td class="m" style="text-align:right;font-weight:700;font-size:15px">${u.kol}</td>
-      <td style="font-size:10.5px;color:#5a5446;line-height:1.4">${u.delovi.join(' · ')}${nK>1?` · <b>×${nK}</b>`:''}</td>
-      <td style="text-align:center">${chk}</td></tr>`;
-  });
-  html += `</tbody></table>
-    <div class="grp-t" style="margin-top:12px">KESE ZA MONTAŽU — STUB I RAJ POSEBNO ZA SVAKI KOMAD, OSTALO ZBIRNO · NALEPITI NAZIV</div>
+    <div class="grp-t">ZBIRNO PO VRSTI — ZA PRIPREMU IZ MAGACINA</div>`
+    + stavke(VR.lista.map(u=>({img:VIJCI[u.id].img, naziv:VIJCI[u.id].n, opis:u.delovi.join(' · ')+(nK>1?` · <b>×${nK}</b>`:''), kol:u.kol, jed:''})));
+  html += `<div class="kese-blok"><div class="grp-t" style="margin-top:12px">KESE ZA MONTAŽU — STUB I RAJ POSEBNO ZA SVAKI KOMAD, OSTALO ZBIRNO · NALEPITI NAZIV</div>
     <div class="kese">`;
   VR.MESTA.forEach(m=>{
     const kesa = m.po ? m.br*nK : nK, puta = m.po ? 1 : m.br;
@@ -2026,16 +2017,14 @@ function renderNalog(I, R, alu, okov){
     html += `<div class="kesa"><div class="kesa-h"><b>${esc(naslov)}</b><span>${kesa} ${kesa===1?'kesa':(kesa<5?'kese':'kesa')}</span></div>
       <div class="kesa-s">${m.s.filter(x=>x[1]).map(([id,q])=>`<span>${esc(VIJCI[id].k)} <b>×${q*puta}</b></span>`).join('')}</div></div>`;
   });
-  html += `</div></div>`;
-  html += potpisi('Spremio','Spakovao','Kontrola');
+  html += `</div></div></div>`;
   html += listFoot('List C · Okov i pakovanje');
 
   /* ═════════ LIST D — ELEKTRONIKA ═════════ */
   html += listHead('D','ELEKTRONIKA','MOTOR · TRAFO · DIMER · LED','ZA ELEKTRIČARA','el');
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">D1</span><h3 class="sec-t">Elektronika</h3></div>
     <div style="font-size:10.5px;color:#5a5446;margin-bottom:4px">
-      Motor, trafo, dimer i kutija za struju idu uz svaku pergolu; daljinski je jedan po nalogu.</div>
-    <table><tbody>`;
+      Motor, trafo, dimer i kutija za struju idu uz svaku pergolu; daljinski je jedan po nalogu.</div>`;
   const motorNaziv = (I.motor||"").trim() || "Motor (po izboru)";
   const elekItems = [
     {naziv:motorNaziv, opis:"motor po izboru — upiši model", kol:nK, jed:"kom", img:"elek_motor"},
@@ -2045,20 +2034,14 @@ function renderNalog(I, R, alu, okov){
     {naziv:"Kutija za struju", opis:"razvodna kutija — uz svaku pergolu", kol:nK, jed:"kom", img:"elek_kutija"},
   ];
   const ledOkov = okov.filter(x=>x.grupa==="led" && x.kol>0).map(s=>({naziv:s.naziv, opis:s.pravilo, kol:s.kol, jed:s.jed, img:s.img}));
-  elekItems.concat(ledOkov).forEach((e,i)=>{
-    html += `<tr style="background:${i%2?'#ebe7db':'transparent'}">
-      <td style="width:64px">${e.img?imgTag(e.img,e.naziv):'&nbsp;'}</td>
-      <td><b>${esc(e.naziv)}</b><div style="font-size:10px;color:#888">${esc(e.opis)}</div></td>
-      <td class="m" style="width:128px;text-align:right;font-weight:700;font-size:14px">${e.kol} ${e.jed}</td>
-      <td style="text-align:center;width:32px">${chk}</td></tr>`;
-  });
-  html += `</tbody></table>
+  html += stavke(elekItems.concat(ledOkov).map(e=>({...e, opis:esc(e.opis)})));
+  html += `
     <div class="card mono" style="margin-top:9px;font-size:11px">★ UKUPNO LED: <b style="font-size:14px">${R.led.svetalaUkupno} kom</b> · ${R.led.svetalaPoKornizu} po kornišu × ${R.led.kornisaSaSvetlom} korniša sa ★</div></div>`;
-  html += potpisi('Spremio','Proverio rad','Kontrola');
   html += listFoot('List D · Elektronika');
 
   /* ═════════ LIST E — BRAVARIJA ═════════ */
-  html += listHead('E','BRAVARIJA','CEV NA ZIDU · LIM · ČELIČNA KONSTRUKCIJA','ZA BRAVARE','br');
+  // Bravarija je kratka — ide na istu stranu ispod elektronike, odvaja se sečenjem po liniji
+  html += listHead('E','BRAVARIJA','CEV NA ZIDU · LIM · ČELIČNA KONSTRUKCIJA','ZA BRAVARE','br', true);
   html += `<div class="sec"><div class="sec-h"><span class="sec-n acc">E1</span><h3 class="sec-t">Cev na zidu i lim</h3></div><table><tbody>`;
   if(I.cev!=="nema") html += `<tr>
     <td style="width:64px">${I.cev==="80x40" ? imgTag('metal_cev8040','Cev na zidu 80×40')
@@ -2097,7 +2080,6 @@ function renderNalog(I, R, alu, okov){
     }
   }
   html += `</div>`;
-  html += potpisi('Sekao / vario','Farbanje','Kontrola');
   html += listFoot('List E · Bravarija');
 
   $("doc").innerHTML = html;
@@ -2617,7 +2599,7 @@ function renderObracun(I, R, alu, okov, obr){
 }
 
 /* ───────── INIT ───────── */
-const APP_VER = "v2026-06-11.41";
+const APP_VER = "v2026-06-11.42";
 (function(){
   $("appVer").textContent = "· " + APP_VER;
   console.log("Lista sečenja — verzija " + APP_VER);
@@ -3806,7 +3788,7 @@ function printProizvodnja(){
   <style>
     *{box-sizing:border-box;}
     body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:16px 20px;color:#111;}
-    @page{margin:10mm;}
+    @page{size:A4;margin:10mm;}
     @media print{.no-print{display:none!important;} body{padding:0;}}
     .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #191814;padding-bottom:10px;margin-bottom:14px;}
     .brand{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#191814;letter-spacing:.05em;}

@@ -26,7 +26,7 @@ Uz svaku izmenu:
 2. `CACHE_NAME` u `sw.js` (bez toga browseri i telefoni drže staru verziju)
 3. Uploaduje se **i `index.html` i `sw.js`**; `api/*.php` samo kad je backend menjan
 
-Trenutna verzija: `v2026-06-11.41` / cache `lista-secenja-v44`.
+Trenutna verzija: `v2026-06-11.42` / cache `lista-secenja-v45`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -43,7 +43,9 @@ Trenutna verzija: `v2026-06-11.41` / cache `lista-secenja-v44`.
   „Izdaj nalog" čuva nalog sa `_izdato` i štampa. **Izveštaj o pergoli** (`renderIzvestaj`) je
   siže bez cena, dostupan na IZVEŠTAJ i iz Arhive.
 - **Radni nalog po listovima**: zbirni list + A sečenje aluminijuma, B cerada (za ceradare: rolne,
-  mapa kedera, PRG-101), C okov i pakovanje, D elektronika, E bravarija — svaki list na novoj strani.
+  mapa kedera, PRG-101), C okov i pakovanje, D elektronika, E bravarija. Svaki list počinje na novoj
+  strani, osim E koji ide ispod D (kratak je). **Nema polja za potpise** — u praksi se ne potpisuje.
+  Stavke okova, vijaka i elektronike su u dve kolone (`stavke()`), štampa je A4 (`@page{size:A4}`).
 
 ## Arhitektura proračuna
 
