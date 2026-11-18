@@ -10,16 +10,18 @@ $action = $_GET['action'] ?? '';
 // podrazumevano aktivni (obrisani/otkazani se ne prikazuju)
 if($method === 'GET' && $action === 'list'){
   $status = $_GET['status'] ?? '';
-  // Giljotine se čuvaju u istoj tabeli sa statusom 'gio' — ne mešaju se sa pergolama
-  if(($_GET['tip'] ?? '') === 'gio'){
-    $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status='gio' ORDER BY id DESC");
-    $st->execute();
+  // Giljotine (status 'gio') i klizni sistemi (status 'sld') se čuvaju u istoj tabeli,
+  // ali se ne mešaju sa pergolama — svaki program vidi samo svoje naloge
+  $tip = $_GET['tip'] ?? '';
+  if($tip === 'gio' || $tip === 'sld'){
+    $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status=? ORDER BY id DESC");
+    $st->execute([$tip]);
     json_out(['ok'=>true, 'data'=>$st->fetchAll()]);
   }
   if($status === 'proizvodnja'){
     $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status='proizvodnja' ORDER BY id DESC");
   } else {
-    $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status NOT IN ('otkazan','proizvodnja','gio') ORDER BY id DESC");
+    $st = db()->prepare("SELECT id, klijent, napomena, status, created_at FROM radni_nalozi WHERE status NOT IN ('otkazan','proizvodnja','gio','sld') ORDER BY id DESC");
   }
   $st->execute();
   json_out(['ok'=>true, 'data'=>$st->fetchAll()]);
@@ -60,7 +62,7 @@ if($method === 'POST' && $action === 'save'){
 
 // GET kalendar — svi nalozi (osim otkazanih) sa rokom isporuke iz input_data
 if($method === 'GET' && $action === 'kalendar'){
-  $st = db()->prepare("SELECT id, klijent, napomena, status, created_at, input_data FROM radni_nalozi WHERE status NOT IN ('otkazan','gio') ORDER BY id DESC");
+  $st = db()->prepare("SELECT id, klijent, napomena, status, created_at, input_data FROM radni_nalozi WHERE status NOT IN ('otkazan','gio','sld') ORDER BY id DESC");
   $st->execute();
   $rows = [];
   foreach($st->fetchAll() as $r){

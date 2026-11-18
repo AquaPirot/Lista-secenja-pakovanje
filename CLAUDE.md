@@ -10,7 +10,8 @@ obračun materijala, magacin sa optimizacijom sečenja i kalendar produkcije.
 | `index.html` | Cela aplikacija za pergole — HTML, CSS, JS. ~225 KB. |
 | `slike.js` | Sve sličice (base64) kao `window.IMG`. ~700 KB, kešira se posebno (`SLIKE_VER` u `sw.js` + `?v=` u `index.html`). |
 | `giljotina.html` | Zaseban program za giljotine; arhiva na serveru (status `gio` u istoj tabeli). |
-| `pocetna.html` | Naslovna — izbor pergola / giljotina. |
+| `slajding.html` | Zaseban program za klizni sistem sa 4 šine (4 krila); arhiva na serveru (status `sld`). |
+| `pocetna.html` | Naslovna — izbor pergola / giljotina / klizni sistem. |
 | `tests/provera.cjs` | Automatska provera proračuna (pravila + referenca). **Pokrenuti posle svake izmene.** |
 | `sw.js` | Service worker. Network-first za HTML, cache-first za ikone, `/api/` se nikad ne kešira. |
 | `popis.html` | Zaseban mobile-first ekran za popis magacina na telefonu. |
@@ -32,7 +33,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v48` / slike v2.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v49` / slike v2 · klizni `s-v2026-11-18.1`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -66,6 +67,13 @@ Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v48` / slike v2.
   listovima A, C, D zbog poklopaca. Boje cerade: Krem 3D (podrazumevano), Krem mat, Antracit, Crna, Miš boja.
 - Korisnik koristi **Nalog, Obračun, Izveštaj i Arhivu**; Proizvodnja, Kalendar i Magacin postoje,
   ali se u praksi ne koriste — ne ulagati u njih bez pitanja.
+
+## Klizni sistem (slajding.html)
+
+X = širina, Y = visina **sistema** (otvor je par mm veći). 4 šine, 4 krila. Formule sa fizičkog uzorka (vlasnik):
+1046 šina sa pragom X − 22 (između dve kutije 1047 od 11 mm) × 2 · 1047 kutija Y × 2 · 1053-1 završni Y × 2 ·
+1049 ručka Y − 42 × 2 · 1051 letvica stakla Y − 42 × 6 · 1050 baza krila (X − 258)/4 + 4 × 8 (gore i dole na svakom krilu).
+Okov: po krilu 2 spojnice gore + 2 dole, 2 seta točkova. 1048 i 1099 se ne koriste. Staklo i cene — naknadno.
 
 ## Arhitektura proračuna
 

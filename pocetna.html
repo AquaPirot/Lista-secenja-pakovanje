@@ -31,10 +31,11 @@
   .brand-t{font-family:'Fjalla One',sans-serif;font-size:16px;letter-spacing:.04em;line-height:1;}
   .brand-s{font-size:9.5px;color:var(--muted);letter-spacing:.08em;margin-top:3px;}
 
-  main{flex:1;width:100%;max-width:860px;margin:0 auto;padding:40px 18px 30px;display:flex;flex-direction:column;gap:26px;}
+  main{flex:1;width:100%;max-width:1180px;margin:0 auto;padding:40px 18px 30px;display:flex;flex-direction:column;gap:26px;}
   h1{font-family:'Fjalla One',sans-serif;font-weight:400;font-size:30px;letter-spacing:.03em;margin:0;line-height:1.1;}
   h1 small{display:block;font-family:'Hanken Grotesk',sans-serif;font-size:14px;letter-spacing:0;color:var(--muted);margin-top:8px;font-weight:500;}
-  .izbor{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .izbor{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:960px){.izbor{grid-template-columns:1fr 1fr;}}
   @media(max-width:620px){.izbor{grid-template-columns:1fr;} h1{font-size:25px;}}
 
   a.kartica{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--shell2);
@@ -46,6 +47,8 @@
   .slika img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;}
   .s-perg{background:#f5f5f5;}
   .s-gilj{background:#eeeeee;}
+  .s-sld{background:#eef0f1;}
+  .s-sld svg{position:absolute;inset:0;width:100%;height:100%;}
   /* ivice slike se blago stapaju sa pozadinom kartice */
   .s-gilj img{inset:10px 0 0;height:calc(100% - 10px);
     -webkit-mask-image:radial-gradient(ellipse 60% 75% at 50% 50%,#000 70%,transparent 100%);
@@ -130,6 +133,35 @@
           <div class="opis">Staklena giljotina GIO NOR, fiksna ili brisiva. Profili, staklo, set okova i kartica troška.</div>
           <div class="sadrzi">nalog · obračun · arhiva</div>
           <div class="ulaz"><span>Otvori giljotine →</span></div>
+        </div>
+      </a>
+
+      <a class="kartica" href="slajding.html">
+        <div class="slika s-sld" aria-hidden="true">
+          <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="st" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f8fa"/><stop offset=".55" stop-color="#d7e3ea"/><stop offset="1" stop-color="#c3d3dc"/></linearGradient>
+              <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3f45"/><stop offset="1" stop-color="#23272b"/></linearGradient>
+            </defs>
+            <ellipse cx="160" cy="164" rx="128" ry="5" fill="#000" opacity=".08"/>
+            <rect x="34" y="20" width="252" height="142" rx="2" fill="url(#al)"/>
+            <rect x="42" y="28" width="236" height="126" fill="#dfe6ea"/>
+            <g stroke="#2a2e33" stroke-width="3">
+              <rect x="44" y="30" width="66" height="122" fill="url(#st)"/>
+              <rect x="98" y="30" width="66" height="122" fill="url(#st)" opacity=".96"/>
+              <rect x="156" y="30" width="66" height="122" fill="url(#st)" opacity=".96"/>
+              <rect x="210" y="30" width="66" height="122" fill="url(#st)"/>
+            </g>
+            <g stroke="#fff" stroke-width="3" opacity=".75"><line x1="54" y1="78" x2="80" y2="44"/><line x1="166" y1="78" x2="192" y2="44"/></g>
+            <rect x="34" y="20" width="252" height="10" fill="#2a2e33"/><rect x="34" y="152" width="252" height="10" fill="#2a2e33"/>
+            <rect x="105" y="84" width="3" height="16" rx="1" fill="#a9743c"/><rect x="212" y="84" width="3" height="16" rx="1" fill="#a9743c"/>
+          </svg>
+        </div>
+        <div class="tekst">
+          <div class="naziv">KLIZNI SISTEM</div>
+          <div class="opis">Klizno staklo na 4 šine, 4 krila. Lista sečenja profila, okov i kartica troška.</div>
+          <div class="sadrzi">nalog · obračun · arhiva</div>
+          <div class="ulaz"><span>Otvori klizni →</span></div>
         </div>
       </a>
     </div>
