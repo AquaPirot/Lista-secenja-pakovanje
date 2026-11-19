@@ -54,6 +54,15 @@ Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v53` / slike v2 · kli
   strani, osim E koji ide ispod D (kratak je). **Nema polja za potpise** — u praksi se ne potpisuje.
   Stavke okova, vijaka i elektronike su u dve kolone (`stavke()`), štampa je A4 (`@page{size:A4}`).
 
+## Novi proizvodi — uvek poseban fajl (dogovor sa vlasnikom)
+
+Svaki proizvod je **zaseban program** i fajlovi se ne mešaju: pergola (`index.html`), giljotina
+(`giljotina.html`), klizni sistem (`slajding.html`), a sledeći (npr. ZIP zavese) dobijaju svoj fajl.
+Šablon je `slajding.html`/`giljotina.html`: isti izgled, PIN, nalog + obračun, arhiva na serveru sa
+**svojim statusom** u `radni_nalozi` (dodati ga u `nalozi.php`: lista po `tip`, i isključiti iz liste
+pergola i kalendara), kartica na `pocetna.html`, `CACHE_NAME` u `sw.js`. Formule daje vlasnik sa
+fizičkog uzorka — ne pogađati, pitati.
+
 ## Pristup i čuvanje
 
 - **PIN** (4 cifre) na svim stranama, pamti se 30 dana na uređaju (`ag_pin_do` u localStorage).
