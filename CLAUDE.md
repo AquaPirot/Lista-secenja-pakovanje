@@ -33,7 +33,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v50` / slike v2 · klizni `s-v2026-11-18.2`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v51` / slike v2 · klizni `s-v2026-11-19.1`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -73,7 +73,9 @@ Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v50` / slike v2 · kli
 X = širina, Y = visina **sistema** (otvor je par mm veći). 4 šine, 4 krila. Formule sa fizičkog uzorka (vlasnik):
 1046 šina sa pragom X − 22 (između dve kutije 1047 od 11 mm) × 2 · 1047 kutija Y × 2 · 1053-1 završni Y × 2 ·
 1049 ručka Y − 42 × 2 · 1051 letvica stakla Y − 42 × 6 · 1050 baza krila (X − 258)/4 + 4 × 8 (gore i dole na svakom krilu).
-Okov: po krilu 2 spojnice gore + 2 dole, 2 seta točkova. 1048 i 1099 se ne koriste. Staklo i cene — naknadno.
+Okov: po krilu 2 spojnice gore + 2 dole, 2 seta točkova. 1048 i 1099 se ne koriste. Cene — naknadno.
+**Staklo** (1 po krilu): širina = (X − 132) / 4 · visina = dužina 1049 − 126 = Y − 168 (provereno na skicama
+2800×1790 → 667×1622 i 3380×2110 → 812×1942).
 Ručke 1049 su **u ogledalu**: krila 1–4 s leva na desno gledano iznutra; krilo 4 (desno iznutra) ima 1049 sa ručkom
 KA UNUTRA, krilo 1 (desno gledano spolja) ručku KA SPOLJA; kraći deo 1049 je između stuba i ručke; i iznutra i spolja
 se otvara s desna na levo. Nalog ima odeljak „Raspored krila i ručki" (`rasporedRucki()`): pogled iznutra, spolja,
