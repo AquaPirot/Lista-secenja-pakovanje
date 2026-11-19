@@ -33,7 +33,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v52` / slike v2 · klizni `s-v2026-11-19.2`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v53` / slike v2 · klizni `s-v2026-11-19.3`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -74,9 +74,10 @@ X = širina, Y = visina **sistema** (otvor je par mm veći). 4 šine, 4 krila. F
 1046 šina sa pragom X − 22 (između dve kutije 1047 od 11 mm) × 2 · 1047 kutija Y × 2 · 1053-1 završni Y × 2 ·
 1049 ručka Y − 42 × 2 · 1051 letvica stakla Y − 42 × 6 · 1050 baza krila (X − 258)/4 + 4 × 8 (gore i dole na svakom krilu).
 Okov: po krilu 2 spojnice gore + 2 dole, 2 seta točkova. 1048 i 1099 se ne koriste. Cene — naknadno.
-**Staklo** termopan 4+12+4 (1 po krilu): širina = (X − 140) / 4 = baza 1050 + 25,5 (dogovor vlasnika: 2 mm uže od
-skice dobavljača (X − 132)/4, 1,5 mm šire od radioničkog 1050 + 24) · visina = dužina 1049 − 126 = Y − 168.
-Primeri: 2800×1790 → 665×1622, 3380×2110 → 810×1942.
+**Staklo** termopan 4+12+4 (1 po krilu): širina = baza 1050 + 22 · visina = dužina 1049 − 126 = Y − 168;
+obe mere se **uvek zaokružuju naviše na ceo mm** (681,3 → 682). Žleb 1049/1051 je dubok 18 mm (staklo ulazi 13),
+žleb 1050 15 mm (staklo ulazi 10) — svuda ostaje 5 mm za gumu/lepak. Primeri: 2865×2490 → 678×2322,
+2800×1790 → 662×1622, 3380×2110 → 807×1942.
 Ručke 1049 su **u ogledalu**: krila 1–4 s leva na desno gledano iznutra; krilo 4 (desno iznutra) ima 1049 sa ručkom
 KA UNUTRA, krilo 1 (desno gledano spolja) ručku KA SPOLJA; kraći deo 1049 je između stuba i ručke; i iznutra i spolja
 se otvara s desna na levo. Nalog ima odeljak „Raspored krila i ručki" (`rasporedRucki()`): pogled iznutra, spolja,
