@@ -35,7 +35,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v56` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-24.2`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v57` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-24.3`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -118,8 +118,11 @@ Promena formule u programu se zato automatski vidi i u porudžbini. Radi samo sa
   „Popuni listu prema pergolama" predlaže šipke za zadate komade.
 - **Stakleni sistemi**: redovi sistema (giljotina fiksna/brisiva, Slajding Nor, klizni 4 šine) sa merama i komadima;
   za svaki profil bira dužinu šipke sa najmanje poručenih metara od ponuđenih (Gio 7000, Nor 6000/7500/9000).
-  kg: giljotina po katalogu (`kat`), Nor po `PROF`. 10417 giljotine se po izboru ne poručuje. Dugme „Türkçe" daje
-  porudžbinu za Nor (profil, boy, adet, metre, kg + napomena sa spiskom sistema i molbom za aksesoar).
+  Isti profil može u VIŠE dužina (`planProfila`: proba svaku dužinu i sve zajedno, pa svaku šipku skrati na
+  najkraću ponuđenu u koju staje — bira najmanje poručenih metara); po profilu se mogu zadati svoje dužine (`por_duz`).
+  10417 giljotine se po izboru ne poručuje. Dugme „Türkçe" daje porudžbinu za Nor: slika, kod, profil, boy, adet,
+  metre — **bez kilograma** (dogovor sa vlasnikom) + napomena sa spiskom sistema i molbom za aksesoar.
+  kg (giljotina po `kat`, Nor po `PROF`) se vidi samo u našem prikazu, u zaglavlju grupe.
 - Svaka stavka (profil, okov, vijak, motor/dimer/daljinski/kutija) ima sličicu iz programa (`IMG`), i u turskoj
   porudžbini — dobavljači prepoznaju artikal po slici i šifri, ne po našem prevodu. Klik na sličicu je uvećava.
 - Stanje forme se pamti u `localStorage` (`por_stanje`, `por_sistemi`, `por_tab`); nema arhive na serveru.
