@@ -12,7 +12,8 @@ obračun materijala, magacin sa optimizacijom sečenja i kalendar produkcije.
 | `giljotina.html` | Zaseban program za giljotine; arhiva na serveru (status `gio` u istoj tabeli). |
 | `slajding.html` | Zaseban program za klizni sistem sa 4 šine (4 krila); arhiva na serveru (status `sld`). |
 | `slajding-nor.html` | Zaseban program za **Nor** klizni sistem (2–5 šina), po Nor kalkulatoru; arhiva status `snr`. |
-| `pocetna.html` | Naslovna — izbor pergola / giljotina / klizni sistem 4 šine / Slajding Nor. |
+| `pocetna.html` | Naslovna — izbor pergola / giljotina / klizni sistem 4 šine / Slajding Nor + traka Porudžbina. |
+| `porudzbina.html` | Porudžbina: pergole (poručeni profili → koliko pergola izlazi + okov/vijci/elektronika) i stakleni sistemi (mere → profili sa otpadom, staklo, okov, PDF na turskom). |
 | `tests/provera.cjs` | Automatska provera proračuna (pravila + referenca). **Pokrenuti posle svake izmene.** |
 | `sw.js` | Service worker. Network-first za HTML, cache-first za ikone, `/api/` se nikad ne kešira. |
 | `popis.html` | Zaseban mobile-first ekran za popis magacina na telefonu. |
@@ -34,7 +35,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v54` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v55` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-24.1`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -104,6 +105,22 @@ Y × 2 · završni U 10400 Y − 15 (Y − 26) × 2 · H 10401 Y − 39 × 1. St
 kenet garnitura D − 2; sa pragom još 4 + 4 zaptivke. Aluminijum 4,65 €/kg (Nor potvrda).
 Napomena: u Nor Excelu izbor „eşikli" ne radi (tursko İ u formuli) — ovde su odbici kako su zamišljeni.
 Provereno: 3000×3000, 4 šine, tek cam, sa H → 32,83 kg i staklo 697×2807 (isto kao Excel).
+
+## Porudžbina (porudzbina.html)
+
+Ne sadrži sopstvene formule: učitava `index.html`, `giljotina.html`, `slajding.html` i `slajding-nor.html`
+u skrivene iframe-ove (isti server) i poziva njihove `compute/aluCalc/applyOkov/vijcanaRoba` i `proracun`.
+Promena formule u programu se zato automatski vidi i u porudžbini. Radi samo sa servera (ne kao `file://`).
+- **Pergole**: lista poručenih profila (šifra, dužina šipke, broj šipki) + tipovi pergola; jedan tip može biti
+  „najviše što može" — povećava se broj dok sve šifre staju (best-fit sečenje, rez 5 mm). Prikaz: koliko izlazi,
+  šta fali za još jednu, iskorišćenje po profilu, ostaci, plan sečenja, i porudžbina okova (ARV/PRG/AK), vijaka,
+  elektronike (motor, dimer, trafo po tipu, kutija, daljinski po pergoli), cerade m², lima, cevi na zidu.
+  „Popuni listu prema pergolama" predlaže šipke za zadate komade.
+- **Stakleni sistemi**: redovi sistema (giljotina fiksna/brisiva, Slajding Nor, klizni 4 šine) sa merama i komadima;
+  za svaki profil bira dužinu šipke sa najmanje poručenih metara od ponuđenih (Gio 7000, Nor 6000/7500/9000).
+  kg: giljotina po katalogu (`kat`), Nor po `PROF`. 10417 giljotine se po izboru ne poručuje. Dugme „Türkçe" daje
+  porudžbinu za Nor (profil, boy, adet, metre, kg + napomena sa spiskom sistema i molbom za aksesoar).
+- Stanje forme se pamti u `localStorage` (`por_stanje`, `por_sistemi`, `por_tab`); nema arhive na serveru.
 
 ## Arhitektura proračuna
 

@@ -57,6 +57,11 @@
   .naziv{font-family:'Fjalla One',sans-serif;font-size:24px;letter-spacing:.04em;}
   .opis{font-size:13px;color:#c9c4b6;line-height:1.5;}
   .sadrzi{font-family:'Spline Sans Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;}
+  /* Porudžbina — široka traka ispod programa, bez slike */
+  a.kartica.siroka{grid-column:1/-1;flex-direction:row;align-items:stretch;}
+  .siroka .ikona{flex:0 0 120px;background:var(--paper);border-right:3px solid var(--bronze);display:grid;place-items:center;}
+  .siroka .ikona svg{width:64px;height:64px;}
+  @media(max-width:620px){a.kartica.siroka{flex-direction:column;} .siroka .ikona{flex-basis:90px;border-right:0;border-bottom:3px solid var(--bronze);}}
   .ulaz{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;}
   .ulaz span{font-family:'Fjalla One',sans-serif;font-size:14px;letter-spacing:.05em;background:var(--bronze);color:#fff;padding:9px 16px;border-radius:6px;}
   a.kartica:hover .ulaz span{background:var(--bronzeD);}
@@ -191,6 +196,21 @@
           <div class="opis">Nor klizni sistem, 2 do 5 šina, sa pragom ili bez. Profili po Nor kalkulatoru, staklo i okov.</div>
           <div class="sadrzi">nalog · obračun · arhiva</div>
           <div class="ulaz"><span>Otvori Nor →</span></div>
+        </div>
+      </a>
+
+      <a class="kartica siroka" href="porudzbina.html">
+        <div class="ikona" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="#191814" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="12" y="8" width="40" height="50" rx="3"/><path d="M22 8v-2h20v2"/>
+            <path d="M20 22h24M20 32h24M20 42h14"/><path d="M38 44l4 4 8-9" stroke="#a9743c"/>
+          </svg>
+        </div>
+        <div class="tekst">
+          <div class="naziv">PORUDŽBINA</div>
+          <div class="opis">Pergole: upišeš poručene profile (šipki × dužina) — program kaže koliko pergola izlazi i šta od okova, vijaka i elektronike da se poruči.
+            Stakleni sistemi: upišeš mere i komade — porudžbina profila sa otpadom, staklo, okov i PDF na turskom.</div>
+          <div class="ulaz"><span>Otvori porudžbinu →</span></div>
         </div>
       </a>
     </div>

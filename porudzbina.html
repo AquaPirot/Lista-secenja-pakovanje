@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#191814" />
+<meta name="description" content="AG GROUP — Porudžbina profila i aksesoara: šta se dobija od poručenog materijala" />
+<title>AG GROUP — Porudžbina</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fjalla+One&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
+  /* Isti izgled kao program za pergole: tamna radna površina, papirni nalog, bronzani akcenat */
+  :root{
+    --shell:#15171b; --shell2:#1e2127; --line:#33373f; --muted:#888;
+    --paper:#f6f4ee; --paper2:#ebe7db; --ink:#191814;
+    --bronze:#a9743c; --bronzeD:#8a5d2e; --ok:#3f7a4d; --warn:#bd4a2a; --info:#2f5f8f;
+  }
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--shell);font-family:'Hanken Grotesk',sans-serif;}
+
+  .topbar{background:var(--ink);padding:12px 16px;display:flex;align-items:center;
+    justify-content:space-between;gap:10px;position:sticky;top:0;z-index:50;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .logo{padding:3px 8px;border:2px solid var(--bronze);border-radius:4px;
+    font-family:'Fjalla One',sans-serif;color:var(--bronze);font-size:16px;}
+  .brand-t{font-family:'Fjalla One',sans-serif;font-size:16px;color:#fff;letter-spacing:.04em;line-height:1;}
+  .brand-s{font-size:9.5px;color:var(--muted);letter-spacing:.08em;margin-top:2px;}
+  .topbar-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .btn{border:0;padding:10px 14px;border-radius:5px;font-family:'Fjalla One',sans-serif;
+    font-size:13px;letter-spacing:.04em;cursor:pointer;white-space:nowrap;}
+  .btn-primary{background:var(--bronze);color:#fff;}
+  .btn-primary:active{background:var(--bronzeD);}
+  .btn-secondary{background:#2a2d34;color:#fff;border:1px solid var(--line);}
+  .btn-secondary.active{background:var(--bronze);border-color:var(--bronze);}
+  a.btn{text-decoration:none;display:inline-block;}
+  .btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--bronze);outline-offset:1px;}
+
+  .panel{max-width:820px;margin:14px auto 0;padding:0 14px;}
+  .card-in{background:var(--shell2);border:1px solid var(--line);border-radius:10px;padding:14px;}
+  .grp{font-family:'Fjalla One',sans-serif;font-size:13px;color:var(--bronze);letter-spacing:.07em;margin:14px 0 8px;}
+  .grp:first-child{margin-top:0;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(min-width:560px){.row{grid-template-columns:1fr 1fr 1fr;}}
+  label{display:block;}
+  .lbl{font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#d8d4c4;}
+  .sub{font-size:9.5px;color:var(--muted);margin:1px 0 3px;}
+  input,select{width:100%;margin-top:2px;padding:9px 10px;background:#101216;
+    border:1px solid var(--line);border-radius:5px;color:#fff;
+    font-family:'Hanken Grotesk',sans-serif;font-size:14px;}
+  input[type=number]{font-family:'Spline Sans Mono',monospace;font-size:15px;}
+  input::placeholder{color:#5c606b;}
+  select option{background:#1e2127;}
+  .hint{text-align:center;color:var(--muted);font-size:11px;margin:10px 0 4px;}
+  .sistem-izbor{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .sistem-izbor label{display:flex;gap:9px;align-items:flex-start;background:#101216;border:1px solid var(--line);
+    border-radius:7px;padding:10px 11px;cursor:pointer;}
+  .sistem-izbor input{width:auto;margin:3px 0 0;accent-color:var(--bronze);}
+  .sistem-izbor b{display:block;color:#fff;font-size:13px;}
+  .sistem-izbor small{display:block;color:var(--muted);font-size:10.5px;margin-top:2px;line-height:1.35;}
+  .sistem-izbor label:has(input:checked){border-color:var(--bronze);background:#1c1813;}
+
+  /* DOKUMENT */
+  .doc{max-width:820px;margin:18px auto 50px;background:var(--paper);
+    box-shadow:0 18px 45px rgba(0,0,0,.5);padding:22px 22px;color:var(--ink);}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:3px solid var(--ink);padding-bottom:11px;gap:10px;}
+  .doc-title{font-family:'Fjalla One',sans-serif;font-size:27px;letter-spacing:.02em;line-height:.95;}
+  .doc-sub{font-family:'Fjalla One',sans-serif;font-size:12px;color:var(--bronze);letter-spacing:.16em;margin-top:3px;}
+  .doc-meta{text-align:right;font-family:'Spline Sans Mono',monospace;font-size:10.5px;line-height:1.65;}
+  .badge{background:var(--ink);color:#fff;padding:3px 7px;border-radius:3px;display:inline-block;font-weight:600;font-size:9.5px;}
+  .badge.obracun{background:var(--bronze);}
+  .info-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:11px;}
+  @media(max-width:480px){.info-row{grid-template-columns:1fr;}}
+  .card{background:var(--paper2);padding:9px 11px;border-radius:5px;}
+  .card-t{font-family:'Fjalla One',sans-serif;font-size:10.5px;letter-spacing:.09em;color:var(--bronzeD);}
+  .mono{font-family:'Spline Sans Mono',monospace;}
+  .dims{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px;}
+  @media(max-width:480px){.dims{grid-template-columns:1fr 1fr;}}
+  .dim{background:var(--ink);color:#fff;padding:6px 7px;border-radius:4px;}
+  .dim-k{font-size:8.5px;letter-spacing:.06em;color:#b9b3a0;}
+  .dim-v{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:14px;}
+  .calc-line{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-family:'Spline Sans Mono',monospace;font-size:11px;}
+
+  .sec{margin-top:20px;}
+  .sec-h{display:flex;align-items:baseline;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:3px;margin-bottom:8px;}
+  .sec-n{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:10.5px;background:var(--ink);color:#fff;padding:2px 6px;border-radius:3px;}
+  .sec-n.acc{background:var(--bronze);}
+  .sec-t{margin:0;font-family:'Fjalla One',sans-serif;font-size:16px;letter-spacing:.02em;text-transform:uppercase;}
+  .sec-x{margin-left:auto;font-family:'Spline Sans Mono',monospace;font-size:11px;color:#5a5446;}
+
+  .tw{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  th{font-weight:700;font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:#fff;background:var(--ink);padding:5px 7px;text-align:left;border-right:1px solid #43403a;}
+  td{padding:5px 7px;border-bottom:1px solid var(--paper2);font-size:12px;vertical-align:middle;}
+  td.m{font-family:'Spline Sans Mono',monospace;font-weight:500;}
+  tbody tr:nth-child(even):not(.obr-sum):not(.obr-total){background:#efebe0;}
+  .chk{width:14px;height:14px;border:1.5px solid #9a927c;border-radius:3px;display:inline-block;}
+  .thumb{width:68px;height:50px;object-fit:contain;background:#fff;border:1px solid #d8d1bd;border-radius:4px;padding:2px;display:block;cursor:zoom-in;}
+  @media(max-width:640px){.thumb{width:54px;height:40px;}}
+  .sif{font-family:'Spline Sans Mono',monospace;font-size:9.5px;color:#7a7361;margin-bottom:2px;}
+  .nap{font-size:10px;color:#5a5446;margin-top:1px;}
+  .oz{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:5px;vertical-align:1px;background:#e3d6c3;color:#6b4a22;}
+  .mera{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:14px;white-space:nowrap;}
+  .kom{font-family:'Spline Sans Mono',monospace;font-weight:700;font-size:14px;text-align:center;}
+
+  .box-cut{border:2px solid var(--ink);border-radius:6px;padding:10px 12px;}
+  .box-cut-t{font-family:'Fjalla One',sans-serif;font-size:11px;letter-spacing:.05em;}
+  .box-cut-v{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:22px;color:var(--bronze);}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.two{grid-template-columns:1fr;}}
+  .note{border-radius:5px;padding:7px 10px;font-size:11.5px;margin-top:8px;line-height:1.45;}
+  .note-ok{background:#e7efe6;border:1px solid var(--ok);}
+  .note-warn{background:#f6e7df;border:1px solid var(--warn);}
+  .note-info{background:#e5edf5;border:1px solid var(--info);}
+  .sema{background:#fff;border:1px solid var(--paper2);border-radius:6px;padding:8px;}
+  .sema svg{display:block;width:100%;height:auto;}
+
+  ol.napomene{margin:0;padding-left:18px;font-size:11.5px;line-height:1.6;}
+  .potpisi{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:22px;}
+  .potpis{border-top:1px solid var(--ink);padding-top:5px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5a5446;}
+  .potpis-l{margin-top:14px;font-weight:400;color:var(--muted);}
+  .foot{margin-top:16px;border-top:1px solid var(--paper2);padding-top:6px;font-family:'Spline Sans Mono',monospace;font-size:9px;color:var(--muted);text-align:center;}
+
+  /* OBRAČUN */
+  .obr-sum{background:#191814;color:#fff;}
+  .obr-sum td{border:0;font-weight:700;padding:7px 8px;font-size:13px;}
+  .obr-total{background:var(--bronze);color:#fff;}
+  .obr-total td{border:0;font-weight:700;padding:9px 10px;font-size:15px;}
+  .obr-total td.amt{font-family:'Spline Sans Mono',monospace;font-size:18px;}
+  .euro{font-family:'Spline Sans Mono',monospace;font-weight:600;text-align:right;white-space:nowrap;}
+  .obr-warning{background:#fbe9b6;border:1px solid #c2933a;color:#5e4413;padding:8px 12px;border-radius:5px;font-size:11.5px;margin:10px 0;line-height:1.45;}
+  .cene{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 10px;}
+  .cene label{background:var(--paper2);border-radius:5px;padding:6px 8px;}
+  .cene span{display:block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5a5446;}
+  .cene input{background:#fff;color:var(--ink);border:1px solid #cfc7b2;font-size:14px;padding:6px 8px;}
+  .cene input.prazno{border-color:var(--warn);background:#fff6f2;}
+  .cene small{display:block;font-size:9.5px;color:#7a7361;margin-top:2px;}
+
+  /* Kartica troška */
+  .kartica{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:0;margin-top:12px;border-radius:7px;overflow:hidden;border:2px solid var(--ink);break-inside:avoid;}
+  @media(max-width:600px){.kartica{grid-template-columns:1fr;}}
+  .kart-gl{background:var(--ink);color:#fff;padding:14px 16px;display:flex;flex-direction:column;gap:2px;}
+  .kart-k{font-family:'Fjalla One',sans-serif;font-size:12px;letter-spacing:.14em;color:#d9b48a;}
+  .kart-v{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:30px;line-height:1.15;}
+  .kart-s{font-size:11px;color:#b9b3a0;}
+  .kart-mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid #3a3730;}
+  .kart-mini span{display:block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#b9b3a0;}
+  .kart-mini b{font-family:'Spline Sans Mono',monospace;font-size:13px;font-weight:600;}
+  .kart-gr{background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+  .kg-t{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:12px;}
+  .kg-t span{font-weight:700;}
+  .kg-t small{font-weight:400;color:#7a7361;margin-left:6px;font-size:10.5px;}
+  .kg-t b{font-family:'Spline Sans Mono',monospace;font-weight:600;white-space:nowrap;}
+  .kg-bar{height:6px;background:var(--paper2);border-radius:3px;overflow:hidden;margin-top:3px;}
+  .kg-bar i{display:block;height:100%;background:var(--bronze);border-radius:3px;}
+  .kg-nula .kg-t b{color:var(--warn);font-family:'Hanken Grotesk',sans-serif;font-size:11px;}
+  .kg-fale{font-size:11px;line-height:1.45;background:#f6e7df;border:1px solid var(--warn);border-radius:5px;padding:6px 9px;margin-top:2px;}
+  .kg-fale.kg-ok{background:#e7efe6;border-color:var(--ok);}
+
+  /* ARHIVA */
+  .arch-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
+  .arch-overlay.open{display:flex;justify-content:flex-end;}
+  .arch-panel{background:var(--shell2);border-left:1px solid var(--line);width:min(400px,100vw);height:100vh;overflow-y:auto;}
+  .arch-head{background:var(--ink);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;}
+  .arch-head-t{font-family:'Fjalla One',sans-serif;color:var(--bronze);font-size:15px;letter-spacing:.05em;}
+  .arch-close{background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;}
+  .arch-empty{padding:40px 20px;color:var(--muted);text-align:center;font-size:13px;line-height:1.5;}
+  .arch-item{padding:13px 16px;border-bottom:1px solid var(--line);}
+  .arch-item b{font-family:'Fjalla One',sans-serif;color:#fff;font-size:13px;font-weight:400;}
+  .arch-item small{display:block;font-size:11px;color:#a09880;margin:3px 0 9px;}
+  .btn-xs{border:0;padding:5px 11px;border-radius:4px;font-family:'Fjalla One',sans-serif;font-size:11px;cursor:pointer;letter-spacing:.03em;}
+  .btn-xs-load{background:var(--bronze);color:#fff;}
+  .btn-xs-del{background:#2e1a1a;color:#e07070;border:1px solid #5a2020;margin-left:6px;}
+
+  #imgZoom{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:10px;cursor:zoom-out;}
+  #imgZoom img{max-width:90vw;max-height:75vh;background:#fff;border-radius:8px;padding:14px;}
+  #imgZoom div{color:#eee;font-size:14px;}
+
+  @media print{
+    @page{margin:10mm;}
+    html,body{background:#fff;}
+    .no-print{display:none!important;}
+    .doc{box-shadow:none!important;margin:0!important;max-width:100%!important;padding:0!important;}
+    .sec-h{break-after:avoid;} tr{break-inside:avoid;} thead{display:table-header-group;}
+    .card,.box-cut,.note,.potpisi,.sema{break-inside:avoid;}
+  }
+  .rr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:620px){.rr-grid{grid-template-columns:1fr;}}
+  .rr-k{background:#fff;border:1.5px solid #191814;border-radius:6px;padding:8px;break-inside:avoid;}
+  .rr-k svg{width:100%;height:auto;display:block;}
+  .rr-presek svg{max-width:470px;margin:0 auto;}
+  .rr-n{font-family:'Fjalla One',sans-serif;font-size:13px;letter-spacing:.06em;text-align:center;margin-bottom:2px;}
+</style>
+</head>
+<body>
+<!-- PIN: pamti se na uređaju 30 dana. Nalog otvoren preko QR koda (zaključan) ne traži PIN. -->
+<style>
+  html.ag-zak body > *:not(#agPin){display:none !important;}
+  #agPin{position:fixed;inset:0;z-index:9999;background:#15171b;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk',system-ui,sans-serif;}
+  #agPin .pk{width:min(320px,88vw);background:#1e2127;border:1px solid #33373f;border-radius:14px;padding:26px 22px;text-align:center;color:#fff;}
+  #agPin .pl{display:inline-block;padding:3px 9px;border:2px solid #a9743c;border-radius:4px;color:#a9743c;font-family:'Fjalla One',sans-serif;font-size:18px;}
+  #agPin h2{font-family:'Fjalla One',sans-serif;font-weight:400;letter-spacing:.05em;font-size:20px;margin:14px 0 4px;}
+  #agPin p{font-size:12px;color:#8b8f98;margin:0 0 16px;}
+  #agPin input{width:100%;text-align:center;font-size:30px;letter-spacing:.45em;padding:12px 0 12px .45em;background:#101216;border:1px solid #33373f;border-radius:8px;color:#fff;font-family:'Spline Sans Mono',monospace;margin:0;}
+  #agPin input.ne{border-color:#d8754a;animation:agTr .3s;}
+  #agPin .pg{height:18px;font-size:12px;color:#f0b49a;margin-top:8px;}
+  @keyframes agTr{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  @media print{#agPin{display:none!important;}}
+</style>
+<script>
+(function(){
+  var K='ag_pin_do', H=2088368152, DANA=30;
+  function h(s){var x=5381;for(var i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))>>>0;return x;}
+  try{ if(+localStorage.getItem(K) > Date.now()) return; }catch(e){}
+  if((location.hash||'').indexOf('#z1~')===0) return;
+  document.documentElement.classList.add('ag-zak');
+  var d=document.createElement('div'); d.id='agPin';
+  d.innerHTML='<div class="pk"><span class="pl">AG</span><h2>AG GROUP · RADNI NALOZI</h2><p>Unesi PIN — pamti se na ovom uređaju '+DANA+' dana</p>'
+    +'<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" id="agPinIn" aria-label="PIN"><div class="pg" id="agPinG"></div></div>';
+  document.body.insertBefore(d, document.body.firstChild);
+  var inp=document.getElementById('agPinIn'), g=document.getElementById('agPinG');
+  inp.addEventListener('input',function(){
+    inp.classList.remove('ne'); g.textContent='';
+    if(inp.value.length<4) return;
+    if(h(inp.value)===H){
+      try{ localStorage.setItem(K, String(Date.now()+DANA*864e5)); }catch(e){}
+      document.documentElement.classList.remove('ag-zak'); d.remove();
+    } else { inp.value=''; inp.classList.add('ne'); g.textContent='Pogrešan PIN'; }
+  });
+  setTimeout(function(){inp.focus();},50);
+})();
+</script>
+<style>
+  /* PORUDŽBINA — dodatni stilovi */
+  .panel{max-width:980px;}
+  .doc{max-width:980px;}
+  .tbl-in{width:100%;border-collapse:collapse;}
+  .tbl-in th{background:#101216;color:#d8d4c4;border:0;border-bottom:1px solid var(--line);font-size:10px;padding:6px;}
+  .tbl-in td{border-bottom:1px solid var(--line);padding:4px;color:#fff;font-size:12px;}
+  .tbl-in input,.tbl-in select{margin:0;padding:7px 8px;font-size:13px;}
+  .tbl-in .x{background:none;border:0;color:#e07070;font-size:18px;cursor:pointer;padding:2px 8px;}
+  .tbl-in tbody tr:nth-child(even){background:transparent!important;}
+  .add{margin-top:8px;background:#101216;border:1px dashed var(--line);color:#d8d4c4;padding:8px 12px;border-radius:5px;cursor:pointer;font-family:'Fjalla One',sans-serif;font-size:12px;letter-spacing:.04em;}
+  .cfg{background:#101216;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;}
+  .cfg.max{border-color:var(--bronze);background:#1c1813;}
+  .cfg-h{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+  .cfg-h b{font-family:'Fjalla One',sans-serif;color:var(--bronze);font-weight:400;letter-spacing:.05em;}
+  .cfg-h label{display:flex;align-items:center;gap:6px;color:#d8d4c4;font-size:12px;cursor:pointer;}
+  .cfg-h input[type=radio],.cfg-h input[type=checkbox]{width:auto;margin:0;accent-color:var(--bronze);}
+  .cfg-h .x{margin-left:auto;background:none;border:0;color:#e07070;font-size:18px;cursor:pointer;}
+  .g6{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 8px;}
+  @media(min-width:620px){.g6{grid-template-columns:repeat(6,1fr);}}
+  .g6 .lbl{font-size:9.5px;}
+  .g6 input,.g6 select{padding:7px 8px;font-size:13px;}
+  .tabs{display:flex;gap:6px;}
+  .opcije{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;color:#d8d4c4;font-size:12px;margin-top:8px;}
+  .opcije label{display:flex;align-items:center;gap:6px;}
+  .opcije input[type=checkbox]{width:auto;margin:0;accent-color:var(--bronze);}
+  .opcije input[type=text],.opcije input[type=number]{width:auto;min-width:90px;padding:6px 8px;font-size:13px;}
+  .big-r{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px;}
+  .big-r .box-cut-v{font-size:26px;}
+  .lim{color:var(--warn);font-weight:700;}
+  .ok{color:var(--ok);font-weight:700;}
+  details.plan{margin-top:6px;}
+  details.plan summary{cursor:pointer;font-size:11.5px;font-weight:700;color:#5a5446;}
+  .sipka{font-family:'Spline Sans Mono',monospace;font-size:10.5px;margin:2px 0;display:flex;gap:6px;align-items:center;}
+  .sipka .bar{flex:1;display:flex;height:14px;background:#ddd5c2;border-radius:2px;overflow:hidden;max-width:520px;}
+  .sipka .bar i{display:block;height:100%;background:var(--ink);border-right:2px solid var(--paper);}
+  .sipka .bar i.o{background:#c9a476;}
+  td.r,th.r{text-align:right;}
+  .muted{color:#7a7361;font-size:10.5px;}
+  .grp-t{font-family:'Fjalla One',sans-serif;font-size:12px;letter-spacing:.06em;color:var(--bronzeD);margin:12px 0 4px;}
+  .ucitava{color:var(--muted);font-size:12px;padding:10px;text-align:center;}
+  td.nw{white-space:nowrap;}
+  @media print{ @page{size:A4;margin:10mm;} details.plan:not([open]){display:none;} }
+</style>
+
+<div class="topbar no-print">
+  <div class="brand"><div class="logo">AG</div><div><div class="brand-t">PORUDŽBINA</div><div class="brand-s">PROFILI · AKSESOAR · STAKLENI SISTEMI</div></div></div>
+  <div class="topbar-actions">
+    <div class="tabs">
+      <button class="btn btn-secondary active" id="tabPer" onclick="tab('per')">PERGOLE</button>
+      <button class="btn btn-secondary" id="tabStk" onclick="tab('stk')">STAKLENI SISTEMI</button>
+    </div>
+    <button class="btn btn-secondary" id="jezikBtn" onclick="promeniJezik()" style="display:none">🇹🇷 Türkçe</button>
+    <button class="btn btn-primary" onclick="window.print()">PDF / Štampa</button>
+    <a class="btn btn-secondary" href="pocetna.html">← Početna</a>
+  </div>
+</div>
+
+<!-- ═════════ PERGOLE ═════════ -->
+<div id="vPer">
+  <div class="panel no-print">
+    <div class="card-in">
+      <div class="grp">1 · PORUČENI PROFILI (šta stiže / šta imam)</div>
+      <div class="tw"><table class="tbl-in">
+        <thead><tr><th>Profil</th><th style="width:110px">Dužina šipke (m)</th><th style="width:100px">Šipki (kom)</th><th style="width:40px"></th></tr></thead>
+        <tbody id="stokRows"></tbody>
+      </table></div>
+      <button class="add" onclick="dodajStok()">＋ Dodaj profil</button>
+      <div class="opcije">
+        <span>Predlog šipki za pergole ispod:</span>
+        <label>dužina <input type="number" id="predlogL" value="7" step="0.5" min="1" style="width:80px"> m</label>
+        <button class="add" style="margin:0" onclick="predloziStok()">Popuni listu prema pergolama</button>
+      </div>
+
+      <div class="grp" style="margin-top:18px">2 · PERGOLE KOJE PRAVIM</div>
+      <div class="sub" style="font-size:11px">Pergola označena sa „najviše" se računa koliko god puta može da stane u materijal; ostale u zadatom broju komada.</div>
+      <div id="cfgRows"></div>
+      <button class="add" onclick="dodajCfg()">＋ Dodaj tip pergole</button>
+
+      <div class="opcije">
+        <label>Rez testere <input type="number" id="rez" value="5" min="0" style="width:70px"> mm</label>
+        <label>Ostatak se računa kao upotrebljiv od <input type="number" id="pragOst" value="1000" min="0" style="width:90px"> mm</label>
+      </div>
+    </div>
+  </div>
+  <div class="doc" id="docPer"><div class="ucitava">Učitavam proračun pergola…</div></div>
+</div>
+
+<!-- ═════════ STAKLENI SISTEMI ═════════ -->
+<div id="vStk" style="display:none">
+  <div class="panel no-print">
+    <div class="card-in">
+      <div class="grp">1 · SISTEMI ZA PORUDŽBINU</div>
+      <div id="sysRows"></div>
+      <button class="add" onclick="dodajSys()">＋ Dodaj sistem</button>
+
+      <div class="grp" style="margin-top:18px">2 · DUŽINE ŠIPKI</div>
+      <div class="sub" style="font-size:11px">Za svaki profil program bira dužinu sa najmanje otpada (od ponuđenih). Upiši jednu dužinu ako sve treba na istu meru.</div>
+      <div class="opcije">
+        <label>Giljotina (Nor) <input type="text" id="lGio" value="7000"></label>
+        <label>Slajding Nor <input type="text" id="lSnr" value="6000, 7500, 9000"></label>
+        <label>Klizni 4 šine <input type="text" id="lSld" value="6000"></label>
+      </div>
+      <div class="opcije">
+        <label>Rez testere <input type="number" id="rezS" value="5" min="0" style="width:70px"> mm</label>
+        <label><input type="checkbox" id="bez10417" checked> 10417 (cev motora giljotine) imam — ne poručujem</label>
+        <label>Boja <input type="text" id="ralS" value="RAL 7016 (Antrasit)" style="min-width:190px"></label>
+      </div>
+    </div>
+  </div>
+  <div class="doc" id="docStk"><div class="ucitava">Učitavam proračune sistema…</div></div>
+</div>
+
+<div id="okviri" style="position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden" aria-hidden="true"></div>
+
+<script>
+const VER = "p-v2026-11-24.1";
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const br = (n,d=0) => (Math.round(n*10**d)/10**d).toFixed(d).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const brT = (n,d=0) => (Math.round(n*10**d)/10**d).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,','); // turski/engleski zapis
+const danas = () => { const d=new Date(); return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); };
+
+/* ───────── Postojeći programi se učitavaju skriveno (isti server) — njihovi proračuni se koriste
+   direktno, bez kopiranja formula. Kad se formula promeni u programu, menja se i ovde. ───────── */
+const PROGRAMI = {per:'index.html', gio:'giljotina.html', sld:'slajding.html', snr:'slajding-nor.html'};
+const W = {};
+function ucitaj(k){
+  if(W[k]) return W[k];
+  return W[k] = new Promise((ok, ne) => {
+    const f = document.createElement('iframe');
+    f.src = PROGRAMI[k] + '?ugradjeno=1';
+    f.onload = () => {
+      const t0 = Date.now();
+      (function cekaj(){
+        try{
+          const w = f.contentWindow;
+          const fn = k==='per' ? 'compute' : 'proracun';
+          if(typeof w[fn] === 'function') return ok(w);
+        }catch(e){ return ne(e); }
+        if(Date.now()-t0 > 8000) return ne(new Error('Program '+PROGRAMI[k]+' se nije učitao'));
+        setTimeout(cekaj, 60);
+      })();
+    };
+    f.onerror = () => ne(new Error('Ne mogu da otvorim '+PROGRAMI[k]));
+    $('okviri').appendChild(f);
+  });
+}
+
+/* ───────── SEČENJE — best-fit (isto načelo kao magacin u programu za pergole):
+   svaki rez ide u šipku koja posle njega ostavlja najmanji ostatak. ───────── */
+function seci(komadi, zaliha, rez){
+  // komadi: [{L, oz}] · zaliha: [{L, n}] (n može biti Infinity)
+  const sl = zaliha.map(z=>({L:z.L, n:z.n})).sort((a,b)=>a.L-b.L);
+  const otv = [];   // otvorene šipke {L, ost, r:[]}
+  const fale = [];
+  const kom = komadi.slice().sort((a,b)=>b.L-a.L);
+  for(const p of kom){
+    let naj=null, najOst=Infinity, nova=null;
+    for(const s of otv){ if(s.ost >= p.L-1e-6){ const o=s.ost-p.L; if(o<najOst){najOst=o; naj=s;} } }
+    for(const z of sl){ if(z.n>0 && z.L >= p.L-1e-6){ const o=z.L-p.L; if(o<najOst-1e-6){najOst=o; naj=null; nova=z;} break; } }
+    if(naj){ naj.r.push(p); naj.ost = Math.max(0, naj.ost - p.L - rez); }
+    else if(nova){ nova.n--; otv.push({L:nova.L, ost:Math.max(0,nova.L-p.L-rez), r:[p]}); }
+    else fale.push(p);
+  }
+  return {sipke:otv, fale, ostatak:sl};
+}
+const duzine = s => String(s||'').split(/[,;\s]+/).map(x=>Math.round(+x)).filter(x=>x>0);
+// najbolja jedna dužina po profilu: najmanje poručenih metara (pa manje šipki)
+function najboljaDuzina(komadi, opcije, rez){
+  let naj=null;
+  for(const L of opcije){
+    if(komadi.some(p=>p.L > L)) continue;
+    const r = seci(komadi, [{L, n:Infinity}], rez);
+    const m = r.sipke.length*L;
+    if(!naj || m < naj.m-1 || (Math.abs(m-naj.m)<=1 && r.sipke.length < naj.r.sipke.length)) naj={L, m, r};
+  }
+  return naj;
+}
+function sipkaHTML(s){
+  const del = s.r.map(p=>`<i style="width:${p.L/s.L*100}%" title="${Math.round(p.L)}"></i>`).join('');
+  const ost = s.ost>0 ? `<i class="o" style="width:${s.ost/s.L*100}%"></i>` : '';
+  return `<div class="sipka"><span style="width:42px">${br(s.L)}</span><span class="bar">${del}${ost}</span><span>${s.r.map(p=>br(p.L)).join(' + ')}${s.ost>0?` · ostatak ${br(s.ost)}`:''}</span></div>`;
+}
+
+/* ═════════════════════ PERGOLE ═════════════════════ */
+let wP = null;
+const OSNOVA = { zadnjaVisina:2700, prednjaVisina:2480, brKomada:1, cev:'80x40', stub:'110x144',
+  sirinaRaja:90, olukTip:'10468', kederTip:'obostrani', kornisSklop:'jednodelni', cevMotora:'jednodelna',
+  bojaRal:'7016', bojaCerade:'Krem 3D', autoInterval:true, brIntervala:7, fiksniRazmak:0,
+  svetalaPoKornizu:6, motor:'', celicnaOn:false, parapetOn:false, parapetVisina:'', rajMod:'auto', brRajaRucno:2,
+  stubMod:'auto', brStubovaRucno:2, kornisLed:'std', motorStrana:'' };
+const POLJA_CFG = [
+  ['sirina','Širina','num'],['dubina','Izbačaj','num'],['zadnjaVisina','Zadnja visina','num'],['prednjaVisina','Prednja visina','num'],
+  ['sirinaRaja','Raj',[['70','70'],['75','75'],['90','90'],['110','110']]],
+  ['kederTip','Keder',[['obostrani','Obostrani'],['jednostrani','Jednostrani']]],
+  ['kornisSklop','Korniš',[['jednodelni','Jednodelni'],['seceni','Sečeni']]],
+  ['stub','Stub',[['110x144','110×144'],['100x100','100×100']]],
+  ['olukTip','Oluk',[['10468','10468'],['10477','10477 dupli']]],
+  ['cevMotora','Cev motora',[['jednodelna','Jednodelna'],['po poljima','Po poljima']]],
+  ['kornisLed','Svetlo',[['std','Korniš 10418'],['lajsna','LED lajsna']]],
+  ['svetalaPoKornizu','Svetala/korniš','num'],
+  ['cev','Cev na zidu',[['80x40','80×40'],['100x100','100×100'],['nema','Nema']]],
+  ['kom','Komada','num'],
+];
+
+const POC_STANJE = {
+  stok:[{s:'10501',L:7,n:20},{s:'10468',L:7,n:6},{s:'10419',L:7,n:6},{s:'10417',L:7,n:6},{s:'10420',L:7,n:6},{s:'10416',L:7,n:10},{s:'10418',L:7,n:20}],
+  cfg:[{...pick(OSNOVA), sirina:4000, dubina:4000, kom:1, max:true}],
+};
+function pick(o){ const r={}; POLJA_CFG.forEach(([k])=>{ if(k in o) r[k]=o[k]; }); return r; }
+let ST = (()=>{ try{ const s=JSON.parse(localStorage.getItem('por_stanje')||'null'); if(s&&s.stok&&s.cfg) return s; }catch(e){} return JSON.parse(JSON.stringify(POC_STANJE)); })();
+function snimi(){ try{ localStorage.setItem('por_stanje', JSON.stringify(ST)); }catch(e){} }
+
+let PROF_LISTA = [];   // [{s, naziv, kgm}] iz programa za pergole
+function profilInfo(s){ return PROF_LISTA.find(p=>p.s===s) || {s, naziv:s, kgm:0}; }
+
+function crtajStok(){
+  $('stokRows').innerHTML = ST.stok.map((r,i)=>`<tr>
+    <td><select data-i="${i}" data-k="s">${PROF_LISTA.map(p=>`<option value="${esc(p.s)}"${p.s===r.s?' selected':''}>${esc(p.s)} — ${esc(p.naziv)}</option>`).join('')}</select></td>
+    <td><input type="number" step="0.1" min="0" data-i="${i}" data-k="L" value="${r.L}"></td>
+    <td><input type="number" min="0" data-i="${i}" data-k="n" value="${r.n}"></td>
+    <td><button class="x" title="Ukloni" onclick="ST.stok.splice(${i},1);crtajStok();racunajPer()">×</button></td></tr>`).join('');
+  $('stokRows').querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{
+    const r=ST.stok[+el.dataset.i]; r[el.dataset.k] = el.dataset.k==='s' ? el.value : +el.value; racunajPer();
+  }));
+}
+function dodajStok(){ ST.stok.push({s:(PROF_LISTA[0]||{}).s||'10501', L:7, n:1}); crtajStok(); racunajPer(); }
+
+function crtajCfg(){
+  $('cfgRows').innerHTML = ST.cfg.map((c,i)=>`<div class="cfg${c.max?' max':''}">
+    <div class="cfg-h"><b>PERGOLA ${String.fromCharCode(65+i)}</b>
+      <label><input type="checkbox" ${c.max?'checked':''} onchange="const v=this.checked;ST.cfg.forEach((x,j)=>x.max=j===${i}?v:false);crtajCfg();racunajPer()"> najviše što može od materijala</label>
+      ${ST.cfg.length>1?`<button class="x" title="Ukloni" onclick="ST.cfg.splice(${i},1);crtajCfg();racunajPer()">×</button>`:''}
+    </div>
+    <div class="g6">${POLJA_CFG.map(([k,t,tip])=>{
+      if(k==='kom') return `<label><div class="lbl">${c.max?'Komada (najviše)':'Komada'}</div><input type="number" min="0" data-i="${i}" data-k="kom" value="${c.kom}" ${c.max?'disabled':''}></label>`;
+      if(tip==='num') return `<label><div class="lbl">${t}</div><input type="number" data-i="${i}" data-k="${k}" value="${esc(c[k])}"></label>`;
+      return `<label><div class="lbl">${t}</div><select data-i="${i}" data-k="${k}">${tip.map(([v,n])=>`<option value="${v}"${String(c[k])===v?' selected':''}>${n}</option>`).join('')}</select></label>`;
+    }).join('')}</div></div>`).join('')
+    + (ST.cfg.some(x=>x.max) ? '' : '<div class="sub" style="font-size:11px;margin-top:6px">Nijedna pergola nije označena sa „najviše" — proverava se samo da li zadati komadi staju u materijal.</div>');
+  $('cfgRows').querySelectorAll('input[data-k],select[data-k]').forEach(el=>el.addEventListener('input',()=>{
+    const c=ST.cfg[+el.dataset.i], k=el.dataset.k;
+    c[k] = el.type==='number' ? +el.value : el.value; racunajPer();
+  }));
+}
+function dodajCfg(){ const z=ST.cfg[ST.cfg.length-1]||OSNOVA; ST.cfg.push({...pick(OSNOVA), ...pick(z), kom:1, max:false}); crtajCfg(); racunajPer(); }
+
+// jedna pergola (brKomada = 1) → rezovi po šifri, okov, vijci i ostalo
+function jednaPergola(c){
+  const I = {...OSNOVA, ...c, brKomada:1};
+  ['sirina','dubina','zadnjaVisina','prednjaVisina','sirinaRaja','svetalaPoKornizu'].forEach(k=>I[k]=+I[k]||0);
+  let R = wP.compute(I);
+  // isto pravilo kao u formi: sečeni tek od 3 raja; obostrani od 3 raja je uvek sečeni
+  if(R.auto.brRaja < 3 && I.kornisSklop==='seceni') I.kornisSklop='jednodelni';
+  if(R.auto.brRaja >= 3 && I.kederTip==='obostrani') I.kornisSklop='seceni';
+  R = wP.compute(I);
+  const alu = wP.aluCalc(I, R);
+  const rezovi = {};
+  alu.items.forEach(it=>{ if(it.kom>0 && it.mera>0){ (rezovi[it.prof.sifra] ||= []).push({L:it.mera, kom:it.kom, oz:it.naziv}); } });
+  return {I, R, alu, rezovi};
+}
+function opisCfg(P){
+  const I=P.I, R=P.R;
+  return `${br(I.sirina)} × ${br(I.dubina)} · raj ${I.sirinaRaja} · ${R.auto.brRaja} raja · ${I.kederTip}${I.kornisSklop==='seceni'?' sečeni':''} · stub ${I.stub.replace('x','×')}${I.olukTip==='10477'?' · oluk 10477':''}${I.kornisLed==='lajsna'?' · LED lajsna':''}`;
+}
+function komadiZa(lista){   // lista: [{P, n}] → {sifra: [{L, oz}]}
+  const out={};
+  lista.forEach(({P,n})=>{ for(const s in P.rezovi) P.rezovi[s].forEach(r=>{ const a=(out[s] ||= []); for(let i=0;i<r.kom*n;i++) a.push({L:r.L, oz:r.oz}); }); });
+  return out;
+}
+function zalihaPo(){
+  const z={};
+  ST.stok.forEach(r=>{ const L=Math.round((+r.L||0)*1000), n=Math.max(0,Math.round(+r.n||0)); if(L>0&&n>0){ const a=(z[r.s] ||= []); const e=a.find(x=>x.L===L); if(e) e.n+=n; else a.push({L,n}); } });
+  return z;
+}
+function probaj(lista, zal, rez){
+  const kom = komadiZa(lista), rez1 = {};
+  let ok = true;
+  const sve = new Set([...Object.keys(kom), ...Object.keys(zal)]);
+  sve.forEach(s=>{ const r = seci(kom[s]||[], zal[s]||[], rez); rez1[s]=r; if(r.fale.length) ok=false; });
+  return {ok, po:rez1, kom};
+}
+
+function racunajPer(){
+  snimi();
+  if(!wP) return;
+  const rez = Math.max(0, +$('rez').value||0), prag = Math.max(0, +$('pragOst').value||0);
+  const P = ST.cfg.map(c=>jednaPergola(c));
+  const iMax = ST.cfg.findIndex(c=>c.max);
+  const fiks = P.map((p,i)=>({P:p, n: i===iMax ? 0 : Math.max(0,Math.round(+ST.cfg[i].kom||0))}));
+  const zal = zalihaPo();
+  let N = 0, rezultat = probaj(fiks, zal, rez);
+  const fiksOk = rezultat.ok;
+  if(iMax>=0 && fiksOk){
+    // koliko još pergola tipa „najviše" staje — povećava se dok sve šifre imaju dovoljno
+    for(let n=1; n<=500; n++){
+      const r = probaj(fiks.map((x,i)=>i===iMax?{P:x.P, n}:x), zal, rez);
+      if(!r.ok) break; N=n; rezultat=r;
+    }
+  }
+  const lista = fiks.map((x,i)=>i===iMax?{P:x.P, n:N}:x);
+  // šta fali za jednu više (ili za zadate komade kad ne staju)
+  let fali = null, za = null;
+  if(iMax>=0 && fiksOk){ za = lista.map((x,i)=>i===iMax?{P:x.P,n:N+1}:x); }
+  else if(!fiksOk) za = lista;
+  if(za){
+    const r = probaj(za, zal, rez); fali=[];
+    for(const s in r.po){ const f=r.po[s].fale; if(!f.length) continue;
+      const Lz = Math.max(...(zal[s]||[]).map(z=>z.L), 0) || Math.round((+$('predlogL').value||7)*1000);
+      const L = Math.max(Lz, ...f.map(p=>p.L));
+      const d = seci(f, [{L, n:Infinity}], rez);
+      fali.push({s, kom:f.length, sipki:d.sipke.length, L, duzi:f.some(p=>p.L>Lz && Lz>0)});
+    }
+  }
+  $('docPer').innerHTML = docPer(P, lista, iMax, N, fiksOk, rezultat, zal, fali, rez, prag);
+}
+
+function predloziStok(){
+  if(!wP) return;
+  const rez = Math.max(0, +$('rez').value||0), L = Math.round((+$('predlogL').value||7)*1000);
+  const P = ST.cfg.map(c=>jednaPergola(c));
+  const lista = P.map((p,i)=>({P:p, n:Math.max(1,Math.round(+ST.cfg[i].kom||1))}));
+  const kom = komadiZa(lista);
+  ST.stok = Object.keys(kom).map(s=>{ const Lx=Math.max(L, ...kom[s].map(p=>Math.ceil(p.L/500)*500)); const r=seci(kom[s],[{L:Lx,n:Infinity}],rez); return {s, L:Lx/1000, n:r.sipke.length}; });
+  crtajStok(); racunajPer();
+}
+
+function docPer(P, lista, iMax, N, fiksOk, rez1, zal, fali, rez, prag){
+  const ukPerg = lista.reduce((a,x)=>a+x.n,0);
+  let h = `<div class="doc-head"><div><div class="doc-title">PORUDŽBINA — PERGOLE</div><div class="doc-sub">ŠTA SE DOBIJA OD MATERIJALA · AKSESOAR ZA PORUČIVANJE</div></div>
+    <div class="doc-meta">${danas()}<br><span class="badge">${VER}</span></div></div>`;
+  // rezultat
+  const naslov = iMax>=0 && fiksOk
+    ? `Od ovog materijala izlazi <b>${N}</b> × pergola ${String.fromCharCode(65+iMax)}${lista.some((x,i)=>i!==iMax&&x.n>0)?' (pored zadatih komada ostalih)':''}`
+    : (fiksOk ? 'Zadate pergole staju u materijal' : 'Zadate pergole NE staju u materijal — vidi šta fali');
+  h += `<div class="note ${fiksOk&&(iMax<0||N>0)?'note-ok':'note-warn'}" style="font-size:13px">${naslov}.</div>`;
+  h += `<div class="big-r">${lista.map((x,i)=>`<div class="box-cut"><div class="box-cut-t">PERGOLA ${String.fromCharCode(65+i)}${i===iMax?' · NAJVIŠE':''}</div><div class="box-cut-v">${x.n} kom</div><div class="muted">${esc(opisCfg(x.P))}</div></div>`).join('')}
+    <div class="box-cut"><div class="box-cut-t">UKUPNO PERGOLA</div><div class="box-cut-v">${ukPerg}</div><div class="muted">aluminijum ${br(lista.reduce((a,x)=>a+x.P.alu.totalKg*x.n,0),1)} kg</div></div></div>`;
+  if(fali && fali.length){
+    h += `<div class="note note-warn"><b>${iMax>=0&&fiksOk?`Za još jednu pergolu ${String.fromCharCode(65+iMax)} fali:`:'Fali za zadate pergole:'}</b><br>${fali.map(f=>`${esc(f.s)} ${esc(profilInfo(f.s).naziv)} — ${f.kom} ${f.kom===1?'rez':'rezova'} → dodati <b>${f.sipki} šipki × ${br(f.L/1000,1)} m</b>${f.duzi?' (rez je duži od poručene šipke!)':''}`).join('<br>')}</div>`;
+  } else if(iMax>=0 && N>=500) h += `<div class="note note-info">Materijala ima za više od 500 pergola — proveri unos.</div>`;
+  P.forEach((p,i)=>{ if(p.R.raj && p.R.raj.padOk===false) h+=`<div class="note note-warn">Pergola ${String.fromCharCode(65+i)}: pad ${br(p.R.raj.pad,1)} % — van opsega 8–10 %, proveri visine.</div>`; });
+
+  // profili
+  h += `<div class="sec"><div class="sec-h"><span class="sec-n">A</span><h2 class="sec-t">Profili — iskorišćenje materijala</h2></div><div class="tw"><table>
+    <thead><tr><th>Šifra</th><th>Profil</th><th class="r">Poručeno</th><th class="r">Rezova</th><th class="r">Potrebno m</th><th class="r">Šipki sečeno</th><th class="r">Celih ostaje</th><th>Upotrebljivi ostaci</th><th class="r">Otpad</th></tr></thead><tbody>`;
+  const sifre = Object.keys(rez1.po).sort();
+  sifre.forEach(s=>{
+    const r = rez1.po[s], z = zal[s]||[], info=profilInfo(s);
+    const poruceno = z.map(x=>`${x.n} × ${br(x.L/1000,1)} m`).join(' + ') || '<span class="lim">nije poručeno</span>';
+    const komadi = (rez1.kom[s]||[]);
+    const potrebno = komadi.reduce((a,p)=>a+p.L,0);
+    const celih = r.ostatak.reduce((a,x)=>a+(isFinite(x.n)?x.n:0),0);
+    const ostaci = r.sipke.map(x=>x.ost).filter(o=>o>=prag).sort((a,b)=>b-a);
+    const otpad = r.sipke.map(x=>x.ost).filter(o=>o<prag).reduce((a,o)=>a+o,0);
+    const sec = r.sipke.reduce((a,x)=>a+x.L,0);
+    h += `<tr><td class="m">${esc(s)}</td><td>${esc(info.naziv)}</td><td class="m r nw">${poruceno}</td><td class="m r">${komadi.length}</td><td class="m r">${br(potrebno/1000,1)}</td>
+      <td class="m r">${r.sipke.length}</td><td class="m r">${celih}</td><td class="m" style="font-size:10.5px">${ostaci.length?ostaci.map(o=>br(o)).join(', '):'—'}</td><td class="m r">${sec?br(otpad/sec*100,1)+' %':'—'}</td></tr>`;
+  });
+  h += `</tbody></table></div><div class="muted" style="margin-top:4px">Rez testere ${rez} mm · ostatak od ${br(prag)} mm naviše se vodi kao upotrebljiv, kraći kao otpad.</div>`;
+  h += `<details class="plan"><summary>Plan sečenja po šipkama</summary>${sifre.filter(s=>rez1.po[s].sipke.length).map(s=>`<div class="grp-t">${esc(s)} ${esc(profilInfo(s).naziv)}</div>${rez1.po[s].sipke.map(sipkaHTML).join('')}`).join('')}</details></div>`;
+
+  h += aksesoarHTML(lista);
+  h += `<div class="foot">AG GROUP · porudžbina ${VER} · proračun iz programa za pergole</div>`;
+  return h;
+}
+
+function aksesoarHTML(lista){
+  const okov = {}, vijci = {}, ostalo = {cerada:[], lim:0, cevM:0, cevTip:{}, motor:0, dimer:0, kutija:0, daljinski:0, trafo:{}};
+  const VIJCI = wP.eval('VIJCI'), GR = {plastika:'Plastika', metal:'Metal okov', fitilj:'Kederi, fitilji i kaiš', led:'LED i kabl'};
+  lista.forEach(({P,n})=>{
+    if(!n) return;
+    const I = {...P.I, brKomada:n};
+    wP.applyOkov(P.R, I).forEach(it=>{ if(!it.kol) return; const k=it.sifra+'|'+it.naziv; const o=(okov[k] ||= {sifra:it.sifra, naziv:it.naziv, grupa:it.grupa, jed:it.jed, kol:0}); o.kol+=it.kol; });
+    wP.vijcanaRoba(P.R, n).lista.forEach(v=>{ const o=(vijci[v.id] ||= {naziv:(VIJCI[v.id]||{}).n||v.id, kol:0}); o.kol+=v.kol; });
+    ostalo.cerada.push({s:P.R.cerada.sirinaCerade, d:P.R.cerada.duzCerade, n});
+    ostalo.lim += P.R.profili2.limKom*n;
+    if(P.I.cev!=='nema'){ ostalo.cevM += P.R.in.D/1000*n; ostalo.cevTip[P.I.cev]=(ostalo.cevTip[P.I.cev]||0)+P.R.in.D/1000*n; }
+    ostalo.motor+=n; ostalo.dimer+=n; ostalo.kutija+=n; ostalo.daljinski+=n;
+    ostalo.trafo[P.R.led.trafo]=(ostalo.trafo[P.R.led.trafo]||0)+n;
+  });
+  if(!Object.keys(okov).length) return `<div class="sec"><div class="sec-h"><span class="sec-n acc">B</span><h2 class="sec-t">Aksesoar za poručivanje</h2></div><div class="note note-info">Nema pergola — nema ni aksesoara.</div></div>`;
+  const tbl = (redovi) => `<div class="tw"><table><thead><tr><th style="width:90px">Šifra</th><th>Naziv</th><th class="r" style="width:90px">Količina</th><th style="width:50px">Jed.</th><th style="width:28px">✓</th></tr></thead><tbody>${redovi}</tbody></table></div>`;
+  let h = `<div class="sec"><div class="sec-h"><span class="sec-n acc">B</span><h2 class="sec-t">Okov — za dobavljača okova</h2><span class="sec-x">za ${lista.reduce((a,x)=>a+x.n,0)} pergola</span></div>`;
+  Object.keys(GR).forEach(g=>{
+    const r = Object.values(okov).filter(o=>o.grupa===g); if(!r.length) return;
+    h += `<div class="grp-t">${GR[g]}</div>` + tbl(r.map(o=>`<tr><td class="m">${esc(o.sifra)}</td><td>${esc(o.naziv)}</td><td class="m r"><b>${o.jed==='m'?br(o.kol,1):br(o.kol)}</b></td><td>${esc(o.jed)}</td><td><span class="chk"></span></td></tr>`).join(''));
+  });
+  h += `</div><div class="sec"><div class="sec-h"><span class="sec-n acc">C</span><h2 class="sec-t">Vijčana roba</h2></div>` +
+    tbl(Object.values(vijci).map(v=>`<tr><td class="m">—</td><td>${esc(v.naziv)}</td><td class="m r"><b>${br(v.kol)}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`).join('')) + `</div>`;
+  const cer = ostalo.cerada.filter(c=>c.n>0);
+  const m2 = cer.reduce((a,c)=>a+c.s*c.d/1e6*c.n,0);
+  h += `<div class="sec"><div class="sec-h"><span class="sec-n acc">D</span><h2 class="sec-t">Elektronika, cerada i ostalo</h2></div>` + tbl(
+      `<tr><td class="m">—</td><td>Motor</td><td class="m r"><b>${ostalo.motor}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      `<tr><td class="m">—</td><td>Dimer</td><td class="m r"><b>${ostalo.dimer}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      Object.keys(ostalo.trafo).map(t=>`<tr><td class="m">—</td><td>Trafo ${esc(t)}</td><td class="m r"><b>${ostalo.trafo[t]}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`).join('')+
+      `<tr><td class="m">—</td><td>Razvodna kutija</td><td class="m r"><b>${ostalo.kutija}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      `<tr><td class="m">—</td><td>Daljinski <span class="nap">po jedan uz svaku pergolu (isti kupac sa više pergola može jedan)</span></td><td class="m r"><b>${ostalo.daljinski}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      `<tr><td class="m">—</td><td>Cerada <span class="nap">${cer.map(c=>`${c.n} × ${br(c.s)} × ${br(c.d)} mm`).join(' · ')}</span></td><td class="m r"><b>${br(m2,1)}</b></td><td>m²</td><td><span class="chk"></span></td></tr>`+
+      (ostalo.lim?`<tr><td class="m">—</td><td>Trapezni lim 125 × 80</td><td class="m r"><b>${ostalo.lim}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`:'')+
+      Object.keys(ostalo.cevTip).map(t=>`<tr><td class="m">—</td><td>Čelična cev na zidu ${esc(t.replace('x','×'))} <span class="nap">dužina = širina pergole</span></td><td class="m r"><b>${br(ostalo.cevTip[t],1)}</b></td><td>m</td><td><span class="chk"></span></td></tr>`).join('')
+    ) + `<div class="muted" style="margin-top:4px">Količine su tačno po proračunu naloga (bez rezerve). Šrafove i fitilje je dobro poručiti sa malo viška.</div></div>`;
+  return h;
+}
+
+/* ═════════════════════ STAKLENI SISTEMI ═════════════════════ */
+const TIP_SYS = {
+  gioS:{t:'Giljotina fiksna', p:'gio'}, gioB:{t:'Giljotina brisiva', p:'gio'},
+  snr:{t:'Slajding Nor', p:'snr'}, sld:{t:'Klizni 4 šine', p:'sld'},
+};
+const GIO_TR = {"Gio-01":"Şase","Gio-02":"Şase Kapak","Gio-03":"Yan Kasa","Gio-04":"Tekli Ray","Gio-05":"Çiftli Ray","Gio-06":"Alt Kasa",
+  "Gio-07":"Küpeşte","Gio-08":"Badem Kenet","Gio-10":"Baza","Gio-11":"Kenet","Gio-12":"Dikey Baza","Gio-13":"Kanat Adaptörü",
+  "Gio-15":"Kasa Kapak","Gio-16":"Tek Cam Profili","Gio-17":"Kanat Profili","10417":"Motor Boru Profili"};
+const GRUPE = {gio:{t:'Giljotine (Nor)', tr:'GİYOTİN CAM SİSTEMİ', l:'lGio'}, snr:{t:'Slajding Nor', tr:'NOR SÜRME SİSTEMİ', l:'lSnr'}, sld:{t:'Klizni sistem 4 šine', tr:'SÜRME SİSTEMİ 4 RAY (1046 serisi)', l:'lSld'}};
+let SY = (()=>{ try{ const s=JSON.parse(localStorage.getItem('por_sistemi')||'null'); if(Array.isArray(s)) return s; }catch(e){} return [{tip:'snr', sirina:3000, visina:2500, kom:1, sine:4, prag:'eşiksiz', staklo:'isicam', srednji:'ne'}]; })();
+let jezik = 'sr', poslednjiStk = null;
+
+function crtajSys(){
+  $('sysRows').innerHTML = SY.map((s,i)=>{
+    const sel=(k,opc)=>`<select data-i="${i}" data-k="${k}">${opc.map(([v,n])=>`<option value="${v}"${String(s[k])===v?' selected':''}>${n}</option>`).join('')}</select>`;
+    const num=(k,t)=>`<label><div class="lbl">${t}</div><input type="number" data-i="${i}" data-k="${k}" value="${esc(s[k])}"></label>`;
+    let dod='';
+    if(s.tip==='gioS'||s.tip==='gioB') dod = `<label><div class="lbl">Staklo</div>${sel('gstaklo',[['ISICAM','Termopan'],['TEKCAM','Jednostruko 8 mm']])}</label><label><div class="lbl">Pogon</div>${sel('pogon',[['ZINCIRLI','Lanac'],['KAYISLI','Kaiš']])}</label>`;
+    if(s.tip==='snr') dod = `<label><div class="lbl">Šine</div>${sel('sine',[['2','2'],['3','3'],['4','4'],['5','5']])}</label><label><div class="lbl">Prag</div>${sel('prag',[['eşiksiz','Bez praga'],['eşikli','Sa pragom']])}</label><label><div class="lbl">Staklo</div>${sel('staklo',[['isicam','Termopan'],['tek','Jednostruko']])}</label><label><div class="lbl">H profil</div>${sel('srednji',[['ne','Ne'],['da','Da']])}</label>`;
+    return `<div class="cfg"><div class="cfg-h"><b>SISTEM ${i+1}</b>${SY.length>1?`<button class="x" title="Ukloni" onclick="SY.splice(${i},1);crtajSys();racunajStk()">×</button>`:''}</div>
+      <div class="g6"><label><div class="lbl">Sistem</div>${sel('tip',Object.keys(TIP_SYS).map(k=>[k,TIP_SYS[k].t]))}</label>${num('sirina','Širina')}${num('visina','Visina')}${num('kom','Komada')}${dod}</div></div>`;
+  }).join('');
+  $('sysRows').querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{
+    const s=SY[+el.dataset.i]; s[el.dataset.k]= el.type==='number'?+el.value:el.value;
+    if(el.dataset.k==='tip'){ crtajSys(); }
+    racunajStk();
+  }));
+}
+function dodajSys(){ const z=SY[SY.length-1]||{}; SY.push({...z}); crtajSys(); racunajStk(); }
+
+async function racunajStk(){
+  try{ localStorage.setItem('por_sistemi', JSON.stringify(SY)); }catch(e){}
+  const rez = Math.max(0, +$('rezS').value||0);
+  const potrebni = [...new Set(SY.map(s=>TIP_SYS[s.tip].p))];
+  let w;
+  try{ w = Object.fromEntries(await Promise.all(potrebni.map(async p=>[p, await ucitaj(p)]))); }
+  catch(e){ $('docStk').innerHTML = `<div class="note note-warn">${esc(e.message)} — porudžbina mora da se otvori sa servera (app.aggroup.rs), ne kao fajl.</div>`; return; }
+  const grupe = {};   // p → {sistemi:[], komadi:{sif:[]}, okov:{}, staklo:[]}
+  SY.forEach(s=>{
+    const p = TIP_SYS[s.tip].p, n=Math.max(0,Math.round(+s.kom||0)); if(!n || !(+s.sirina>0) || !(+s.visina>0)) return;
+    let I, R;
+    if(p==='gio') I={sistem:s.tip==='gioB'?'silinebilir':'sabit', sirina:+s.sirina, visina:+s.visina, kom:n, staklo:s.gstaklo||'ISICAM', pogon:s.pogon||'ZINCIRLI'};
+    else if(p==='snr') I={sirina:+s.sirina, visina:+s.visina, kom:n, sine:+s.sine||4, prag:s.prag||'eşiksiz', staklo:s.staklo||'isicam', srednji:s.srednji||'ne'};
+    else I={sirina:+s.sirina, visina:+s.visina, kom:n};
+    R = w[p].proracun(I);
+    const g = (grupe[p] ||= {sistemi:[], komadi:{}, okov:{}, staklo:[]});
+    g.sistemi.push({s, I, R, n});
+    R.aktivni.forEach(x=>{ if(p==='gio' && x.sif==='10417' && $('bez10417').checked) return; const a=(g.komadi[x.sif] ||= []); for(let i=0;i<x.kom;i++) a.push({L:x.mera}); });
+    R.OK.forEach(o=>{ if(o.id==='staklo') return; const k=o.id+'|'+o.naziv; const e=(g.okov[k] ||= {naziv:o.naziv, jed:o.jed, kol:0}); e.kol+=o.kol; });
+    g.staklo.push({opis:opisSys(s,I,R,'sr'), s:R.staklo.s, v:R.staklo.v, kom:R.staklo.kom, m2:R.m2, vrsta:(R.OK.find(o=>o.id==='staklo')||{}).naziv||''});
+  });
+  // profili po grupi — najbolja dužina
+  Object.keys(grupe).forEach(p=>{
+    const g=grupe[p], opc=duzine($(GRUPE[p].l).value), PR = w[p].eval(p==='snr'?'PROF':'PROFIL');
+    g.profili = Object.keys(g.komadi).sort().map(sif=>{
+      const kom=g.komadi[sif], info=PR[sif]||{};
+      const maxRez = Math.max(...kom.map(x=>x.L));
+      const opcije = opc.length ? opc : [6000];
+      let nb = najboljaDuzina(kom, opcije, rez);
+      if(!nb){ const L=Math.ceil(maxRez/500)*500; nb={L, r:seci(kom,[{L,n:Infinity}],rez), m:0, duze:true}; nb.m=nb.r.sipke.length*L; }
+      const potrebno = kom.reduce((a,x)=>a+x.L,0);
+      const kgm = p==='gio' ? (info.kat||info.kgm||0) : (info.kgm||0);
+      return {sif, naziv:info.naziv||sif, tr: p==='gio' ? (GIO_TR[sif]||info.naziv) : (info.tr||info.naziv), L:nb.L, sipki:nb.r.sipke.length,
+              m:nb.m/1000, kgm, kg:nb.m/1000*kgm, rezova:kom.length, potrebno, otpad: nb.m? (1-potrebno/nb.m)*100 : 0, plan:nb.r.sipke, duze:!!nb.duze};
+    });
+  });
+  poslednjiStk = grupe;
+  $('docStk').innerHTML = jezik==='tr' ? docStkTR(grupe) : docStkSR(grupe, rez);
+}
+function opisSys(s,I,R,j){
+  const dim = `${I.sirina} × ${I.visina} mm`;
+  if(j==='tr'){
+    if(s.tip==='gioS'||s.tip==='gioB') return `${R.n} adet giyotin cam sistemi ${s.tip==='gioB'?'(silinebilir)':'(sabit)'} · ${I.staklo==='TEKCAM'?'tek cam':'ısıcam'} · ${dim}`;
+    if(s.tip==='snr') return `${R.n} adet ${R.D} raylı sürme sistem · ${R.prag?'eşikli':'eşiksiz'} · ${R.termo?'ısıcam 4+12+4':'tek cam'}${R.H?' · ara H profili ile':''} · ${dim}`;
+    return `${R.n} adet 4 raylı sürme sistem (1046 serisi) · ${dim}`;
+  }
+  if(s.tip==='gioS'||s.tip==='gioB') return `${R.n} × ${s.tip==='gioB'?'brisiva':'fiksna'} giljotina · ${I.staklo==='TEKCAM'?'jednostruko':'termopan'} · ${I.pogon==='KAYISLI'?'kaiš':'lanac'} · ${dim}`;
+  if(s.tip==='snr') return `${R.n} × Nor ${R.D} šine · ${R.prag?'sa pragom':'bez praga'} · ${R.termo?'termopan':'jednostruko'}${R.H?' · H profil':''} · ${dim}`;
+  return `${R.n} × klizni 4 šine · ${dim}`;
+}
+function docStkSR(grupe, rez){
+  let h = `<div class="doc-head"><div><div class="doc-title">PORUDŽBINA — STAKLENI SISTEMI</div><div class="doc-sub">PROFILI SA OTPADOM · STAKLO · OKOV</div></div><div class="doc-meta">${danas()}<br><span class="badge">${VER}</span></div></div>`;
+  if(!Object.keys(grupe).length) return h + `<div class="note note-info">Unesi bar jedan sistem sa širinom, visinom i brojem komada.</div>`;
+  let sl='A';
+  Object.keys(GRUPE).filter(p=>grupe[p]).forEach(p=>{
+    const g=grupe[p];
+    const kg=g.profili.reduce((a,x)=>a+x.kg,0), sip=g.profili.reduce((a,x)=>a+x.sipki,0);
+    h += `<div class="sec"><div class="sec-h"><span class="sec-n">${sl}</span><h2 class="sec-t">${GRUPE[p].t}</h2><span class="sec-x">${sip} šipki · ≈ ${br(kg,1)} kg</span></div>
+      <div class="note note-info" style="margin-top:0">${g.sistemi.map(x=>esc(opisSys(x.s,x.I,x.R,'sr'))).join('<br>')}</div>
+      <div class="tw"><table style="margin-top:8px"><thead><tr><th>Šifra</th><th>Profil</th><th class="r">Šipka</th><th class="r">Šipki</th><th class="r">Metara</th><th class="r">Rezova</th><th class="r">Otpad</th><th class="r">kg/m</th><th class="r">≈ kg</th></tr></thead><tbody>
+      ${g.profili.map(x=>`<tr><td class="m">${esc(x.sif)}</td><td>${esc(x.naziv)}${x.duze?' <span class="oz">rez duži od ponuđenih šipki</span>':''}</td><td class="m r">${br(x.L)}</td><td class="m r"><b>${x.sipki}</b></td><td class="m r">${br(x.m,1)}</td><td class="m r">${x.rezova}</td><td class="m r">${br(x.otpad,1)} %</td><td class="m r">${br(x.kgm,3)}</td><td class="m r">${br(x.kg,1)}</td></tr>`).join('')}
+      <tr class="obr-sum"><td colspan="3">UKUPNO</td><td class="m r">${sip}</td><td class="m r">${br(g.profili.reduce((a,x)=>a+x.m,0),1)}</td><td colspan="3"></td><td class="m r">${br(kg,1)}</td></tr>
+      </tbody></table></div>
+      <details class="plan"><summary>Plan sečenja po šipkama</summary>${g.profili.map(x=>`<div class="grp-t">${esc(x.sif)} ${esc(x.naziv)}</div>${x.plan.map(sipkaHTML).join('')}`).join('')}</details>
+      <div class="two" style="margin-top:10px"><div><div class="grp-t">Staklo</div><table><thead><tr><th>Sistem</th><th class="r">Mera (mm)</th><th class="r">Kom</th><th class="r">m²</th></tr></thead><tbody>
+        ${g.staklo.map(s=>`<tr><td style="font-size:10.5px">${esc(s.vrsta)}<div class="nap">${esc(s.opis)}</div></td><td class="m r">${br(s.s)} × ${br(s.v)}</td><td class="m r">${s.kom}</td><td class="m r">${br(s.m2,2)}</td></tr>`).join('')}
+      </tbody></table></div><div><div class="grp-t">Okov</div><table><thead><tr><th>Naziv</th><th class="r">Količina</th></tr></thead><tbody>
+        ${Object.values(g.okov).map(o=>`<tr><td style="font-size:11px">${esc(o.naziv)}</td><td class="m r">${o.jed==='m'?br(o.kol,1):br(o.kol)} ${esc(o.jed)}</td></tr>`).join('')}
+      </tbody></table></div></div></div>`;
+    sl = String.fromCharCode(sl.charCodeAt(0)+1);
+  });
+  h += `<div class="muted" style="margin-top:8px">Rez testere ${rez} mm. Dužina šipke po profilu je izabrana tako da poručenih metara bude najmanje. Turska porudžbina za dobavljača: dugme „🇹🇷 Türkçe" gore, pa PDF.</div>`;
+  return h + `<div class="foot">AG GROUP · porudžbina ${VER} · proračuni iz programa giljotina / klizni / Nor</div>`;
+}
+function docStkTR(grupe){
+  const ral = $('ralS').value || '';
+  let h = `<div class="doc-head"><div><div class="doc-title">ALÜMİNYUM PROFİL SİPARİŞİ</div><div class="doc-sub">AG GROUP</div></div><div class="doc-meta">Tarih: ${danas()}<br>Renk: ${esc(ral)}</div></div>`;
+  if(!Object.keys(grupe).length) return h;
+  let ukKg=0, ukSip=0, i=0;
+  Object.keys(GRUPE).filter(p=>grupe[p]).forEach(p=>{
+    const g=grupe[p]; const kg=g.profili.reduce((a,x)=>a+x.kg,0), sip=g.profili.reduce((a,x)=>a+x.sipki,0); ukKg+=kg; ukSip+=sip;
+    h += `<div class="sec"><div class="sec-h"><span class="sec-n">${++i}</span><h2 class="sec-t">${GRUPE[p].tr}</h2></div>
+      <div class="tw"><table><thead><tr><th>Sıra</th><th>Kod</th><th>Profil adı</th><th class="r">Boy (mm)</th><th class="r">Boy adedi</th><th class="r">Toplam metre</th><th class="r">kg/m</th><th class="r">Yaklaşık kg</th></tr></thead><tbody>
+      ${g.profili.map((x,j)=>`<tr><td class="m">${j+1}</td><td class="m">${esc(x.sif)}</td><td>${esc(x.tr)}</td><td class="m r">${x.L}</td><td class="m r"><b>${x.sipki}</b></td><td class="m r">${brT(x.m,1)}</td><td class="m r">${x.kgm.toFixed(3)}</td><td class="m r">${brT(x.kg,1)}</td></tr>`).join('')}
+      <tr class="obr-sum"><td colspan="4">TOPLAM</td><td class="m r">${sip}</td><td class="m r">${brT(g.profili.reduce((a,x)=>a+x.m,0),1)}</td><td></td><td class="m r">${brT(kg,1)}</td></tr>
+      </tbody></table></div></div>`;
+  });
+  if(i>1) h += `<div class="note note-info" style="font-size:12.5px"><b>GENEL TOPLAM:</b> ${ukSip} boy · yaklaşık ${brT(ukKg,1)} kg</div>`;
+  const sistemi = Object.keys(GRUPE).filter(p=>grupe[p]).flatMap(p=>grupe[p].sistemi.map(x=>opisSys(x.s,x.I,x.R,'tr')));
+  h += `<div class="sec"><div class="sec-h"><h2 class="sec-t">Not</h2></div><div style="font-size:12px;line-height:1.6">
+    Hesaplamamıza göre bu sipariş aşağıdaki sistemler içindir:<ul style="margin:4px 0 8px">${sistemi.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
+    Fireyi azaltmak için profillere göre farklı boylar seçtik. Bu boylarda üretim ve boya mümkün değilse lütfen bildiriniz.<br><br>
+    Lütfen siparişin doğru olup olmadığını kontrol ediniz ve bu sistemler için gerekli olan tüm aksesuarları (teker, aksesuar takımları, conta, fırça, vida, kapak vb.) bize bildiriniz.<br><br>
+    Ağırlıklar yaklaşıktır; fatura, teslim edilen gerçek ağırlığa göre düzenlenir.</div></div>`;
+  return h + `<div class="foot">AG GROUP · pergola.rs</div>`;
+}
+function promeniJezik(){
+  jezik = jezik==='sr' ? 'tr' : 'sr';
+  $('jezikBtn').textContent = jezik==='sr' ? '🇹🇷 Türkçe' : '🇷🇸 Srpski';
+  racunajStk();
+}
+
+/* ───────── prebacivanje ───────── */
+function tab(t){
+  $('vPer').style.display = t==='per'?'':'none';
+  $('vStk').style.display = t==='stk'?'':'none';
+  $('tabPer').classList.toggle('active', t==='per');
+  $('tabStk').classList.toggle('active', t==='stk');
+  $('jezikBtn').style.display = t==='stk'?'':'none';
+  try{ localStorage.setItem('por_tab', t); }catch(e){}
+  if(t==='stk') racunajStk();
+}
+['rez','pragOst'].forEach(id=>$(id).addEventListener('input',racunajPer));
+['rezS','bez10417','ralS','lGio','lSnr','lSld'].forEach(id=>$(id).addEventListener('input',racunajStk));
+
+crtajSys();
+ucitaj('per').then(w=>{
+  wP = w;
+  const PR = w.eval('PROFILI'), vid = new Set();
+  PROF_LISTA = Object.values(PR).filter(p=>{ if(vid.has(p.sifra)) return false; vid.add(p.sifra); return true; })
+    .map(p=>({s:p.sifra, naziv:p.nazivSr||p.naziv||p.sifra, kgm:p.kgm}));
+  crtajStok(); crtajCfg(); racunajPer();
+}).catch(e=>{ $('docPer').innerHTML = `<div class="note note-warn">${esc(e.message)} — porudžbina mora da se otvori sa servera (app.aggroup.rs), ne kao fajl.</div>`; });
+try{ if(localStorage.getItem('por_tab')==='stk') tab('stk'); }catch(e){}
+</script>
+</body>
+</html>
