@@ -269,6 +269,8 @@
   td.r,th.r{text-align:right;}
   .muted{color:#7a7361;font-size:10.5px;}
   .grp-t{font-family:'Fjalla One',sans-serif;font-size:12px;letter-spacing:.06em;color:var(--bronzeD);margin:12px 0 4px;}
+  td.sl{width:76px;padding:3px 5px;}
+  @media print{ .thumb{width:62px;height:46px;} }
   .ucitava{color:var(--muted);font-size:12px;padding:10px;text-align:center;}
   td.nw{white-space:nowrap;}
   @media print{ @page{size:A4;margin:10mm;} details.plan:not([open]){display:none;} }
@@ -342,14 +344,18 @@
   <div class="doc" id="docStk"><div class="ucitava">Učitavam proračune sistema…</div></div>
 </div>
 
+<div id="imgZoom" onclick="this.style.display='none'"><img id="imgZoomPic" alt=""><div id="imgZoomCap"></div></div>
 <div id="okviri" style="position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden" aria-hidden="true"></div>
 
 <script>
-const VER = "p-v2026-11-24.1";
+const VER = "p-v2026-11-24.2";
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const br = (n,d=0) => (Math.round(n*10**d)/10**d).toFixed(d).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 const brT = (n,d=0) => (Math.round(n*10**d)/10**d).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,','); // turski/engleski zapis
+// sličica iz programa (klik = uvećanje) — dobavljači prepoznaju artikal po slici i šifri, ne po prevodu
+const slika = (src, alt) => src ? `<img class="thumb" src="${src}" alt="${esc(alt)}" onclick="uvecaj(this)">` : '<span class="muted">—</span>';
+function uvecaj(im){ $('imgZoomPic').src=im.src; $('imgZoomCap').textContent=im.alt; $('imgZoom').style.display='flex'; }
 const danas = () => { const d=new Date(); return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); };
 
 /* ───────── Postojeći programi se učitavaju skriveno (isti server) — njihovi proračuni se koriste
@@ -445,6 +451,7 @@ function snimi(){ try{ localStorage.setItem('por_stanje', JSON.stringify(ST)); }
 
 let PROF_LISTA = [];   // [{s, naziv, kgm}] iz programa za pergole
 function profilInfo(s){ return PROF_LISTA.find(p=>p.s===s) || {s, naziv:s, kgm:0}; }
+let SLIKE = {};   // window.IMG iz programa za pergole (slike.js)
 
 function crtajStok(){
   $('stokRows').innerHTML = ST.stok.map((r,i)=>`<tr>
@@ -575,7 +582,7 @@ function docPer(P, lista, iMax, N, fiksOk, rez1, zal, fali, rez, prag){
 
   // profili
   h += `<div class="sec"><div class="sec-h"><span class="sec-n">A</span><h2 class="sec-t">Profili — iskorišćenje materijala</h2></div><div class="tw"><table>
-    <thead><tr><th>Šifra</th><th>Profil</th><th class="r">Poručeno</th><th class="r">Rezova</th><th class="r">Potrebno m</th><th class="r">Šipki sečeno</th><th class="r">Celih ostaje</th><th>Upotrebljivi ostaci</th><th class="r">Otpad</th></tr></thead><tbody>`;
+    <thead><tr><th>Slika</th><th>Šifra</th><th>Profil</th><th class="r">Poručeno</th><th class="r">Rezova</th><th class="r">Potrebno m</th><th class="r">Šipki sečeno</th><th class="r">Celih ostaje</th><th>Upotrebljivi ostaci</th><th class="r">Otpad</th></tr></thead><tbody>`;
   const sifre = Object.keys(rez1.po).sort();
   sifre.forEach(s=>{
     const r = rez1.po[s], z = zal[s]||[], info=profilInfo(s);
@@ -586,7 +593,7 @@ function docPer(P, lista, iMax, N, fiksOk, rez1, zal, fali, rez, prag){
     const ostaci = r.sipke.map(x=>x.ost).filter(o=>o>=prag).sort((a,b)=>b-a);
     const otpad = r.sipke.map(x=>x.ost).filter(o=>o<prag).reduce((a,o)=>a+o,0);
     const sec = r.sipke.reduce((a,x)=>a+x.L,0);
-    h += `<tr><td class="m">${esc(s)}</td><td>${esc(info.naziv)}</td><td class="m r nw">${poruceno}</td><td class="m r">${komadi.length}</td><td class="m r">${br(potrebno/1000,1)}</td>
+    h += `<tr><td class="sl">${slika(SLIKE[info.img], s+' '+info.naziv)}</td><td class="m">${esc(s)}</td><td>${esc(info.naziv)}</td><td class="m r nw">${poruceno}</td><td class="m r">${komadi.length}</td><td class="m r">${br(potrebno/1000,1)}</td>
       <td class="m r">${r.sipke.length}</td><td class="m r">${celih}</td><td class="m" style="font-size:10.5px">${ostaci.length?ostaci.map(o=>br(o)).join(', '):'—'}</td><td class="m r">${sec?br(otpad/sec*100,1)+' %':'—'}</td></tr>`;
   });
   h += `</tbody></table></div><div class="muted" style="margin-top:4px">Rez testere ${rez} mm · ostatak od ${br(prag)} mm naviše se vodi kao upotrebljiv, kraći kao otpad.</div>`;
@@ -603,8 +610,8 @@ function aksesoarHTML(lista){
   lista.forEach(({P,n})=>{
     if(!n) return;
     const I = {...P.I, brKomada:n};
-    wP.applyOkov(P.R, I).forEach(it=>{ if(!it.kol) return; const k=it.sifra+'|'+it.naziv; const o=(okov[k] ||= {sifra:it.sifra, naziv:it.naziv, grupa:it.grupa, jed:it.jed, kol:0}); o.kol+=it.kol; });
-    wP.vijcanaRoba(P.R, n).lista.forEach(v=>{ const o=(vijci[v.id] ||= {naziv:(VIJCI[v.id]||{}).n||v.id, kol:0}); o.kol+=v.kol; });
+    wP.applyOkov(P.R, I).forEach(it=>{ if(!it.kol) return; const k=it.sifra+'|'+it.naziv; const o=(okov[k] ||= {sifra:it.sifra, naziv:it.naziv, grupa:it.grupa, jed:it.jed, img:it.img, kol:0}); o.kol+=it.kol; });
+    wP.vijcanaRoba(P.R, n).lista.forEach(v=>{ const o=(vijci[v.id] ||= {naziv:(VIJCI[v.id]||{}).n||v.id, img:(VIJCI[v.id]||{}).img, kol:0}); o.kol+=v.kol; });
     ostalo.cerada.push({s:P.R.cerada.sirinaCerade, d:P.R.cerada.duzCerade, n});
     ostalo.lim += P.R.profili2.limKom*n;
     if(P.I.cev!=='nema'){ ostalo.cevM += P.R.in.D/1000*n; ostalo.cevTip[P.I.cev]=(ostalo.cevTip[P.I.cev]||0)+P.R.in.D/1000*n; }
@@ -612,25 +619,25 @@ function aksesoarHTML(lista){
     ostalo.trafo[P.R.led.trafo]=(ostalo.trafo[P.R.led.trafo]||0)+n;
   });
   if(!Object.keys(okov).length) return `<div class="sec"><div class="sec-h"><span class="sec-n acc">B</span><h2 class="sec-t">Aksesoar za poručivanje</h2></div><div class="note note-info">Nema pergola — nema ni aksesoara.</div></div>`;
-  const tbl = (redovi) => `<div class="tw"><table><thead><tr><th style="width:90px">Šifra</th><th>Naziv</th><th class="r" style="width:90px">Količina</th><th style="width:50px">Jed.</th><th style="width:28px">✓</th></tr></thead><tbody>${redovi}</tbody></table></div>`;
+  const tbl = (redovi) => `<div class="tw"><table><thead><tr><th style="width:76px">Slika</th><th style="width:90px">Šifra</th><th>Naziv</th><th class="r" style="width:90px">Količina</th><th style="width:50px">Jed.</th><th style="width:28px">✓</th></tr></thead><tbody>${redovi}</tbody></table></div>`;
   let h = `<div class="sec"><div class="sec-h"><span class="sec-n acc">B</span><h2 class="sec-t">Okov — za dobavljača okova</h2><span class="sec-x">za ${lista.reduce((a,x)=>a+x.n,0)} pergola</span></div>`;
   Object.keys(GR).forEach(g=>{
     const r = Object.values(okov).filter(o=>o.grupa===g); if(!r.length) return;
-    h += `<div class="grp-t">${GR[g]}</div>` + tbl(r.map(o=>`<tr><td class="m">${esc(o.sifra)}</td><td>${esc(o.naziv)}</td><td class="m r"><b>${o.jed==='m'?br(o.kol,1):br(o.kol)}</b></td><td>${esc(o.jed)}</td><td><span class="chk"></span></td></tr>`).join(''));
+    h += `<div class="grp-t">${GR[g]}</div>` + tbl(r.map(o=>`<tr><td class="sl">${slika(SLIKE[o.img], o.sifra+' '+o.naziv)}</td><td class="m">${esc(o.sifra)}</td><td>${esc(o.naziv)}</td><td class="m r"><b>${o.jed==='m'?br(o.kol,1):br(o.kol)}</b></td><td>${esc(o.jed)}</td><td><span class="chk"></span></td></tr>`).join(''));
   });
   h += `</div><div class="sec"><div class="sec-h"><span class="sec-n acc">C</span><h2 class="sec-t">Vijčana roba</h2></div>` +
-    tbl(Object.values(vijci).map(v=>`<tr><td class="m">—</td><td>${esc(v.naziv)}</td><td class="m r"><b>${br(v.kol)}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`).join('')) + `</div>`;
+    tbl(Object.values(vijci).map(v=>`<tr><td class="sl">${slika(SLIKE[v.img], v.naziv)}</td><td class="m">—</td><td>${esc(v.naziv)}</td><td class="m r"><b>${br(v.kol)}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`).join('')) + `</div>`;
   const cer = ostalo.cerada.filter(c=>c.n>0);
   const m2 = cer.reduce((a,c)=>a+c.s*c.d/1e6*c.n,0);
   h += `<div class="sec"><div class="sec-h"><span class="sec-n acc">D</span><h2 class="sec-t">Elektronika, cerada i ostalo</h2></div>` + tbl(
-      `<tr><td class="m">—</td><td>Motor</td><td class="m r"><b>${ostalo.motor}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
-      `<tr><td class="m">—</td><td>Dimer</td><td class="m r"><b>${ostalo.dimer}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
-      Object.keys(ostalo.trafo).map(t=>`<tr><td class="m">—</td><td>Trafo ${esc(t)}</td><td class="m r"><b>${ostalo.trafo[t]}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`).join('')+
-      `<tr><td class="m">—</td><td>Razvodna kutija</td><td class="m r"><b>${ostalo.kutija}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
-      `<tr><td class="m">—</td><td>Daljinski <span class="nap">po jedan uz svaku pergolu (isti kupac sa više pergola može jedan)</span></td><td class="m r"><b>${ostalo.daljinski}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
-      `<tr><td class="m">—</td><td>Cerada <span class="nap">${cer.map(c=>`${c.n} × ${br(c.s)} × ${br(c.d)} mm`).join(' · ')}</span></td><td class="m r"><b>${br(m2,1)}</b></td><td>m²</td><td><span class="chk"></span></td></tr>`+
-      (ostalo.lim?`<tr><td class="m">—</td><td>Trapezni lim 125 × 80</td><td class="m r"><b>${ostalo.lim}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`:'')+
-      Object.keys(ostalo.cevTip).map(t=>`<tr><td class="m">—</td><td>Čelična cev na zidu ${esc(t.replace('x','×'))} <span class="nap">dužina = širina pergole</span></td><td class="m r"><b>${br(ostalo.cevTip[t],1)}</b></td><td>m</td><td><span class="chk"></span></td></tr>`).join('')
+      `<tr><td class="sl">${slika(SLIKE.elek_motor,'Motor')}</td><td class="m">—</td><td>Motor</td><td class="m r"><b>${ostalo.motor}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      `<tr><td class="sl">${slika(SLIKE.elek_dimer,'Dimer')}</td><td class="m">—</td><td>Dimer</td><td class="m r"><b>${ostalo.dimer}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      Object.keys(ostalo.trafo).map(t=>`<tr><td class="sl">${slika('')}</td><td class="m">—</td><td>Trafo ${esc(t)}</td><td class="m r"><b>${ostalo.trafo[t]}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`).join('')+
+      `<tr><td class="sl">${slika(SLIKE.elek_kutija,'Razvodna kutija')}</td><td class="m">—</td><td>Razvodna kutija</td><td class="m r"><b>${ostalo.kutija}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      `<tr><td class="sl">${slika(SLIKE.elek_daljinski,'Daljinski')}</td><td class="m">—</td><td>Daljinski <span class="nap">po jedan uz svaku pergolu (isti kupac sa više pergola može jedan)</span></td><td class="m r"><b>${ostalo.daljinski}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`+
+      `<tr><td class="sl">${slika('')}</td><td class="m">—</td><td>Cerada <span class="nap">${cer.map(c=>`${c.n} × ${br(c.s)} × ${br(c.d)} mm`).join(' · ')}</span></td><td class="m r"><b>${br(m2,1)}</b></td><td>m²</td><td><span class="chk"></span></td></tr>`+
+      (ostalo.lim?`<tr><td class="sl">${slika('')}</td><td class="m">—</td><td>Trapezni lim 125 × 80</td><td class="m r"><b>${ostalo.lim}</b></td><td>kom</td><td><span class="chk"></span></td></tr>`:'')+
+      Object.keys(ostalo.cevTip).map(t=>`<tr><td class="sl">${slika('')}</td><td class="m">—</td><td>Čelična cev na zidu ${esc(t.replace('x','×'))} <span class="nap">dužina = širina pergole</span></td><td class="m r"><b>${br(ostalo.cevTip[t],1)}</b></td><td>m</td><td><span class="chk"></span></td></tr>`).join('')
     ) + `<div class="muted" style="margin-top:4px">Količine su tačno po proračunu naloga (bez rezerve). Šrafove i fitilje je dobro poručiti sa malo viška.</div></div>`;
   return h;
 }
@@ -688,7 +695,7 @@ async function racunajStk(){
   });
   // profili po grupi — najbolja dužina
   Object.keys(grupe).forEach(p=>{
-    const g=grupe[p], opc=duzine($(GRUPE[p].l).value), PR = w[p].eval(p==='snr'?'PROF':'PROFIL');
+    const g=grupe[p], opc=duzine($(GRUPE[p].l).value), PR = w[p].eval(p==='snr'?'PROF':'PROFIL'), IM = w[p].eval('IMG')||{};
     g.profili = Object.keys(g.komadi).sort().map(sif=>{
       const kom=g.komadi[sif], info=PR[sif]||{};
       const maxRez = Math.max(...kom.map(x=>x.L));
@@ -697,7 +704,7 @@ async function racunajStk(){
       if(!nb){ const L=Math.ceil(maxRez/500)*500; nb={L, r:seci(kom,[{L,n:Infinity}],rez), m:0, duze:true}; nb.m=nb.r.sipke.length*L; }
       const potrebno = kom.reduce((a,x)=>a+x.L,0);
       const kgm = p==='gio' ? (info.kat||info.kgm||0) : (info.kgm||0);
-      return {sif, naziv:info.naziv||sif, tr: p==='gio' ? (GIO_TR[sif]||info.naziv) : (info.tr||info.naziv), L:nb.L, sipki:nb.r.sipke.length,
+      return {sif, img:IM[sif], naziv:info.naziv||sif, tr: p==='gio' ? (GIO_TR[sif]||info.naziv) : (info.tr||info.naziv), L:nb.L, sipki:nb.r.sipke.length,
               m:nb.m/1000, kgm, kg:nb.m/1000*kgm, rezova:kom.length, potrebno, otpad: nb.m? (1-potrebno/nb.m)*100 : 0, plan:nb.r.sipke, duze:!!nb.duze};
     });
   });
@@ -724,9 +731,9 @@ function docStkSR(grupe, rez){
     const kg=g.profili.reduce((a,x)=>a+x.kg,0), sip=g.profili.reduce((a,x)=>a+x.sipki,0);
     h += `<div class="sec"><div class="sec-h"><span class="sec-n">${sl}</span><h2 class="sec-t">${GRUPE[p].t}</h2><span class="sec-x">${sip} šipki · ≈ ${br(kg,1)} kg</span></div>
       <div class="note note-info" style="margin-top:0">${g.sistemi.map(x=>esc(opisSys(x.s,x.I,x.R,'sr'))).join('<br>')}</div>
-      <div class="tw"><table style="margin-top:8px"><thead><tr><th>Šifra</th><th>Profil</th><th class="r">Šipka</th><th class="r">Šipki</th><th class="r">Metara</th><th class="r">Rezova</th><th class="r">Otpad</th><th class="r">kg/m</th><th class="r">≈ kg</th></tr></thead><tbody>
-      ${g.profili.map(x=>`<tr><td class="m">${esc(x.sif)}</td><td>${esc(x.naziv)}${x.duze?' <span class="oz">rez duži od ponuđenih šipki</span>':''}</td><td class="m r">${br(x.L)}</td><td class="m r"><b>${x.sipki}</b></td><td class="m r">${br(x.m,1)}</td><td class="m r">${x.rezova}</td><td class="m r">${br(x.otpad,1)} %</td><td class="m r">${br(x.kgm,3)}</td><td class="m r">${br(x.kg,1)}</td></tr>`).join('')}
-      <tr class="obr-sum"><td colspan="3">UKUPNO</td><td class="m r">${sip}</td><td class="m r">${br(g.profili.reduce((a,x)=>a+x.m,0),1)}</td><td colspan="3"></td><td class="m r">${br(kg,1)}</td></tr>
+      <div class="tw"><table style="margin-top:8px"><thead><tr><th>Slika</th><th>Šifra</th><th>Profil</th><th class="r">Šipka</th><th class="r">Šipki</th><th class="r">Metara</th><th class="r">Rezova</th><th class="r">Otpad</th><th class="r">kg/m</th><th class="r">≈ kg</th></tr></thead><tbody>
+      ${g.profili.map(x=>`<tr><td class="sl">${slika(x.img, x.sif+' '+x.naziv)}</td><td class="m">${esc(x.sif)}</td><td>${esc(x.naziv)}${x.duze?' <span class="oz">rez duži od ponuđenih šipki</span>':''}</td><td class="m r">${br(x.L)}</td><td class="m r"><b>${x.sipki}</b></td><td class="m r">${br(x.m,1)}</td><td class="m r">${x.rezova}</td><td class="m r">${br(x.otpad,1)} %</td><td class="m r">${br(x.kgm,3)}</td><td class="m r">${br(x.kg,1)}</td></tr>`).join('')}
+      <tr class="obr-sum"><td colspan="4">UKUPNO</td><td class="m r">${sip}</td><td class="m r">${br(g.profili.reduce((a,x)=>a+x.m,0),1)}</td><td colspan="3"></td><td class="m r">${br(kg,1)}</td></tr>
       </tbody></table></div>
       <details class="plan"><summary>Plan sečenja po šipkama</summary>${g.profili.map(x=>`<div class="grp-t">${esc(x.sif)} ${esc(x.naziv)}</div>${x.plan.map(sipkaHTML).join('')}`).join('')}</details>
       <div class="two" style="margin-top:10px"><div><div class="grp-t">Staklo</div><table><thead><tr><th>Sistem</th><th class="r">Mera (mm)</th><th class="r">Kom</th><th class="r">m²</th></tr></thead><tbody>
@@ -747,9 +754,9 @@ function docStkTR(grupe){
   Object.keys(GRUPE).filter(p=>grupe[p]).forEach(p=>{
     const g=grupe[p]; const kg=g.profili.reduce((a,x)=>a+x.kg,0), sip=g.profili.reduce((a,x)=>a+x.sipki,0); ukKg+=kg; ukSip+=sip;
     h += `<div class="sec"><div class="sec-h"><span class="sec-n">${++i}</span><h2 class="sec-t">${GRUPE[p].tr}</h2></div>
-      <div class="tw"><table><thead><tr><th>Sıra</th><th>Kod</th><th>Profil adı</th><th class="r">Boy (mm)</th><th class="r">Boy adedi</th><th class="r">Toplam metre</th><th class="r">kg/m</th><th class="r">Yaklaşık kg</th></tr></thead><tbody>
-      ${g.profili.map((x,j)=>`<tr><td class="m">${j+1}</td><td class="m">${esc(x.sif)}</td><td>${esc(x.tr)}</td><td class="m r">${x.L}</td><td class="m r"><b>${x.sipki}</b></td><td class="m r">${brT(x.m,1)}</td><td class="m r">${x.kgm.toFixed(3)}</td><td class="m r">${brT(x.kg,1)}</td></tr>`).join('')}
-      <tr class="obr-sum"><td colspan="4">TOPLAM</td><td class="m r">${sip}</td><td class="m r">${brT(g.profili.reduce((a,x)=>a+x.m,0),1)}</td><td></td><td class="m r">${brT(kg,1)}</td></tr>
+      <div class="tw"><table><thead><tr><th>Sıra</th><th>Resim</th><th>Kod</th><th>Profil adı</th><th class="r">Boy (mm)</th><th class="r">Boy adedi</th><th class="r">Toplam metre</th><th class="r">kg/m</th><th class="r">Yaklaşık kg</th></tr></thead><tbody>
+      ${g.profili.map((x,j)=>`<tr><td class="m">${j+1}</td><td class="sl">${slika(x.img, x.sif+' '+x.tr)}</td><td class="m">${esc(x.sif)}</td><td>${esc(x.tr)}</td><td class="m r">${x.L}</td><td class="m r"><b>${x.sipki}</b></td><td class="m r">${brT(x.m,1)}</td><td class="m r">${x.kgm.toFixed(3)}</td><td class="m r">${brT(x.kg,1)}</td></tr>`).join('')}
+      <tr class="obr-sum"><td colspan="5">TOPLAM</td><td class="m r">${sip}</td><td class="m r">${brT(g.profili.reduce((a,x)=>a+x.m,0),1)}</td><td></td><td class="m r">${brT(kg,1)}</td></tr>
       </tbody></table></div></div>`;
   });
   if(i>1) h += `<div class="note note-info" style="font-size:12.5px"><b>GENEL TOPLAM:</b> ${ukSip} boy · yaklaşık ${brT(ukKg,1)} kg</div>`;
@@ -785,7 +792,8 @@ ucitaj('per').then(w=>{
   wP = w;
   const PR = w.eval('PROFILI'), vid = new Set();
   PROF_LISTA = Object.values(PR).filter(p=>{ if(vid.has(p.sifra)) return false; vid.add(p.sifra); return true; })
-    .map(p=>({s:p.sifra, naziv:p.nazivSr||p.naziv||p.sifra, kgm:p.kgm}));
+    .map(p=>({s:p.sifra, naziv:p.nazivSr||p.naziv||p.sifra, kgm:p.kgm, img:p.img}));
+  SLIKE = w.IMG || w.eval('IMG') || {};
   crtajStok(); crtajCfg(); racunajPer();
 }).catch(e=>{ $('docPer').innerHTML = `<div class="note note-warn">${esc(e.message)} — porudžbina mora da se otvori sa servera (app.aggroup.rs), ne kao fajl.</div>`; });
 try{ if(localStorage.getItem('por_tab')==='stk') tab('stk'); }catch(e){}
