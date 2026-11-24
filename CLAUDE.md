@@ -35,7 +35,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v57` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-24.3`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v58` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-24.4`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -115,7 +115,10 @@ Promena formule u programu se zato automatski vidi i u porudžbini. Radi samo sa
   „najviše što može" — povećava se broj dok sve šifre staju (best-fit sečenje, rez 5 mm). Prikaz: koliko izlazi,
   šta fali za još jednu, iskorišćenje po profilu, ostaci, plan sečenja, i porudžbina okova (ARV/PRG/AK), vijaka,
   elektronike (motor, dimer, trafo po tipu, kutija, daljinski po pergoli), cerade m², lima, cevi na zidu.
-  „Popuni listu prema pergolama" predlaže šipke za zadate komade.
+  „Popuni listu prema pergolama" predlaže šipke za zadate komade — isti profil u više dužina (`planProfila`,
+  ponuđene dužine npr. 6000, 7000, 7500); provera zalihe (`seciZaliha`) ume da složi i takav predlog.
+  „Türkçe" na pergolama: dve porudžbine — **Profili (Nor)**: slika, kod, `nazivTr` (gde postoji), boy, adet, metre,
+  bez kg; **Okov i vijci** (drugi dobavljač): slika, kod, miktar, birim; vijci sa slikom i merom (`VIJCI.k`).
 - **Stakleni sistemi**: redovi sistema (giljotina fiksna/brisiva, Slajding Nor, klizni 4 šine) sa merama i komadima;
   za svaki profil bira dužinu šipke sa najmanje poručenih metara od ponuđenih (Gio 7000, Nor 6000/7500/9000).
   Isti profil može u VIŠE dužina (`planProfila`: proba svaku dužinu i sve zajedno, pa svaku šipku skrati na

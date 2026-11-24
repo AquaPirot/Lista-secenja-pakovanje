@@ -283,7 +283,7 @@
       <button class="btn btn-secondary active" id="tabPer" onclick="tab('per')">PERGOLE</button>
       <button class="btn btn-secondary" id="tabStk" onclick="tab('stk')">STAKLENI SISTEMI</button>
     </div>
-    <button class="btn btn-secondary" id="jezikBtn" onclick="promeniJezik()" style="display:none">🇹🇷 Türkçe</button>
+    <button class="btn btn-secondary" id="jezikBtn" onclick="promeniJezik()">🇹🇷 Türkçe</button>
     <button class="btn btn-primary" onclick="window.print()">PDF / Štampa</button>
     <a class="btn btn-secondary" href="pocetna.html">← Početna</a>
   </div>
@@ -301,7 +301,7 @@
       <button class="add" onclick="dodajStok()">＋ Dodaj profil</button>
       <div class="opcije">
         <span>Predlog šipki za pergole ispod:</span>
-        <label>dužina <input type="number" id="predlogL" value="7" step="0.5" min="1" style="width:80px"> m</label>
+        <label>dužine šipki (mm) <input type="text" id="predlogL" value="6000, 7000, 7500" style="min-width:170px"></label>
         <button class="add" style="margin:0" onclick="predloziStok()">Popuni listu prema pergolama</button>
       </div>
 
@@ -312,6 +312,7 @@
 
       <div class="opcije">
         <label>Rez testere <input type="number" id="rez" value="5" min="0" style="width:70px"> mm</label>
+        <label>Boja <input type="text" id="ralP" value="RAL 7016 (Antrasit)" style="min-width:190px"></label>
         <label>Ostatak se računa kao upotrebljiv od <input type="number" id="pragOst" value="1000" min="0" style="width:90px"> mm</label>
       </div>
     </div>
@@ -350,7 +351,7 @@
 <div id="okviri" style="position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden" aria-hidden="true"></div>
 
 <script>
-const VER = "p-v2026-11-24.3";
+const VER = "p-v2026-11-24.4";
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const br = (n,d=0) => (Math.round(n*10**d)/10**d).toFixed(d).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
@@ -423,6 +424,28 @@ function planProfila(komadi, opcije, rez){
   kand.push(skrati(seci(komadi, op.map(L=>({L,n:Infinity})), rez), op, rez));
   let naj=null;
   kand.forEach(r=>{ const m=r.sipke.reduce((a,s)=>a+s.L,0); if(!naj || m<naj.m-1 || (Math.abs(m-naj.m)<=1 && r.sipke.length<naj.r.sipke.length)) naj={m,r}; });
+  return naj;
+}
+// Sečenje iz konačne zalihe sa više dužina: best-fit, a ako nešto ne stane — isti postupak kao predlog
+// (složi u jednu dužinu ili u sve, pa svakoj šipki dodeli najkraću poručenu u koju staje). Uzima se prvi koji uspe.
+function seciZaliha(komadi, zaliha, rez){
+  let naj = seci(komadi, zaliha, rez);
+  if(!naj.fale.length || !komadi.length) return naj;
+  const Ls = [...new Set(zaliha.map(z=>z.L))].sort((a,b)=>b-a);
+  const probe = Ls.map(L=>seci(komadi,[{L,n:Infinity}],rez));
+  probe.push(seci(komadi, Ls.map(L=>({L,n:Infinity})), rez));
+  for(const r of probe){
+    if(r.fale.length) continue;
+    const ost = zaliha.map(z=>({L:z.L, n:z.n})).sort((a,b)=>a.L-b.L);
+    const sipke = r.sipke.map(s=>({s, z: s.r.reduce((a,p)=>a+p.L,0)+rez*(s.r.length-1)})).sort((a,b)=>b.z-a.z);
+    let uspeh = true;
+    for(const x of sipke){
+      const z = ost.find(o=>o.n>0 && o.L >= x.z-1e-6);
+      if(!z){ uspeh=false; break; }
+      z.n--; x.s.L = z.L; x.s.ost = Math.max(0, z.L - x.z - rez);
+    }
+    if(uspeh) return {sipke:r.sipke, fale:[], ostatak:ost};
+  }
   return naj;
 }
 // šipke grupisane po dužini, najduže prve: [{L, n}]
@@ -529,10 +552,49 @@ function probaj(lista, zal, rez){
   const kom = komadiZa(lista), rez1 = {};
   let ok = true;
   const sve = new Set([...Object.keys(kom), ...Object.keys(zal)]);
-  sve.forEach(s=>{ const r = seci(kom[s]||[], zal[s]||[], rez); rez1[s]=r; if(r.fale.length) ok=false; });
+  sve.forEach(s=>{ const r = seciZaliha(kom[s]||[], zal[s]||[], rez); rez1[s]=r; if(r.fale.length) ok=false; });
   return {ok, po:rez1, kom};
 }
 
+let poslednjiPer = [], perTrVrsta = 'prof';
+// Turska porudžbina za pergole: PROFILI (Nor) ili OKOV + VIJCI (drugi dobavljač) — slika + šifra + količina, bez kg
+function docPerTR(lista){
+  const izbor = `<div class="no-print" style="display:flex;gap:6px;margin-bottom:12px">
+    <button class="btn ${perTrVrsta==='prof'?'btn-primary':'btn-secondary'}" onclick="perTrVrsta='prof';racunajPer()">Profili (Nor)</button>
+    <button class="btn ${perTrVrsta==='okov'?'btn-primary':'btn-secondary'}" onclick="perTrVrsta='okov';racunajPer()">Okov i vijci</button></div>`;
+  const ukupno = lista.reduce((a,x)=>a+x.n,0);
+  const sistemi = lista.filter(x=>x.n>0).map(x=>`${x.n} adet pergola · ${x.P.I.sirina} × ${x.P.I.dubina} mm · ${x.P.R.auto.brRaja} ray`);
+  if(perTrVrsta==='prof'){
+    const PR = wP.eval('PROFILI'), poS = {};
+    Object.values(PR).forEach(p=>{ if(!poS[p.sifra]) poS[p.sifra]=p; });
+    const redovi = {};
+    ST.stok.forEach(r=>{ const L=Math.round((+r.L||0)*1000), n=Math.round(+r.n||0); if(L>0&&n>0){ const k=r.s+'|'+L; (redovi[k] ||= {s:r.s, L, n:0}).n+=n; } });
+    const lis = Object.values(redovi).sort((a,b)=>a.s.localeCompare(b.s) || b.L-a.L);
+    let h = `${izbor}<div class="doc-head"><div><div class="doc-title">ALÜMİNYUM PROFİL SİPARİŞİ</div><div class="doc-sub">AG GROUP · PERGOLA</div></div><div class="doc-meta">Tarih: ${danas()}<br>Renk: ${esc($('ralP').value)}</div></div>`;
+    h += `<div class="sec"><div class="tw"><table><thead><tr><th>Sıra</th><th>Resim</th><th>Kod</th><th>Profil adı</th><th class="r">Boy (mm)</th><th class="r">Adet</th><th class="r">Toplam metre</th></tr></thead><tbody>
+      ${lis.map((x,j)=>{ const p=poS[x.s]||{}; return `<tr><td class="m">${j+1}</td><td class="sl">${slika(SLIKE[p.img], x.s)}</td><td class="m"><b>${esc(x.s)}</b></td><td>${esc(p.nazivTr||'')}</td><td class="m r"><b>${x.L}</b></td><td class="m r"><b>${x.n}</b></td><td class="m r">${brT(x.L*x.n/1000,1)}</td></tr>`; }).join('')}
+      <tr class="obr-sum"><td colspan="5">TOPLAM</td><td class="m r">${lis.reduce((a,x)=>a+x.n,0)}</td><td class="m r">${brT(lis.reduce((a,x)=>a+x.L*x.n,0)/1000,1)}</td></tr></tbody></table></div></div>`;
+    h += `<div class="sec"><div class="sec-h"><h2 class="sec-t">Not</h2></div><div style="font-size:12px;line-height:1.6">
+      ${sistemi.length?`Hesaplamamıza göre bu sipariş aşağıdaki pergolalar içindir:<ul style="margin:4px 0 8px">${sistemi.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}
+      Fireyi azaltmak için aynı profil için bile farklı boylar seçtik. Bu boylarda üretim ve boya mümkün değilse lütfen bildiriniz.<br><br>
+      Lütfen siparişin doğru olup olmadığını kontrol ediniz.</div></div>`;
+    return h + `<div class="foot">AG GROUP · pergola.rs</div>`;
+  }
+  const {okov, vijci, VIJCI} = skupiAksesoar(lista);
+  const jed = j => j==='m' ? 'metre' : 'adet';
+  const ok = Object.values(okov), vk = Object.keys(vijci);
+  let h = `${izbor}<div class="doc-head"><div><div class="doc-title">AKSESUAR SİPARİŞİ</div><div class="doc-sub">AG GROUP · PERGOLA</div></div><div class="doc-meta">Tarih: ${danas()}<br>${ukupno} adet pergola için</div></div>`;
+  h += `<div class="sec"><div class="tw"><table><thead><tr><th>Sıra</th><th>Resim</th><th>Kod</th><th class="r">Miktar</th><th>Birim</th></tr></thead><tbody>
+    ${ok.map((o,j)=>`<tr><td class="m">${j+1}</td><td class="sl">${slika(SLIKE[o.img], o.sifra)}</td><td class="m"><b>${esc(o.sifra)}</b></td><td class="m r"><b>${o.jed==='m'?brT(o.kol,1):brT(o.kol)}</b></td><td>${jed(o.jed)}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  if(vk.length) h += `<div class="sec"><div class="sec-h"><h2 class="sec-t">Vida, somun, pul</h2></div><div class="tw"><table><thead><tr><th>Sıra</th><th>Resim</th><th>Ölçü</th><th class="r">Miktar</th><th>Birim</th></tr></thead><tbody>
+    ${vk.map((id,j)=>`<tr><td class="m">${j+1}</td><td class="sl">${slika(SLIKE[vijci[id].img], vijci[id].naziv)}</td><td class="m">${esc((VIJCI[id]||{}).k||'')}</td><td class="m r"><b>${brT(vijci[id].kol)}</b></td><td>adet</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  h += `<div class="sec"><div class="sec-h"><h2 class="sec-t">Not</h2></div><div style="font-size:12px;line-height:1.6">
+    ${sistemi.length?`Bu sipariş aşağıdaki pergolalar içindir:<ul style="margin:4px 0 8px">${sistemi.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}
+    Ürünler kod ve resim ile belirtilmiştir. Lütfen siparişin doğru olup olmadığını kontrol ediniz.</div></div>`;
+  return h + `<div class="foot">AG GROUP · pergola.rs</div>`;
+}
 function racunajPer(){
   snimi();
   if(!wP) return;
@@ -558,22 +620,30 @@ function racunajPer(){
   if(za){
     const r = probaj(za, zal, rez); fali=[];
     for(const s in r.po){ const f=r.po[s].fale; if(!f.length) continue;
-      const Lz = Math.max(...(zal[s]||[]).map(z=>z.L), 0) || Math.round((+$('predlogL').value||7)*1000);
+      const Lz = Math.max(...(zal[s]||[]).map(z=>z.L), 0) || Math.max(...duzine($('predlogL').value), 7000);
       const L = Math.max(Lz, ...f.map(p=>p.L));
       const d = seci(f, [{L, n:Infinity}], rez);
       fali.push({s, kom:f.length, sipki:d.sipke.length, L, duzi:f.some(p=>p.L>Lz && Lz>0)});
     }
   }
-  $('docPer').innerHTML = docPer(P, lista, iMax, N, fiksOk, rezultat, zal, fali, rez, prag);
+  poslednjiPer = lista;
+  $('docPer').innerHTML = jezik==='tr' ? docPerTR(lista) : docPer(P, lista, iMax, N, fiksOk, rezultat, zal, fali, rez, prag);
 }
 
 function predloziStok(){
   if(!wP) return;
-  const rez = Math.max(0, +$('rez').value||0), L = Math.round((+$('predlogL').value||7)*1000);
+  // isti profil može u više dužina — kombinacija sa najmanje poručenih metara (kao kod staklenih sistema)
+  const rez = Math.max(0, +$('rez').value||0), op = duzine($('predlogL').value);
+  const opcije = op.length ? op : [7000];
   const P = ST.cfg.map(c=>jednaPergola(c));
   const lista = P.map((p,i)=>({P:p, n:Math.max(1,Math.round(+ST.cfg[i].kom||1))}));
   const kom = komadiZa(lista);
-  ST.stok = Object.keys(kom).map(s=>{ const Lx=Math.max(L, ...kom[s].map(p=>Math.ceil(p.L/500)*500)); const r=seci(kom[s],[{L:Lx,n:Infinity}],rez); return {s, L:Lx/1000, n:r.sipke.length}; });
+  ST.stok = [];
+  Object.keys(kom).sort().forEach(s=>{
+    let nb = planProfila(kom[s], opcije, rez);
+    if(!nb){ const L=Math.ceil(Math.max(...kom[s].map(p=>p.L))/500)*500; nb={r:seci(kom[s],[{L,n:Infinity}],rez)}; }
+    poDuzini(nb.r.sipke).forEach(d=>ST.stok.push({s, L:d.L/1000, n:d.n}));
+  });
   crtajStok(); racunajPer();
 }
 
@@ -617,9 +687,9 @@ function docPer(P, lista, iMax, N, fiksOk, rez1, zal, fali, rez, prag){
   return h;
 }
 
-function aksesoarHTML(lista){
+function skupiAksesoar(lista){
   const okov = {}, vijci = {}, ostalo = {cerada:[], lim:0, cevM:0, cevTip:{}, motor:0, dimer:0, kutija:0, daljinski:0, trafo:{}};
-  const VIJCI = wP.eval('VIJCI'), GR = {plastika:'Plastika', metal:'Metal okov', fitilj:'Kederi, fitilji i kaiš', led:'LED i kabl'};
+  const VIJCI = wP.eval('VIJCI');
   lista.forEach(({P,n})=>{
     if(!n) return;
     const I = {...P.I, brKomada:n};
@@ -631,6 +701,10 @@ function aksesoarHTML(lista){
     ostalo.motor+=n; ostalo.dimer+=n; ostalo.kutija+=n; ostalo.daljinski+=n;
     ostalo.trafo[P.R.led.trafo]=(ostalo.trafo[P.R.led.trafo]||0)+n;
   });
+  return {okov, vijci, ostalo, VIJCI};
+}
+function aksesoarHTML(lista){
+  const {okov, vijci, ostalo} = skupiAksesoar(lista), GR = {plastika:'Plastika', metal:'Metal okov', fitilj:'Kederi, fitilji i kaiš', led:'LED i kabl'};
   if(!Object.keys(okov).length) return `<div class="sec"><div class="sec-h"><span class="sec-n acc">B</span><h2 class="sec-t">Aksesoar za poručivanje</h2></div><div class="note note-info">Nema pergola — nema ni aksesoara.</div></div>`;
   const tbl = (redovi) => `<div class="tw"><table><thead><tr><th style="width:76px">Slika</th><th style="width:90px">Šifra</th><th>Naziv</th><th class="r" style="width:90px">Količina</th><th style="width:50px">Jed.</th><th style="width:28px">✓</th></tr></thead><tbody>${redovi}</tbody></table></div>`;
   let h = `<div class="sec"><div class="sec-h"><span class="sec-n acc">B</span><h2 class="sec-t">Okov — za dobavljača okova</h2><span class="sec-x">za ${lista.reduce((a,x)=>a+x.n,0)} pergola</span></div>`;
@@ -798,7 +872,7 @@ function docStkTR(grupe){
 function promeniJezik(){
   jezik = jezik==='sr' ? 'tr' : 'sr';
   $('jezikBtn').textContent = jezik==='sr' ? '🇹🇷 Türkçe' : '🇷🇸 Srpski';
-  racunajStk();
+  if($('vStk').style.display==='none') racunajPer(); else racunajStk();
 }
 
 /* ───────── prebacivanje ───────── */
@@ -807,11 +881,10 @@ function tab(t){
   $('vStk').style.display = t==='stk'?'':'none';
   $('tabPer').classList.toggle('active', t==='per');
   $('tabStk').classList.toggle('active', t==='stk');
-  $('jezikBtn').style.display = t==='stk'?'':'none';
   try{ localStorage.setItem('por_tab', t); }catch(e){}
-  if(t==='stk') racunajStk();
+  if(t==='stk') racunajStk(); else racunajPer();
 }
-['rez','pragOst'].forEach(id=>$(id).addEventListener('input',racunajPer));
+['rez','pragOst','ralP'].forEach(id=>$(id).addEventListener('input',racunajPer));
 ['rezS','bez10417','ralS','lGio','lSnr','lSld'].forEach(id=>$(id).addEventListener('input',racunajStk));
 
 crtajSys();
