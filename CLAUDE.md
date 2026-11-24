@@ -11,7 +11,8 @@ obračun materijala, magacin sa optimizacijom sečenja i kalendar produkcije.
 | `slike.js` | Sve sličice (base64) kao `window.IMG`. ~700 KB, kešira se posebno (`SLIKE_VER` u `sw.js` + `?v=` u `index.html`). |
 | `giljotina.html` | Zaseban program za giljotine; arhiva na serveru (status `gio` u istoj tabeli). |
 | `slajding.html` | Zaseban program za klizni sistem sa 4 šine (4 krila); arhiva na serveru (status `sld`). |
-| `pocetna.html` | Naslovna — izbor pergola / giljotina / klizni sistem. |
+| `slajding-nor.html` | Zaseban program za **Nor** klizni sistem (2–5 šina), po Nor kalkulatoru; arhiva status `snr`. |
+| `pocetna.html` | Naslovna — izbor pergola / giljotina / klizni sistem 4 šine / Slajding Nor. |
 | `tests/provera.cjs` | Automatska provera proračuna (pravila + referenca). **Pokrenuti posle svake izmene.** |
 | `sw.js` | Service worker. Network-first za HTML, cache-first za ikone, `/api/` se nikad ne kešira. |
 | `popis.html` | Zaseban mobile-first ekran za popis magacina na telefonu. |
@@ -33,7 +34,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v53` / slike v2 · klizni `s-v2026-11-19.3`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v54` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -91,6 +92,18 @@ Ručke 1049 su **u ogledalu**: krila 1–4 s leva na desno gledano iznutra; kril
 KA UNUTRA, krilo 1 (desno gledano spolja) ručku KA SPOLJA; kraći deo 1049 je između stuba i ručke; i iznutra i spolja
 se otvara s desna na levo. Nalog ima odeljak „Raspored krila i ručki" (`rasporedRucki()`): pogled iznutra, spolja,
 presek odozgo i tabela vertikala po krilu.
+
+## Slajding Nor (slajding-nor.html)
+
+Po Nor Excel kalkulatoru „Sürme Hesaplama" (X širina, Y visina, D = šine = krila 2–5). Podrazumevano: bez praga
+(eşiksiz), termopan 4+12+4 (profili 10394/10396/10398), bez srednjeg H profila. Gornja kasa je UVEK sa pragom
+(10407/10406/10405/10494); donja sa pragom ili bez (10410/10409/10408/10492). Rezovi: kase X − 24 · baza krila
+(staklo − 30) × 2D · krilo sa ručkom Y − 105 (prag Y − 125) × 2 · kenet Y − 39 (Y − 59) × (2D − 2) · bočna kasa
+Y × 2 · završni U 10400 Y − 15 (Y − 26) × 2 · H 10401 Y − 39 × 1. Staklo: ((X − 146) + (D − 1)·4 − 79·H) / D ×
+(Y − 193 | prag Y − 213), zaokruženo naviše; D po sistemu. Okov: točak 2D, garnitura krila sa ručkom 2,
+kenet garnitura D − 2; sa pragom još 4 + 4 zaptivke. Aluminijum 4,65 €/kg (Nor potvrda).
+Napomena: u Nor Excelu izbor „eşikli" ne radi (tursko İ u formuli) — ovde su odbici kako su zamišljeni.
+Provereno: 3000×3000, 4 šine, tek cam, sa H → 32,83 kg i staklo 697×2807 (isto kao Excel).
 
 ## Arhitektura proračuna
 
