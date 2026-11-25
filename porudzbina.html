@@ -271,6 +271,11 @@
   .grp-t{font-family:'Fjalla One',sans-serif;font-size:12px;letter-spacing:.06em;color:var(--bronzeD);margin:12px 0 4px;}
   td.sl{width:76px;padding:3px 5px;}
   @media print{ .thumb{width:62px;height:46px;} }
+  .pop-prof td{height:44px;}
+  .pop-okov td{height:34px;}
+  .pop-pr{border-bottom:1px solid #b9b09a;display:inline-block;min-width:90%;height:14px;}
+  .pop-list{break-before:page;}
+  .pop-list:first-of-type{break-before:auto;}
   .ucitava{color:var(--muted);font-size:12px;padding:10px;text-align:center;}
   td.nw{white-space:nowrap;}
   @media print{ @page{size:A4;margin:10mm;} details.plan:not([open]){display:none;} }
@@ -282,6 +287,7 @@
     <div class="tabs">
       <button class="btn btn-secondary active" id="tabPer" onclick="tab('per')">PERGOLE</button>
       <button class="btn btn-secondary" id="tabStk" onclick="tab('stk')">STAKLENI SISTEMI</button>
+      <button class="btn btn-secondary" id="tabPop" onclick="tab('pop')">POPIS</button>
     </div>
     <button class="btn btn-secondary" id="jezikBtn" onclick="promeniJezik()">🇹🇷 Türkçe</button>
     <button class="btn btn-primary" onclick="window.print()">PDF / Štampa</button>
@@ -348,10 +354,27 @@
 </div>
 
 <div id="imgZoom" onclick="this.style.display='none'"><img id="imgZoomPic" alt=""><div id="imgZoomCap"></div></div>
+<!-- ═════════ POPISNE LISTE ═════════ -->
+<div id="vPop" style="display:none">
+  <div class="panel no-print">
+    <div class="card-in">
+      <div class="grp">POPISNE LISTE — SVI DELOVI IZ PROGRAMA</div>
+      <div class="sub" style="font-size:11px">Spisak se pravi iz samih programa — kad se doda nov profil ili okov u program, pojavi se i ovde. Svaki program počinje na novoj strani.</div>
+      <div class="opcije" id="popIzbor">
+        <label><input type="checkbox" value="per" checked> Pergola</label>
+        <label><input type="checkbox" value="gio" checked> Giljotina</label>
+        <label><input type="checkbox" value="snr" checked> Slajding Nor</label>
+        <label><input type="checkbox" value="sld" checked> Klizni 4 šine</label>
+      </div>
+    </div>
+  </div>
+  <div class="doc" id="docPop"><div class="ucitava">Učitavam programe…</div></div>
+</div>
+
 <div id="okviri" style="position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden" aria-hidden="true"></div>
 
 <script>
-const VER = "p-v2026-11-24.4";
+const VER = "p-v2026-11-25.1";
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const br = (n,d=0) => (Math.round(n*10**d)/10**d).toFixed(d).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
@@ -881,11 +904,65 @@ function tab(t){
   $('vStk').style.display = t==='stk'?'':'none';
   $('tabPer').classList.toggle('active', t==='per');
   $('tabStk').classList.toggle('active', t==='stk');
+  $('vPop').style.display = t==='pop'?'':'none';
+  $('tabPop').classList.toggle('active', t==='pop');
+  $('jezikBtn').style.display = t==='pop'?'none':'';
   try{ localStorage.setItem('por_tab', t); }catch(e){}
-  if(t==='stk') racunajStk(); else racunajPer();
+  if(t==='stk') racunajStk(); else if(t==='pop') crtajPopis(); else racunajPer();
 }
 ['rez','pragOst','ralP'].forEach(id=>$(id).addEventListener('input',racunajPer));
 ['rezS','bez10417','ralS','lGio','lSnr','lSld'].forEach(id=>$(id).addEventListener('input',racunajStk));
+
+/* ═════════════════════ POPISNE LISTE ═════════════════════
+   Svi profili i sav okov iz programa, sa slikom i praznim poljima za brojanje. */
+async function crtajPopis(){
+  const izab = [...document.querySelectorAll('#popIzbor input:checked')].map(x=>x.value);
+  let w;
+  try{ w = Object.fromEntries(await Promise.all(izab.map(async p=>[p, await ucitaj(p)]))); }
+  catch(e){ $('docPop').innerHTML = `<div class="note note-warn">${esc(e.message)} — mora da se otvori sa servera.</div>`; return; }
+  const glava = (t) => `<div class="doc-head"><div><div class="doc-title">POPISNA LISTA — ${t}</div><div class="doc-sub">AG GROUP · MAGACIN</div></div>
+    <div class="doc-meta" style="text-align:left;min-width:210px">Datum popisa: <span class="pop-pr" style="min-width:110px"></span><br>Popisao: <span class="pop-pr" style="min-width:130px"></span></div></div>`;
+  const tProf = (red) => `<div class="sec"><div class="sec-h"><span class="sec-n">P</span><h2 class="sec-t">Profili</h2><span class="sec-x">upisati: dužina šipke × broj komada</span></div>
+    <div class="tw"><table class="pop-prof"><thead><tr><th style="width:76px">Slika</th><th style="width:80px">Šifra</th><th>Naziv</th><th style="width:28%">Cele šipke (dužina × kom)</th><th style="width:24%">Ostaci (dužina × kom)</th></tr></thead><tbody>
+    ${red.map(r=>`<tr><td class="sl">${slika(r.img, r.s+' '+r.n)}</td><td class="m"><b>${esc(r.s)}</b></td><td>${esc(r.n)}</td><td></td><td></td></tr>`).join('')}</tbody></table></div></div>`;
+  const tOkov = (naslov, oz, red) => red.length ? `<div class="sec"><div class="sec-h"><span class="sec-n acc">${oz}</span><h2 class="sec-t">${naslov}</h2></div>
+    <div class="tw"><table class="pop-okov"><thead><tr><th style="width:76px">Slika</th><th style="width:90px">Šifra</th><th>Naziv</th><th style="width:50px">Jed.</th><th style="width:110px">Stanje</th><th style="width:22%">Napomena</th></tr></thead><tbody>
+    ${red.map(r=>`<tr><td class="sl">${slika(r.img, r.n)}</td><td class="m"><b>${esc(r.s||'—')}</b></td><td>${esc(r.n)}</td><td>${esc(r.j)}</td><td></td><td></td></tr>`).join('')}</tbody></table></div></div>` : '';
+  let h = '';
+  if(w.per){
+    const P=w.per, IMGp = P.IMG || P.eval('IMG') || {}, PR=P.eval('PROFILI'), KAT=P.eval('KATALOG'), VIJ=P.eval('VIJCI');
+    const vid=new Set(), prof=[];
+    Object.values(PR).forEach(x=>{ if(vid.has(x.sifra)) return; vid.add(x.sifra); prof.push({s:x.sifra, n:x.nazivSr||x.naziv||x.sifra, img:IMGp[x.img]}); });
+    const ctx = {kederJednostrani:false};
+    const okov = g => { const v=new Set(); return KAT.filter(x=>x.grupa===g && !v.has(x.sifra) && v.add(x.sifra)).map(x=>{
+      const k = typeof x.img==='function' ? x.img(ctx) : x.img; return {s:x.sifra, n:x.naziv, j:x.jed, img:IMGp[k]}; }); };
+    const vij = Object.values(VIJ).map(v=>({s:'', n:v.n, j:'kom', img:IMGp[v.img]}));
+    const elek = [
+      {n:'Motor', j:'kom', img:IMGp.elek_motor}, {n:'Dimer', j:'kom', img:IMGp.elek_dimer}, {n:'Daljinski', j:'kom', img:IMGp.elek_daljinski},
+      {n:'Razvodna kutija', j:'kom', img:IMGp.elek_kutija}, {n:'Trafo 10A', j:'kom'}, {n:'Trafo 20A', j:'kom'}, {n:'Trafo 30A', j:'kom'},
+    ];
+    const ost = ['Krem 3D','Krem mat','Antracit','Crna','Miš boja'].map(c=>({n:'Cerada — '+c, j:'m'}))
+      .concat([{n:'Trapezni lim 125 × 80', j:'kom'}, {n:'Čelična cev 80 × 40', j:'m'}, {n:'Čelična cev 100 × 100', j:'m'}]);
+    h += `<div class="pop-list">${glava('PERGOLA')}${tProf(prof)}${tOkov('Plastika','1',okov('plastika'))}${tOkov('Metal okov','2',okov('metal'))}
+      ${tOkov('Kederi, fitilji i kaiš','3',okov('fitilj'))}${tOkov('LED i kabl','4',okov('led'))}${tOkov('Vijčana roba','5',vij)}
+      ${tOkov('Elektronika','6',elek)}${tOkov('Cerada, lim i čelik','7',ost)}</div>`;
+  }
+  // stakleni sistemi: profili iz programa + okov skupljen iz svih varijanti proračuna (bez stakla — ono je po meri)
+  const okovIz = (w1, ulazi) => { const m=new Map(); ulazi.forEach(I=>w1.proracun(I).OK.forEach(o=>{ if(o.id!=='staklo' && !m.has(o.naziv)) m.set(o.naziv,{s:'', n:o.naziv, j:o.jed}); })); return [...m.values()]; };
+  const stakl = (k, naslov, PRk, ulazi) => {
+    const W1=w[k]; if(!W1) return '';
+    const PR=W1.eval(PRk), IM=W1.eval('IMG')||{};
+    const prof = Object.keys(PR).map(s=>({s, n:PR[s].naziv, img:IM[s]}));
+    return `<div class="pop-list">${glava(naslov)}${tProf(prof)}${tOkov('Okov','1',okovIz(W1, ulazi))}</div>`;
+  };
+  h += stakl('gio','GILJOTINA','PROFIL',[
+    {sistem:'sabit',sirina:3000,visina:2500,kom:1,staklo:'ISICAM',pogon:'ZINCIRLI'},
+    {sistem:'silinebilir',sirina:3000,visina:2500,kom:1,staklo:'ISICAM',pogon:'KAYISLI'}]);
+  h += stakl('snr','SLAJDING NOR','PROF',[{sirina:3000,visina:2500,kom:1,sine:4,prag:'eşikli',staklo:'isicam',srednji:'da'}]);
+  h += stakl('sld','KLIZNI SISTEM 4 ŠINE','PROFIL',[{sirina:3000,visina:2500,kom:1}]);
+  $('docPop').innerHTML = h || '<div class="note note-info">Izaberi bar jedan program.</div>';
+}
+document.querySelectorAll('#popIzbor input').forEach(x=>x.addEventListener('change',crtajPopis));
 
 crtajSys();
 ucitaj('per').then(w=>{
@@ -896,7 +973,7 @@ ucitaj('per').then(w=>{
   SLIKE = w.IMG || w.eval('IMG') || {};
   crtajStok(); crtajCfg(); racunajPer();
 }).catch(e=>{ $('docPer').innerHTML = `<div class="note note-warn">${esc(e.message)} — porudžbina mora da se otvori sa servera (app.aggroup.rs), ne kao fajl.</div>`; });
-try{ if(localStorage.getItem('por_tab')==='stk') tab('stk'); }catch(e){}
+try{ const t=localStorage.getItem('por_tab'); if(t==='stk'||t==='pop') tab(t); }catch(e){}
 </script>
 </body>
 </html>

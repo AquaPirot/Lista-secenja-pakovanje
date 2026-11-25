@@ -13,7 +13,7 @@ obračun materijala, magacin sa optimizacijom sečenja i kalendar produkcije.
 | `slajding.html` | Zaseban program za klizni sistem sa 4 šine (4 krila); arhiva na serveru (status `sld`). |
 | `slajding-nor.html` | Zaseban program za **Nor** klizni sistem (2–5 šina), po Nor kalkulatoru; arhiva status `snr`. |
 | `pocetna.html` | Naslovna — izbor pergola / giljotina / klizni sistem 4 šine / Slajding Nor + traka Porudžbina. |
-| `porudzbina.html` | Porudžbina: pergole (poručeni profili → koliko pergola izlazi + okov/vijci/elektronika) i stakleni sistemi (mere → profili sa otpadom, staklo, okov, PDF na turskom). |
+| `porudzbina.html` | Porudžbina + popisne liste: pergole (poručeni profili → koliko pergola izlazi + okov/vijci/elektronika) i stakleni sistemi (mere → profili sa otpadom, staklo, okov, PDF na turskom). |
 | `tests/provera.cjs` | Automatska provera proračuna (pravila + referenca). **Pokrenuti posle svake izmene.** |
 | `sw.js` | Service worker. Network-first za HTML, cache-first za ikone, `/api/` se nikad ne kešira. |
 | `popis.html` | Zaseban mobile-first ekran za popis magacina na telefonu. |
@@ -35,7 +35,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v58` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-24.4`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v59` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-25.1`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -128,6 +128,10 @@ Promena formule u programu se zato automatski vidi i u porudžbini. Radi samo sa
   kg (giljotina po `kat`, Nor po `PROF`) se vidi samo u našem prikazu, u zaglavlju grupe.
 - Svaka stavka (profil, okov, vijak, motor/dimer/daljinski/kutija) ima sličicu iz programa (`IMG`), i u turskoj
   porudžbini — dobavljači prepoznaju artikal po slici i šifri, ne po našem prevodu. Klik na sličicu je uvećava.
+- **POPIS** (kartica): papirne popisne liste za magacin po programu (pergola, giljotina, Slajding Nor, klizni 4 šine),
+  svaki na novoj strani. Profili: slika, šifra, naziv + prazno „cele šipke (dužina × kom)" i „ostaci". Okov/vijci/
+  elektronika/cerada/lim/cev: slika, šifra, naziv, jed. + prazno „stanje". Sve se čita iz programa (`PROFILI`,
+  `KATALOG`, `VIJCI`, `PROFIL`/`PROF`, okov iz `proracun().OK` za sve varijante) — nova stavka u programu se sama pojavi.
 - Stanje forme se pamti u `localStorage` (`por_stanje`, `por_sistemi`, `por_tab`); nema arhive na serveru.
 
 ## Arhitektura proračuna
