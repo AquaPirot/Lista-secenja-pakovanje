@@ -35,7 +35,7 @@ Uz svaku izmenu:
 4. Pre commita: `node tests/provera.cjs` — pravila moraju da prođu; razlika u referenci je
    u redu samo ako je izmena namerna (tada `--snimi`)
 
-Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v59` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-24.1` · porudžbina `p-v2026-11-25.1`.
+Trenutna verzija: `v2026-06-11.45` / cache `lista-secenja-v60` / slike v2 · klizni `s-v2026-11-19.3` · Nor `n-v2026-11-27.1` · porudžbina `p-v2026-11-25.1`.
 
 ## Izgled ekrana i radni nalog (od v2026-06-11.41)
 
@@ -103,6 +103,11 @@ Po Nor Excel kalkulatoru „Sürme Hesaplama" (X širina, Y visina, D = šine = 
 Y × 2 · završni U 10400 Y − 15 (Y − 26) × 2 · H 10401 Y − 39 × 1. Staklo: ((X − 146) + (D − 1)·4 − 79·H) / D ×
 (Y − 193 | prag Y − 213), zaokruženo naviše; D po sistemu. Okov: točak 2D, garnitura krila sa ručkom 2,
 kenet garnitura D − 2; sa pragom još 4 + 4 zaptivke. Aluminijum 4,65 €/kg (Nor potvrda).
+Cene (Nor potvrda 0000003351): točak 9 €, garnitura sa ručkom 2,50 €, kenet garnitura 2 €, četkica 6,7 mm 600 0,60 €/m
+i 800 0,10 €/m — četkice su PROCENA 14 m + 11 m po krilu (Nor nije dao pravilo); staklo 32 €/m² je procena. Ključ cena
+`snr_cene2` (prenos sa `snr_cene1`: nule za okov/staklo dobijaju nove cene, ostale ručne cene ostaju).
+Okvirno ~60–63 €/m² materijala (alu ~18, okov ~15, staklo ~28), bez rada, prevoza i PDV-a.
+Vlasnik je pogledao Smart ECO SLIM (1700-xxx): ~1,5× više alu po m² od Nor-a — ostajemo na Nor slajdingu.
 Napomena: u Nor Excelu izbor „eşikli" ne radi (tursko İ u formuli) — ovde su odbici kako su zamišljeni.
 Provereno: 3000×3000, 4 šine, tek cam, sa H → 32,83 kg i staklo 697×2807 (isto kao Excel).
 
